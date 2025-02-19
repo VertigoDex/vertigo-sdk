@@ -62,12 +62,7 @@ export class VertigoSDK {
     royaltiesOwner: PublicKey,
     devBuyAmount?: anchor.BN,
     dev?: PublicKey
-  ): Promise<{
-    signature: string;
-    poolAddress: PublicKey;
-    mintAddress: PublicKey;
-    vaultAddress: PublicKey;
-  }> {
+  ) {
     const POOL_SEED = "pool";
 
     console.log("🚀 Launching new pool...");
@@ -167,7 +162,7 @@ export class VertigoSDK {
     mint: PublicKey,
     amount: anchor.BN,
     limit: anchor.BN = new anchor.BN(0)
-  ): Promise<string> {
+  ) {
     const vault = await getAssociatedTokenAddress(mint, pool, true);
 
     console.log(`🛍️  Buying tokens with ${amount.toString()} lamports...`);
@@ -224,7 +219,7 @@ export class VertigoSDK {
     mint: PublicKey,
     amount: anchor.BN,
     limit: anchor.BN = new anchor.BN(0)
-  ): Promise<string> {
+  ) {
     console.log(`💱 Selling ${amount.toString()} tokens...`);
     console.log(`📊 Slippage limit: ${limit.toString()} lamports`);
 
@@ -265,7 +260,7 @@ export class VertigoSDK {
     payer: Keypair,
     claimer: Keypair,
     receiver: PublicKey = this.wallet.publicKey
-  ): Promise<string> {
+  ) {
     return await this.program.methods
       .claim()
       .accounts({
@@ -283,7 +278,7 @@ export class VertigoSDK {
    * @returns {Promise<any>} Pool state including token reserves, fees, and other parameters
    * @throws Will throw if the pool address is invalid or doesn't exist
    */
-  async getPoolState(pool: PublicKey): Promise<any> {
+  async getPoolState(pool: PublicKey) {
     console.log(`🔍 Fetching pool state for ${pool.toString()}...`);
     return await this.program.account.pool.fetch(pool);
   }

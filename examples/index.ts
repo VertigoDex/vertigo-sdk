@@ -79,6 +79,7 @@ async function example() {
 
   // Get pool state
   const poolState = await sdk.getPoolState(poolAddress);
+  console.log(poolState);
 
   // Format numbers to SOL/tokens with proper decimals
   const formatSOL = (lamports: anchor.BN) =>
