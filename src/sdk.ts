@@ -1,11 +1,11 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
+import { Vertigo } from "../target/types/vertigo";
 import { PublicKey, Keypair, Connection } from "@solana/web3.js";
 import {
   createAssociatedTokenAccount,
   getAssociatedTokenAddress,
 } from "@solana/spl-token";
-import { Vertigo } from "../target/types/vertigo";
 import { PoolConfig } from "./types";
 
 /**

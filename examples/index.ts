@@ -1,20 +1,19 @@
 import { Connection, Keypair } from "@solana/web3.js";
 import { VertigoSDK, createFeeParams, createPoolConfig } from "../dist";
 import * as anchor from "@coral-xyz/anchor";
+import fs from "node:fs";
+import os from "node:os";
 
 import { createMint, getAssociatedTokenAddress } from "@solana/spl-token";
 
 async function example() {
   // Initialize connection and wallet
-  const connection = new Connection("http://localhost:8899", "confirmed");
+  const connection = new Connection("http://127.0.0.1:8899", "confirmed");
   const wallet = new anchor.Wallet(
     Keypair.fromSecretKey(
       Buffer.from(
         JSON.parse(
-          require("fs").readFileSync(
-            require("os").homedir() + "/.config/solana/id.json",
-            "utf-8"
-          )
+          fs.readFileSync(`${os.homedir()}/.config/solana/id.json`, "utf-8")
         )
       )
     )
@@ -83,10 +82,10 @@ async function example() {
 
   // Format numbers to SOL/tokens with proper decimals
   const formatSOL = (lamports: anchor.BN) =>
-    (lamports.toNumber() / anchor.web3.LAMPORTS_PER_SOL).toFixed(4) + " SOL";
+    `${(lamports.toNumber() / anchor.web3.LAMPORTS_PER_SOL).toFixed(4)} SOL`;
 
   const formatTokens = (amount: anchor.BN) =>
-    (amount.toNumber() / 10 ** 6).toFixed(2) + " tokens";
+    `${(amount.toNumber() / 10 ** 6).toFixed(2)} tokens`;
 
   console.log("\n📊 Pool State");
   console.log("══════════════════════════════════");

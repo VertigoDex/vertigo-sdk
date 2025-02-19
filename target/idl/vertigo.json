@@ -1,5 +1,5 @@
 {
-  "address": "J5RLyCa5sPxuvoqCdjMB6nW3T3efC6SCsUiBvZmuJP5X",
+  "address": "F73L8FrEFFv7nvkpPM8gmN2YD1upoksspvWNmg7PBuJW",
   "metadata": {
     "name": "vertigo",
     "version": "0.1.0",
@@ -9,16 +9,7 @@
   "instructions": [
     {
       "name": "buy",
-      "discriminator": [
-        102,
-        6,
-        61,
-        18,
-        1,
-        218,
-        235,
-        234
-      ],
+      "discriminator": [102, 6, 61, 18, 1, 218, 235, 234],
       "accounts": [
         {
           "name": "pool",
@@ -45,38 +36,9 @@
               {
                 "kind": "const",
                 "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
+                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206,
+                  235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140,
+                  245, 133, 126, 255, 0, 169
                 ]
               },
               {
@@ -87,38 +49,9 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
+                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
+                219, 233, 248, 89
               ]
             }
           }
@@ -152,16 +85,7 @@
     },
     {
       "name": "claim",
-      "discriminator": [
-        62,
-        198,
-        214,
-        193,
-        213,
-        159,
-        108,
-        210
-      ],
+      "discriminator": [62, 198, 214, 193, 213, 159, 108, 210],
       "accounts": [
         {
           "name": "pool",
@@ -178,9 +102,7 @@
         },
         {
           "name": "receiver",
-          "docs": [
-            "The account that will receive the claimed funds"
-          ],
+          "docs": ["The account that will receive the claimed funds"],
           "writable": true
         }
       ],
@@ -188,16 +110,7 @@
     },
     {
       "name": "create",
-      "discriminator": [
-        24,
-        30,
-        200,
-        40,
-        5,
-        28,
-        7,
-        119
-      ],
+      "discriminator": [24, 30, 200, 40, 5, 28, 7, 119],
       "accounts": [
         {
           "name": "deployer",
@@ -226,12 +139,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
+                "value": [112, 111, 111, 108]
               },
               {
                 "kind": "account",
@@ -242,16 +150,12 @@
         },
         {
           "name": "mint",
-          "docs": [
-            "The token mint of the tokens used in the pool."
-          ],
+          "docs": ["The token mint of the tokens used in the pool."],
           "writable": true
         },
         {
           "name": "mint_authority",
-          "docs": [
-            "The authority allowed to mint tokens from `mint`."
-          ],
+          "docs": ["The authority allowed to mint tokens from `mint`."],
           "signer": true
         },
         {
@@ -270,38 +174,9 @@
               {
                 "kind": "const",
                 "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
+                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206,
+                  235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140,
+                  245, 133, 126, 255, 0, 169
                 ]
               },
               {
@@ -312,47 +187,16 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
+                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
+                219, 233, 248, 89
               ]
             }
           }
         },
         {
           "name": "token_program",
-          "docs": [
-            "Required programs and sysvars"
-          ],
+          "docs": ["Required programs and sysvars"],
           "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
@@ -381,16 +225,7 @@
     },
     {
       "name": "sell",
-      "discriminator": [
-        51,
-        230,
-        133,
-        164,
-        1,
-        127,
-        131,
-        173
-      ],
+      "discriminator": [51, 230, 133, 164, 1, 127, 131, 173],
       "accounts": [
         {
           "name": "pool",
@@ -417,38 +252,9 @@
               {
                 "kind": "const",
                 "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
+                  6, 221, 246, 225, 215, 101, 161, 147, 217, 203, 225, 70, 206,
+                  235, 121, 172, 28, 180, 133, 237, 95, 91, 55, 145, 58, 140,
+                  245, 133, 126, 255, 0, 169
                 ]
               },
               {
@@ -459,38 +265,9 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
+                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
+                219, 233, 248, 89
               ]
             }
           }
@@ -526,57 +303,21 @@
   "accounts": [
     {
       "name": "Pool",
-      "discriminator": [
-        241,
-        154,
-        109,
-        4,
-        17,
-        177,
-        109,
-        188
-      ]
+      "discriminator": [241, 154, 109, 4, 17, 177, 109, 188]
     }
   ],
   "events": [
     {
       "name": "BuyEvent",
-      "discriminator": [
-        103,
-        244,
-        82,
-        31,
-        44,
-        245,
-        119,
-        119
-      ]
+      "discriminator": [103, 244, 82, 31, 44, 245, 119, 119]
     },
     {
       "name": "PoolCreated",
-      "discriminator": [
-        202,
-        44,
-        41,
-        88,
-        104,
-        220,
-        157,
-        82
-      ]
+      "discriminator": [202, 44, 41, 88, 104, 220, 157, 82]
     },
     {
       "name": "SellEvent",
-      "discriminator": [
-        62,
-        47,
-        55,
-        10,
-        165,
-        3,
-        220,
-        42
-      ]
+      "discriminator": [62, 47, 55, 10, 165, 3, 220, 42]
     }
   ],
   "errors": [
@@ -689,30 +430,22 @@
           },
           {
             "name": "reference",
-            "docs": [
-              "Reference slot for the fee calculation."
-            ],
+            "docs": ["Reference slot for the fee calculation."],
             "type": "u64"
           },
           {
             "name": "royalties_bps",
-            "docs": [
-              "Royalties in basis points."
-            ],
+            "docs": ["Royalties in basis points."],
             "type": "u16"
           },
           {
             "name": "protocol_fee_bps",
-            "docs": [
-              "Protocol fee in basis points."
-            ],
+            "docs": ["Protocol fee in basis points."],
             "type": "u16"
           },
           {
             "name": "fee_exempt_buys",
-            "docs": [
-              "Number of fee exempt buys."
-            ],
+            "docs": ["Number of fee exempt buys."],
             "type": "u16"
           }
         ]

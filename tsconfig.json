@@ -2,10 +2,31 @@
   "compilerOptions": {
     "types": ["mocha", "chai"],
     "typeRoots": ["./node_modules/@types"],
-    "lib": ["es2015"],
+    "lib": ["es2020"],
     "module": "commonjs",
-    "target": "es6",
-    "esModuleInterop": true
+    "target": "es2020",
+    "esModuleInterop": true,
+    "resolveJsonModule": true,
+    "outDir": "./dist",
+    "skipLibCheck": true,
+    "strict": false,
+    "moduleResolution": "node",
+    "noImplicitAny": false,
+    "allowJs": true,
+    "declaration": true,
+    "isolatedModules": false,
+    "rootDir": "./src",
+    "sourceMap": false,
+    "emitDecoratorMetadata": false,
+    "experimentalDecorators": false
   },
-  "include": ["src/**/*", "target/**/*"]
+  "include": ["src/**/*.ts", "src/**/*.tsx"],
+  "exclude": [
+    "node_modules",
+    "dist",
+    "examples",
+    "target",
+    "**/target/**",
+    "./target/**/*"
+  ]
 }
