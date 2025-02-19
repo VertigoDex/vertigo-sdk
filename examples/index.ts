@@ -1,5 +1,5 @@
 import { Connection, Keypair } from "@solana/web3.js";
-import { VertigoSDK, createFeeParams, createPoolConfig } from "../build";
+import { VertigoSDK, createFeeParams, createPoolConfig } from "../dist";
 import * as anchor from "@coral-xyz/anchor";
 
 import { createMint, getAssociatedTokenAddress } from "@solana/spl-token";
