@@ -2,12 +2,12 @@
  * Program IDL in camelCase format in order to be used in JS/TS.
  *
  * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/vertigo.json`.
+ * IDL can be found at `target/idl/amm.json`.
  */
-export type Vertigo = {
-  "address": "J5RLyCa5sPxuvoqCdjMB6nW3T3efC6SCsUiBvZmuJP5X",
+export type Amm = {
+  "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX",
   "metadata": {
-    "name": "vertigo",
+    "name": "amm",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
@@ -28,11 +28,24 @@ export type Vertigo = {
       "accounts": [
         {
           "name": "pool",
-          "writable": true
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
         },
         {
           "name": "user",
@@ -40,50 +53,28 @@ export type Vertigo = {
           "signer": true
         },
         {
-          "name": "userAta",
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "userTa",
+          "docs": [
+            "Can be any token account owned by the user for this mint"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "user"
+                "path": "pool"
               },
               {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
+                "kind": "account",
+                "path": "tokenProgram"
               },
               {
                 "kind": "account",
@@ -130,19 +121,15 @@ export type Vertigo = {
           }
         },
         {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
         },
         {
-          "name": "mint",
-          "writable": true
+          "name": "tokenProgram"
         },
         {
-          "name": "vault",
-          "writable": true
-        },
-        {
-          "name": "program"
+          "name": "program",
+          "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX"
         }
       ],
       "args": [
@@ -206,9 +193,22 @@ export type Vertigo = {
       ],
       "accounts": [
         {
-          "name": "deployer",
+          "name": "payer",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "owner",
           "docs": [
-            "The user who pays for creation and owns the deployer signature."
+            "The user who pays for creation and owns the owner signature."
+          ],
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "tokenWalletAuthority",
+          "docs": [
+            "Token wallet authority"
           ],
           "writable": true,
           "signer": true
@@ -216,9 +216,76 @@ export type Vertigo = {
         {
           "name": "royaltiesOwner",
           "docs": [
-            "The account that will receive royalties (can be the same as deployer or different)."
+            "The account that will receive royalties (can be the same as owner or different)."
           ],
           "writable": true
+        },
+        {
+          "name": "mint",
+          "docs": [
+            "The token mint of the tokens used in the pool."
+          ],
+          "writable": true
+        },
+        {
+          "name": "tokenWallet",
+          "docs": [
+            "Token wallet where the initial token reserves come from"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "tokenWalletAuthority"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgram"
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                140,
+                151,
+                37,
+                143,
+                78,
+                36,
+                137,
+                241,
+                187,
+                61,
+                16,
+                41,
+                20,
+                142,
+                13,
+                131,
+                11,
+                90,
+                19,
+                153,
+                218,
+                255,
+                16,
+                132,
+                4,
+                142,
+                123,
+                216,
+                219,
+                233,
+                248,
+                89
+              ]
+            }
+          }
         },
         {
           "name": "pool",
@@ -247,20 +314,6 @@ export type Vertigo = {
           }
         },
         {
-          "name": "mint",
-          "docs": [
-            "The token mint of the tokens used in the pool."
-          ],
-          "writable": true
-        },
-        {
-          "name": "mintAuthority",
-          "docs": [
-            "The authority allowed to mint tokens from `mint`."
-          ],
-          "signer": true
-        },
-        {
           "name": "vault",
           "docs": [
             "The Vault ATA owned by the Pool PDA.",
@@ -274,41 +327,8 @@ export type Vertigo = {
                 "path": "pool"
               },
               {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
+                "kind": "account",
+                "path": "tokenProgram"
               },
               {
                 "kind": "account",
@@ -358,8 +378,7 @@ export type Vertigo = {
           "name": "tokenProgram",
           "docs": [
             "Required programs and sysvars"
-          ],
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          ]
         },
         {
           "name": "associatedTokenProgram",
@@ -386,6 +405,120 @@ export type Vertigo = {
       ]
     },
     {
+      "name": "quoteBuy",
+      "discriminator": [
+        83,
+        9,
+        231,
+        110,
+        146,
+        31,
+        40,
+        12
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "program",
+          "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "swapParams"
+            }
+          }
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "swapResult"
+        }
+      }
+    },
+    {
+      "name": "quoteSell",
+      "discriminator": [
+        5,
+        178,
+        49,
+        206,
+        140,
+        231,
+        131,
+        145
+      ],
+      "accounts": [
+        {
+          "name": "pool",
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
+        },
+        {
+          "name": "mint"
+        },
+        {
+          "name": "program",
+          "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX"
+        }
+      ],
+      "args": [
+        {
+          "name": "params",
+          "type": {
+            "defined": {
+              "name": "swapParams"
+            }
+          }
+        }
+      ],
+      "returns": {
+        "defined": {
+          "name": "swapResult"
+        }
+      }
+    },
+    {
       "name": "sell",
       "discriminator": [
         51,
@@ -400,11 +533,24 @@ export type Vertigo = {
       "accounts": [
         {
           "name": "pool",
-          "writable": true
-        },
-        {
-          "name": "systemProgram",
-          "address": "11111111111111111111111111111111"
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  112,
+                  111,
+                  111,
+                  108
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint"
+              }
+            ]
+          }
         },
         {
           "name": "user",
@@ -412,50 +558,28 @@ export type Vertigo = {
           "signer": true
         },
         {
-          "name": "userAta",
+          "name": "mint",
+          "writable": true
+        },
+        {
+          "name": "userTa",
+          "docs": [
+            "Can be any token account owned by the user for this mint"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "user"
+                "path": "pool"
               },
               {
-                "kind": "const",
-                "value": [
-                  6,
-                  221,
-                  246,
-                  225,
-                  215,
-                  101,
-                  161,
-                  147,
-                  217,
-                  203,
-                  225,
-                  70,
-                  206,
-                  235,
-                  121,
-                  172,
-                  28,
-                  180,
-                  133,
-                  237,
-                  95,
-                  91,
-                  55,
-                  145,
-                  58,
-                  140,
-                  245,
-                  133,
-                  126,
-                  255,
-                  0,
-                  169
-                ]
+                "kind": "account",
+                "path": "tokenProgram"
               },
               {
                 "kind": "account",
@@ -502,19 +626,15 @@ export type Vertigo = {
           }
         },
         {
-          "name": "tokenProgram",
-          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
+          "name": "systemProgram",
+          "address": "11111111111111111111111111111111"
         },
         {
-          "name": "mint",
-          "writable": true
+          "name": "tokenProgram"
         },
         {
-          "name": "vault",
-          "writable": true
-        },
-        {
-          "name": "program"
+          "name": "program",
+          "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX"
         }
       ],
       "args": [
@@ -593,36 +713,46 @@ export type Vertigo = {
     },
     {
       "code": 6001,
+      "name": "invalidTokenAccount",
+      "msg": "Invalid Token Account"
+    },
+    {
+      "code": 6002,
+      "name": "insufficientFunds",
+      "msg": "Insufficient Funds"
+    },
+    {
+      "code": 6003,
       "name": "invalidConstant",
       "msg": "Constant must be greater than 0"
     },
     {
-      "code": 6002,
+      "code": 6004,
       "name": "invalidFees",
       "msg": "Fees must be between 0 and 10000 basis points"
     },
     {
-      "code": 6003,
+      "code": 6005,
       "name": "mathOverflow",
       "msg": "mathOverflow"
     },
     {
-      "code": 6004,
+      "code": 6006,
       "name": "insufficientOutput",
       "msg": "Insufficient output"
     },
     {
-      "code": 6005,
+      "code": 6007,
       "name": "insufficientInput",
       "msg": "Insufficient input"
     },
     {
-      "code": 6006,
+      "code": 6008,
       "name": "illegalClaimant",
       "msg": "Illegal Claimant"
     },
     {
-      "code": 6007,
+      "code": 6009,
       "name": "poolEmpty",
       "msg": "Pool Empty"
     }
@@ -770,7 +900,7 @@ export type Vertigo = {
             "type": "pubkey"
           },
           {
-            "name": "deployer",
+            "name": "owner",
             "type": "pubkey"
           }
         ]
@@ -790,7 +920,7 @@ export type Vertigo = {
             "type": "pubkey"
           },
           {
-            "name": "deployer",
+            "name": "owner",
             "type": "pubkey"
           },
           {
@@ -843,6 +973,34 @@ export type Vertigo = {
           },
           {
             "name": "limit",
+            "type": "u64"
+          }
+        ]
+      }
+    },
+    {
+      "name": "swapResult",
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "newLamportsReserves",
+            "type": "u128"
+          },
+          {
+            "name": "newTokenReserves",
+            "type": "u128"
+          },
+          {
+            "name": "lamportsAmount",
+            "type": "u64"
+          },
+          {
+            "name": "tokenAmount",
+            "type": "u64"
+          },
+          {
+            "name": "feesLamports",
             "type": "u64"
           }
         ]
