@@ -64,9 +64,17 @@ export type Factory = {
               {
                 "kind": "account",
                 "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mintA"
               }
             ]
           }
+        },
+        {
+          "name": "mintA",
+          "writable": true
         },
         {
           "name": "systemProgram",
@@ -146,19 +154,16 @@ export type Factory = {
               {
                 "kind": "account",
                 "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mintA"
               }
             ]
           }
         },
         {
-          "name": "royaltiesOwner",
-          "docs": [
-            "The account that will receive royalties"
-          ],
-          "writable": true
-        },
-        {
-          "name": "mintAuthority",
+          "name": "mintBAuthority",
           "docs": [
             "The authority allowed to mint tokens from `mint`."
           ],
@@ -166,9 +171,12 @@ export type Factory = {
           "signer": true
         },
         {
-          "name": "mint",
+          "name": "mintB",
           "writable": true,
           "signer": true
+        },
+        {
+          "name": "mintA"
         },
         {
           "name": "pool",
@@ -186,7 +194,15 @@ export type Factory = {
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mintA"
+              },
+              {
+                "kind": "account",
+                "path": "mintB"
               }
             ],
             "program": {
@@ -229,25 +245,130 @@ export type Factory = {
           }
         },
         {
-          "name": "vault",
-          "writable": true
-        },
-        {
-          "name": "tokenWallet",
+          "name": "vaultA",
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "mintAuthority"
+                "path": "pool"
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "mintA"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                7,
+                87,
+                18,
+                62,
+                70,
+                176,
+                102,
+                18,
+                46,
+                201,
+                152,
+                185,
+                42,
+                214,
+                249,
+                37,
+                56,
+                200,
+                147,
+                177,
+                133,
+                12,
+                123,
+                15,
+                51,
+                221,
+                221,
+                4,
+                248,
+                132,
+                21,
+                210
+              ]
+            }
+          }
+        },
+        {
+          "name": "vaultB",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pool"
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "mintB"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                7,
+                87,
+                18,
+                62,
+                70,
+                176,
+                102,
+                18,
+                46,
+                201,
+                152,
+                185,
+                42,
+                214,
+                249,
+                37,
+                56,
+                200,
+                147,
+                177,
+                133,
+                12,
+                123,
+                15,
+                51,
+                221,
+                221,
+                4,
+                248,
+                132,
+                21,
+                210
+              ]
+            }
+          }
+        },
+        {
+          "name": "tokenWalletB",
+          "docs": [
+            "Token wallet where the initial token reserves come from"
+          ],
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "mintBAuthority"
+              },
+              {
+                "kind": "account",
+                "path": "tokenProgramB"
+              },
+              {
+                "kind": "account",
+                "path": "mintB"
               }
             ],
             "program": {
@@ -290,7 +411,10 @@ export type Factory = {
           }
         },
         {
-          "name": "tokenProgram"
+          "name": "tokenProgramA"
+        },
+        {
+          "name": "tokenProgramB"
         },
         {
           "name": "associatedTokenProgram",
@@ -350,61 +474,71 @@ export type Factory = {
   "errors": [
     {
       "code": 6000,
+      "name": "invalidMint",
+      "msg": "Invalid base mint"
+    },
+    {
+      "code": 6001,
+      "name": "invalidTokenAccount",
+      "msg": "Invalid Token Account"
+    },
+    {
+      "code": 6002,
       "name": "invalidMetadataAddress",
       "msg": "Invalid metadata address"
     },
     {
-      "code": 6001,
+      "code": 6003,
       "name": "invalidOwner",
       "msg": "Invalid factory owner"
     },
     {
-      "code": 6002,
+      "code": 6004,
       "name": "invalidInitialTokenReserves",
       "msg": "Initial token reserves must be greater than 0"
     },
     {
-      "code": 6003,
-      "name": "invalidConstant",
-      "msg": "Constant must be greater than 0"
+      "code": 6005,
+      "name": "invalidShift",
+      "msg": "Shift must be greater than 0"
     },
     {
-      "code": 6004,
+      "code": 6006,
       "name": "invalidFees",
       "msg": "Fees must be between 0 and 10000 basis points"
     },
     {
-      "code": 6005,
+      "code": 6007,
       "name": "mathOverflow",
       "msg": "mathOverflow"
     },
     {
-      "code": 6006,
+      "code": 6008,
       "name": "insufficientOutput",
       "msg": "Insufficient output"
     },
     {
-      "code": 6007,
+      "code": 6009,
       "name": "insufficientInput",
       "msg": "Insufficient input"
     },
     {
-      "code": 6008,
+      "code": 6010,
       "name": "illegalClaimant",
       "msg": "Illegal Claimant"
     },
     {
-      "code": 6009,
+      "code": 6011,
       "name": "poolEmpty",
       "msg": "Pool Empty"
     },
     {
-      "code": 6010,
+      "code": 6012,
       "name": "invalidName",
       "msg": "Invalid name"
     },
     {
-      "code": 6011,
+      "code": 6013,
       "name": "invalidSymbol",
       "msg": "Invalid symbol"
     }
@@ -420,7 +554,7 @@ export type Factory = {
             "type": "pubkey"
           },
           {
-            "name": "constant",
+            "name": "shift",
             "type": "u128"
           },
           {
@@ -446,6 +580,10 @@ export type Factory = {
           {
             "name": "bump",
             "type": "u8"
+          },
+          {
+            "name": "mintA",
+            "type": "pubkey"
           }
         ]
       }
@@ -457,6 +595,10 @@ export type Factory = {
         "fields": [
           {
             "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "mintA",
             "type": "pubkey"
           }
         ]
@@ -489,13 +631,6 @@ export type Factory = {
               "Royalties in basis points."
             ],
             "type": "u16"
-          },
-          {
-            "name": "protocolFeeBps",
-            "docs": [
-              "Protocol fee in basis points."
-            ],
-            "type": "u16"
           }
         ]
       }
@@ -506,7 +641,7 @@ export type Factory = {
         "kind": "struct",
         "fields": [
           {
-            "name": "constant",
+            "name": "shift",
             "type": "u128"
           },
           {

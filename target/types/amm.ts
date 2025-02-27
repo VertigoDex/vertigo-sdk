@@ -42,7 +42,15 @@ export type Amm = {
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mintA"
+              },
+              {
+                "kind": "account",
+                "path": "mintB"
               }
             ]
           }
@@ -53,18 +61,30 @@ export type Amm = {
           "signer": true
         },
         {
-          "name": "mint",
-          "writable": true
+          "name": "owner"
         },
         {
-          "name": "userTa",
+          "name": "mintA"
+        },
+        {
+          "name": "mintB"
+        },
+        {
+          "name": "userTaA",
           "docs": [
             "Can be any token account owned by the user for this mint"
           ],
           "writable": true
         },
         {
-          "name": "vault",
+          "name": "userTaB",
+          "docs": [
+            "Can be any token account owned by the user for this mint"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vaultA",
           "writable": true,
           "pda": {
             "seeds": [
@@ -74,58 +94,36 @@ export type Amm = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "mintA"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vaultB",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pool"
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "mintB"
               }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
+            ]
           }
+        },
+        {
+          "name": "tokenProgramA"
+        },
+        {
+          "name": "tokenProgramB"
         },
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "tokenProgram"
         },
         {
           "name": "program",
@@ -170,11 +168,36 @@ export type Amm = {
           "signer": true
         },
         {
-          "name": "receiver",
+          "name": "mintA",
           "docs": [
-            "The account that will receive the claimed funds"
+            "The token mint of the tokens used in the pool."
+          ]
+        },
+        {
+          "name": "vaultA",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "mintA"
+              }
+            ]
+          }
+        },
+        {
+          "name": "receiverTaA",
+          "docs": [
+            "Can be any token account owned by the user for this mint"
           ],
           "writable": true
+        },
+        {
+          "name": "tokenProgramA"
         }
       ],
       "args": []
@@ -199,101 +222,27 @@ export type Amm = {
         },
         {
           "name": "owner",
-          "docs": [
-            "The user who pays for creation and owns the owner signature."
-          ],
-          "writable": true,
           "signer": true
         },
         {
           "name": "tokenWalletAuthority",
-          "docs": [
-            "Token wallet authority"
-          ],
-          "writable": true,
           "signer": true
         },
         {
-          "name": "royaltiesOwner",
-          "docs": [
-            "The account that will receive royalties (can be the same as owner or different)."
-          ],
-          "writable": true
+          "name": "mintA"
         },
         {
-          "name": "mint",
-          "docs": [
-            "The token mint of the tokens used in the pool."
-          ],
-          "writable": true
+          "name": "mintB"
         },
         {
-          "name": "tokenWallet",
+          "name": "tokenWalletB",
           "docs": [
-            "Token wallet where the initial token reserves come from"
+            "Token wallet that funds the pool with token B."
           ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "tokenWalletAuthority"
-              },
-              {
-                "kind": "account",
-                "path": "tokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "mint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "writable": true
         },
         {
           "name": "pool",
-          "docs": [
-            "The PDA that holds the `Pool` state.",
-            "We use the seed = [POOL_SEED, mint.key()] and store the `bump` automatically.",
-            "We allocate enough space for Pool::LEN + 8 (discriminator)."
-          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -308,17 +257,21 @@ export type Amm = {
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mintA"
+              },
+              {
+                "kind": "account",
+                "path": "mintB"
               }
             ]
           }
         },
         {
-          "name": "vault",
-          "docs": [
-            "The Vault ATA owned by the Pool PDA.",
-            "Anchor will create it if necessary."
-          ],
+          "name": "vaultA",
           "writable": true,
           "pda": {
             "seeds": [
@@ -328,61 +281,35 @@ export type Amm = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
-              },
-              {
-                "kind": "account",
-                "path": "mint"
+                "path": "mintA"
               }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
+            ]
           }
         },
         {
-          "name": "tokenProgram",
+          "name": "vaultB",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "mintB"
+              }
+            ]
+          }
+        },
+        {
+          "name": "tokenProgramA",
           "docs": [
             "Required programs and sysvars"
           ]
         },
         {
-          "name": "associatedTokenProgram",
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+          "name": "tokenProgramB"
         },
         {
           "name": "systemProgram",
@@ -403,6 +330,54 @@ export type Amm = {
           }
         }
       ]
+    },
+    {
+      "name": "disable",
+      "discriminator": [
+        185,
+        173,
+        187,
+        90,
+        216,
+        15,
+        238,
+        233
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true
+        },
+        {
+          "name": "pool",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "enable",
+      "discriminator": [
+        159,
+        34,
+        127,
+        41,
+        193,
+        53,
+        124,
+        27
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true
+        },
+        {
+          "name": "pool",
+          "writable": true
+        }
+      ],
+      "args": []
     },
     {
       "name": "quoteBuy",
@@ -432,13 +407,27 @@ export type Amm = {
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mintA"
+              },
+              {
+                "kind": "account",
+                "path": "mintB"
               }
             ]
           }
         },
         {
-          "name": "mint"
+          "name": "owner"
+        },
+        {
+          "name": "mintA"
+        },
+        {
+          "name": "mintB"
         },
         {
           "name": "program",
@@ -489,13 +478,27 @@ export type Amm = {
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mintA"
+              },
+              {
+                "kind": "account",
+                "path": "mintB"
               }
             ]
           }
         },
         {
-          "name": "mint"
+          "name": "owner"
+        },
+        {
+          "name": "mintA"
+        },
+        {
+          "name": "mintB"
         },
         {
           "name": "program",
@@ -547,7 +550,15 @@ export type Amm = {
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mintA"
+              },
+              {
+                "kind": "account",
+                "path": "mintB"
               }
             ]
           }
@@ -558,18 +569,30 @@ export type Amm = {
           "signer": true
         },
         {
-          "name": "mint",
-          "writable": true
+          "name": "owner"
         },
         {
-          "name": "userTa",
+          "name": "mintA"
+        },
+        {
+          "name": "mintB"
+        },
+        {
+          "name": "userTaA",
           "docs": [
             "Can be any token account owned by the user for this mint"
           ],
           "writable": true
         },
         {
-          "name": "vault",
+          "name": "userTaB",
+          "docs": [
+            "Can be any token account owned by the user for this mint"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vaultA",
           "writable": true,
           "pda": {
             "seeds": [
@@ -579,58 +602,36 @@ export type Amm = {
               },
               {
                 "kind": "account",
-                "path": "tokenProgram"
+                "path": "mintA"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vaultB",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pool"
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "mintB"
               }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
+            ]
           }
+        },
+        {
+          "name": "tokenProgramA"
+        },
+        {
+          "name": "tokenProgramB"
         },
         {
           "name": "systemProgram",
           "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "tokenProgram"
         },
         {
           "name": "program",
@@ -708,51 +709,71 @@ export type Amm = {
   "errors": [
     {
       "code": 6000,
+      "name": "poolDisabled",
+      "msg": "Pool Disabled"
+    },
+    {
+      "code": 6001,
+      "name": "ownerMustBeSystemAccount",
+      "msg": "Owner must be a system account (wallet), not a PDA"
+    },
+    {
+      "code": 6002,
+      "name": "invalidFeeDecay",
+      "msg": "Invalid Fee Decay"
+    },
+    {
+      "code": 6003,
       "name": "invalidInitialTokenReserves",
       "msg": "Initial token reserves must be greater than 0"
     },
     {
-      "code": 6001,
+      "code": 6004,
+      "name": "invalidMint",
+      "msg": "Invalid Mint"
+    },
+    {
+      "code": 6005,
       "name": "invalidTokenAccount",
       "msg": "Invalid Token Account"
     },
     {
-      "code": 6002,
+      "code": 6006,
       "name": "insufficientFunds",
       "msg": "Insufficient Funds"
     },
     {
-      "code": 6003,
-      "name": "invalidConstant",
-      "msg": "Constant must be greater than 0"
+      "code": 6007,
+      "name": "invalidShift",
+      "msg": "Shift must be greater than 0"
     },
     {
-      "code": 6004,
+      "code": 6008,
       "name": "invalidFees",
       "msg": "Fees must be between 0 and 10000 basis points"
     },
     {
-      "code": 6005,
+      "code": 6009,
       "name": "mathOverflow",
       "msg": "mathOverflow"
     },
     {
-      "code": 6006,
+      "code": 6010,
       "name": "insufficientOutput",
       "msg": "Insufficient output"
     },
     {
-      "code": 6007,
+      "code": 6011,
       "name": "insufficientInput",
       "msg": "Insufficient input"
     },
     {
-      "code": 6008,
+      "code": 6012,
       "name": "illegalClaimant",
       "msg": "Illegal Claimant"
     },
     {
-      "code": 6009,
+      "code": 6013,
       "name": "poolEmpty",
       "msg": "Pool Empty"
     }
@@ -780,11 +801,11 @@ export type Amm = {
         "kind": "struct",
         "fields": [
           {
-            "name": "constant",
+            "name": "shift",
             "type": "u128"
           },
           {
-            "name": "initialTokenReserves",
+            "name": "initialTokenBReserves",
             "type": "u64"
           },
           {
@@ -838,13 +859,6 @@ export type Amm = {
             "type": "u16"
           },
           {
-            "name": "protocolFeeBps",
-            "docs": [
-              "Protocol fee in basis points."
-            ],
-            "type": "u16"
-          },
-          {
             "name": "feeExemptBuys",
             "docs": [
               "Number of fee exempt buys."
@@ -864,15 +878,27 @@ export type Amm = {
             "type": "bool"
           },
           {
-            "name": "lamportsReserves",
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "mintA",
+            "type": "pubkey"
+          },
+          {
+            "name": "mintB",
+            "type": "pubkey"
+          },
+          {
+            "name": "tokenAReserves",
             "type": "u128"
           },
           {
-            "name": "tokenReserves",
+            "name": "tokenBReserves",
             "type": "u128"
           },
           {
-            "name": "constant",
+            "name": "shift",
             "type": "u128"
           },
           {
@@ -880,7 +906,7 @@ export type Amm = {
             "type": "u64"
           },
           {
-            "name": "protocolFees",
+            "name": "vertigoFees",
             "type": "u64"
           },
           {
@@ -894,14 +920,6 @@ export type Amm = {
                 "name": "feeParams"
               }
             }
-          },
-          {
-            "name": "royaltiesOwner",
-            "type": "pubkey"
-          },
-          {
-            "name": "owner",
-            "type": "pubkey"
           }
         ]
       }
@@ -916,7 +934,11 @@ export type Amm = {
             "type": "pubkey"
           },
           {
-            "name": "mint",
+            "name": "mintA",
+            "type": "pubkey"
+          },
+          {
+            "name": "mintB",
             "type": "pubkey"
           },
           {
@@ -924,15 +946,11 @@ export type Amm = {
             "type": "pubkey"
           },
           {
-            "name": "royaltiesOwner",
-            "type": "pubkey"
-          },
-          {
             "name": "initialTokenReserves",
             "type": "u64"
           },
           {
-            "name": "constant",
+            "name": "shift",
             "type": "u128"
           },
           {
@@ -984,23 +1002,23 @@ export type Amm = {
         "kind": "struct",
         "fields": [
           {
-            "name": "newLamportsReserves",
+            "name": "newReservesA",
             "type": "u128"
           },
           {
-            "name": "newTokenReserves",
+            "name": "newReservesB",
             "type": "u128"
           },
           {
-            "name": "lamportsAmount",
+            "name": "amountA",
             "type": "u64"
           },
           {
-            "name": "tokenAmount",
+            "name": "amountB",
             "type": "u64"
           },
           {
-            "name": "feesLamports",
+            "name": "feeA",
             "type": "u64"
           }
         ]

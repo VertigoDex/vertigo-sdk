@@ -1,15 +1,26 @@
 import * as anchor from "@coral-xyz/anchor";
-import { FeeParams } from "./fees";
+import type { FeeParams } from "./fees";
 
 /**
  * Configuration parameters for launching a new pool
  * @interface launchConfig
  */
 export interface PoolConfig {
-  /** Constant in the bonding curve formula (in lamports) */
-  constant: anchor.BN;
+  /** Shift in the constant product formula */
+  shift: anchor.BN;
+  /** Initial token supply for the pool */
+  initialTokenBReserves: anchor.BN;
+  /** Fee parameters for the pool */
+  feeParams: FeeParams;
+}
+
+export interface FactoryPoolConfig {
+  /** Shift in the constant product formula */
+  shift: anchor.BN;
   /** Initial token supply for the pool */
   initialTokenReserves: anchor.BN;
   /** Fee parameters for the pool */
   feeParams: FeeParams;
 }
+
+export const POOL_SEED = "pool";

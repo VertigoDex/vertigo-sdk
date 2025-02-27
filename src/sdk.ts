@@ -1,285 +1,547 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Program } from "@coral-xyz/anchor";
-import { Vertigo } from "../target/types/vertigo";
-import { PublicKey, Keypair, Connection } from "@solana/web3.js";
-import {
-  createAssociatedTokenAccount,
-  getAssociatedTokenAddress,
-} from "@solana/spl-token";
-import { PoolConfig } from "./types";
+import { BN, type Program } from "@coral-xyz/anchor";
+import { type Keypair, type Connection, PublicKey } from "@solana/web3.js";
+import type { Amm } from "../../target/types/amm";
+import type { Factory } from "../../target/types/factory";
 
+import { POOL_SEED, type PoolConfig } from "./types";
+import dotenv from "dotenv";
+
+dotenv.config();
+
+// TODO
 /**
  * Main SDK class for interacting with the Vertigo protocol
  * @class VertigoSDK
  */
 export class VertigoSDK {
-  private program: Program<Vertigo>;
-  private connection: Connection;
-  private wallet: anchor.Wallet;
+  private amm: Program<Amm>;
+  private factory: Program<Factory>;
+  public connection: Connection;
+  public wallet: anchor.Wallet;
+  public logLevel: "verbose" | "tx" | "none";
+  public explorer: "solscan" | "solanaExplorer" | "solanafm";
 
-  constructor(connection: Connection, wallet: anchor.Wallet) {
+  constructor(
+    connection: Connection,
+    wallet: anchor.Wallet,
+    logLevel: "verbose" | "tx" | "none" = "verbose",
+    explorer: "solscan" | "solanaExplorer" = "solscan"
+  ) {
     // Initialize anchor provider
     const provider = new anchor.AnchorProvider(connection, wallet, {
       commitment: "confirmed",
     });
 
-    // Get program
-    this.program = new Program(require("../target/idl/vertigo.json"), provider);
+    // Set anchor provider
+    anchor.setProvider(provider);
+
+    // Initialize the programs
+    this.factory = new anchor.Program(
+      require(process.env.PATH_TO_FACTORY_IDL as string),
+      provider
+    ) as Program<Factory>;
+
+    this.amm = new anchor.Program(
+      require(process.env.PATH_TO_AMM_IDL as string),
+      provider
+    ) as Program<Amm>;
 
     this.connection = connection;
     this.wallet = wallet;
+    this.logLevel = logLevel;
+    this.explorer = explorer;
   }
 
   private logTx(signature: string, operation: string) {
-    console.log(
-      `🔗 ${operation} transaction: https://explorer.solana.com/tx/${signature}`
-    );
+    if (["tx", "verbose"].includes(this.logLevel)) {
+      const cluster = this.connection.rpcEndpoint.includes("devnet")
+        ? "?cluster=devnet"
+        : this.connection.rpcEndpoint.includes("testnet")
+        ? "?cluster=testnet"
+        : this.connection.rpcEndpoint.includes("127.0.0.1")
+        ? "?cluster=custom&customUrl=http://127.0.0.1:8899"
+        : "";
+      const explorerUrl =
+        this.explorer === "solscan"
+          ? `https://solscan.io/tx/${signature}${cluster}`
+          : `https://explorer.solana.com/tx/${signature}${cluster}`;
+      console.log(`🔗 ${operation} transaction: ${explorerUrl}`);
+    }
+  }
+
+  private log(message: string) {
+    if (this.logLevel === "verbose") {
+      console.log(message);
+    }
   }
 
   /**
    * Launches a new trading pool with the specified configuration
-   * @param {PoolConfig} cfg - Pool configuration parameters including bonding curve constant and fee structure
+   * @param {PoolConfig} poolParams - Pool configuration parameters including bonding curve constant and fee structure
    * @param {Keypair} payer - Keypair that will pay for the transaction
-   * @param {Keypair} mintAuthority - Keypair with authority over the token mint
-   * @param {PublicKey} mint - Public key of the token mint
-   * @param {PublicKey} deployer - Public key of the pool deployer
-   * @param {PublicKey} royaltiesOwner - Public key that will receive royalty fees
+   * @param {Keypair} owner - Keypair that will own the pool
+   * @param {Keypair} tokenWalletAuthority - Keypair with authority over the token wallet
+   * @param {PublicKey} tokenWalletB - Public key of the token wallet for the B side
+   * @param {PublicKey} mintA - Public key of the token mint for the A side
+   * @param {PublicKey} mintB - Public key of the token mint for the B side
+   * @param {PublicKey} tokenProgramA - Token program for the A side
+   * @param {PublicKey} tokenProgramB - Token program for the B side
    * @param {anchor.BN} [devBuyAmount] - Optional amount of SOL (in lamports) for initial token purchase
-   * @param {PublicKey} [dev] - Optional public key to receive initial dev tokens
+   * @param {Keypair} [dev] - Optional Keypair to receive initial dev tokens
+   *
    * @returns {Promise<{
    *   signature: string,
-   *   poolAddress: PublicKey,
-   *   mintAddress: PublicKey,
-   *   vaultAddress: PublicKey
    * }>} Object containing transaction signature and relevant addresses
    */
   async launchPool(
-    cfg: PoolConfig,
+    poolParams: PoolConfig,
     payer: Keypair,
-    mintAuthority: Keypair,
-    mint: PublicKey,
-    deployer: PublicKey,
-    royaltiesOwner: PublicKey,
+    owner: Keypair,
+    tokenWalletAuthority: Keypair,
+    tokenWalletB: PublicKey,
+    mintA: PublicKey,
+    mintB: PublicKey,
+    tokenProgramA: PublicKey,
+    tokenProgramB: PublicKey,
     devBuyAmount?: anchor.BN,
-    dev?: PublicKey
-  ) {
-    const POOL_SEED = "pool";
+    dev?: Keypair,
+    devTaA?: PublicKey,
+    devTaB?: PublicKey
+  ): Promise<{ signature: string }> {
+    this.log("🚀 Launching new pool...");
 
-    console.log("🚀 Launching new pool...");
-    console.log(`💎 Token mint address: ${mint.toString()}`);
-
-    // Find pool PDA
-    console.log("🔍 Deriving pool PDA...");
-    const [poolPda, bump] = PublicKey.findProgramAddressSync(
-      [Buffer.from(POOL_SEED), mint.toBuffer()],
-      this.program.programId
+    const [pool, bump] = PublicKey.findProgramAddressSync(
+      [
+        Buffer.from(POOL_SEED),
+        owner.publicKey.toBuffer(),
+        mintA.toBuffer(),
+        mintB.toBuffer(),
+      ],
+      this.amm.programId
     );
-
-    // Get vault ATA
-    const vault = await getAssociatedTokenAddress(mint, poolPda, true);
-
-    // If dev buy is requested, create dev ATA and update fee exempt buys
-    let devAta: PublicKey | undefined;
-    if (devBuyAmount) {
-      console.log(
-        `💰 Setting up dev buy for ${devBuyAmount.toString()} lamports...`
-      );
-      devAta = await getAssociatedTokenAddress(mint, dev, true);
-
-      // Create the ATA if it doesn't exist
-      try {
-        await createAssociatedTokenAccount(this.connection, payer, mint, dev);
-      } catch (e) {
-        // ATA already exists
-      }
-
-      // Update fee params to include one fee exempt buy
-      cfg.feeParams.feeExemptBuys = 1;
-    }
 
     // Prepare pool creation params
     const params = {
-      ...cfg,
+      ...poolParams,
       bump,
     };
 
+    this.log("📡 Sending pool creation transaction...");
     // Create the pool
-    const tx = this.program.methods.create(params).accounts({
-      deployer,
-      royaltiesOwner,
-      mint,
-      mintAuthority: mintAuthority.publicKey,
-    });
+    const createSignature = await this.amm.methods
+      .create(params)
+      .accounts({
+        payer: payer.publicKey,
+        owner: owner.publicKey,
+        tokenWalletAuthority: tokenWalletAuthority.publicKey,
+        tokenWalletB: tokenWalletB,
+        mintA: mintA,
+        mintB: mintB,
+        tokenProgramA: tokenProgramA,
+        tokenProgramB: tokenProgramB,
+      })
+      .signers([payer, owner, tokenWalletAuthority])
+      .rpc();
 
-    // If dev buy is requested, add the buy instruction
-    if (devBuyAmount && devAta) {
-      tx.postInstructions([
-        await this.program.methods
-          .buy({
-            amount: devBuyAmount,
-            limit: new anchor.BN(0),
-          })
-          .accounts({
-            pool: poolPda,
-            mint: mint,
-            vault: vault,
-            user: dev,
-            program: this.program.programId,
-          })
-          .instruction(),
-      ]);
+    this.logTx(createSignature, "Pool creation");
+    this.log("✅ Pool successfully created!");
+
+    if (devBuyAmount && dev && devTaA && devTaB) {
+      const buySignature = await this.amm.methods
+        .buy({
+          amount: devBuyAmount,
+          limit: new anchor.BN(0),
+        })
+        .accounts({
+          owner: owner.publicKey,
+          user: dev.publicKey,
+          mintA: mintA,
+          mintB: mintB,
+          userTaA: devTaA,
+          userTaB: devTaB,
+          tokenProgramA: tokenProgramA,
+          tokenProgramB: tokenProgramB,
+        })
+        .signers([dev])
+        .rpc();
+      this.logTx(buySignature, "Dev buy");
     }
 
-    // Send transaction
-    console.log("📡 Sending transaction...");
-    const signature = await tx.signers([payer, mintAuthority]).rpc();
-    this.logTx(signature, "Pool creation");
-    console.log("✅ Pool successfully created!");
-
     return {
-      signature,
-      poolAddress: poolPda,
-      mintAddress: mint,
-      vaultAddress: vault,
+      signature: createSignature,
     };
   }
 
   /**
+   * Gets a quote for buying tokens from a pool
+   * @param {anchor.BN} amount - Amount of token A to buy
+   * @param {anchor.BN} limit - Maximum amount of token B expected to receive
+   * @param {PublicKey} owner - Pool owner's public key
+   * @param {PublicKey} mintA - Address of the token mint for the A side
+   * @param {PublicKey} mintB - Address of the token mint for the B side
+   * @returns {Promise<{amountB: BN, feeA: BN}>} Quote containing expected token amount and fees
+   */
+  async quoteBuy(
+    amount: anchor.BN,
+    limit: anchor.BN,
+    owner: PublicKey,
+    mintA: PublicKey,
+    mintB: PublicKey
+  ) {
+    return this.amm.methods
+      .quoteBuy({ amount, limit })
+      .accounts({ owner, mintA, mintB })
+      .view();
+  }
+
+  /**
+   * Gets a quote for selling tokens to a pool
+   * @param {anchor.BN} amount - Amount of token B to sell
+   * @param {anchor.BN} limit - Minimum amount of token A expected to receive
+   * @param {PublicKey} owner - Pool owner's public key
+   * @param {PublicKey} mintA - Address of the token mint for the A side
+   * @param {PublicKey} mintB - Address of the token mint for the B side
+   * @returns {Promise<{amountA: BN, feeA: BN}>} Quote containing expected token A amount and fees
+   */
+  async quoteSell(
+    amount: anchor.BN,
+    limit: anchor.BN,
+    owner: PublicKey,
+    mintA: PublicKey,
+    mintB: PublicKey
+  ) {
+    return this.amm.methods
+      .quoteSell({ amount, limit })
+      .accounts({ owner, mintA, mintB })
+      .view();
+  }
+
+  /**
    * Buys tokens from a pool using the bonding curve price
-   * @param {PublicKey} pool - Address of the trading pool
-   * @param {Keypair} payer - Keypair that will pay for the transaction
-   * @param {Keypair} user - Keypair that will receive the tokens
-   * @param {PublicKey} mint - Address of the token mint
+   * @param {PublicKey} owner - Address of the pool owner
+   * @param {Keypair} user - Address of the user
+   * @param {PublicKey} mintA - Address of the token mint for the A side
+   * @param {PublicKey} mintB - Address of the token mint for the B side
+   * @param {PublicKey} userTaA - Address of the user's token account for the A side
+   * @param {PublicKey} userTaB - Address of the user's token account for the B side
+   * @param {PublicKey} tokenProgramA - Token program for the A side
+   * @param {PublicKey} tokenProgramB - Token program for the B side
    * @param {anchor.BN} amount - Amount of SOL to spend (in lamports)
-   * @param {anchor.BN} [limit=new anchor.BN(0)] - Minimum amount of tokens to receive (slippage protection)
+   * @param {anchor.BN} limit - Maximum amount of token B expected to receive
    * @returns {Promise<string>} Transaction signature
    * @throws Will throw if the slippage limit is not met or if there's insufficient liquidity
    */
   async buy(
-    pool: PublicKey,
-    payer: Keypair,
+    owner: PublicKey,
     user: Keypair,
-    mint: PublicKey,
+    mintA: PublicKey,
+    mintB: PublicKey,
+    userTaA: PublicKey,
+    userTaB: PublicKey,
+    tokenProgramA: PublicKey,
+    tokenProgramB: PublicKey,
     amount: anchor.BN,
-    limit: anchor.BN = new anchor.BN(0)
+    limit: anchor.BN
   ) {
-    const vault = await getAssociatedTokenAddress(mint, pool, true);
-
-    console.log(`🛍️  Buying tokens with ${amount.toString()} lamports...`);
-    console.log(`📊 Slippage limit: ${limit.toString()} tokens`);
-
-    // Create user ATA if it doesn't exist
-    console.log("🔍 Checking token account...");
-    try {
-      await createAssociatedTokenAccount(
-        this.connection,
-        this.wallet.payer,
-        mint,
-        this.wallet.publicKey
-      );
-    } catch (e) {
-      // ATA already exists
-    }
-
-    console.log("📡 Sending buy transaction...");
-    const signature = await this.program.methods
+    const signature = await this.amm.methods
       .buy({
         amount,
-        limit: limit,
+        limit,
       })
       .accounts({
-        pool,
-        mint,
-        vault,
+        owner,
         user: user.publicKey,
-        program: this.program.programId,
+        mintA,
+        mintB,
+        userTaA,
+        userTaB,
+        tokenProgramA,
+        tokenProgramB,
       })
-      .signers([payer, user])
+      .signers([user])
       .rpc();
+
+    // Wait for transaction confirmation
+    const confirmation = await this.connection.confirmTransaction(signature);
+
+    if (confirmation.value.err) {
+      throw new Error(`Transaction failed: ${confirmation.value.err}`);
+    }
+
     this.logTx(signature, "Buy");
-    console.log("✅ Buy successful!");
     return signature;
   }
 
   /**
    * Sells tokens back to the pool at the current bonding curve price
-   * @param {PublicKey} pool - Address of the trading pool
-   * @param {Keypair} payer - Keypair that will pay for the transaction
-   * @param {Keypair} user - Keypair that owns the tokens to sell
-   * @param {PublicKey} mint - Address of the token mint
+   * @param {PublicKey} owner - Public key of the pool owner
+   * @param {PublicKey} mintA - Address of the token mint for the A side
+   * @param {PublicKey} mintB - Address of the token mint for the B side
+   * @param {Keypair} user - User's keypair
+   * @param {PublicKey} userTaA - Address of the user's token account for the A side
+   * @param {PublicKey} userTaB - Address of the user's token account for the B side
+   * @param {PublicKey} tokenProgramA - Token program for the A side
+   * @param {PublicKey} tokenProgramB - Token program for the B side
    * @param {anchor.BN} amount - Amount of tokens to sell
-   * @param {anchor.BN} [limit=new anchor.BN(0)] - Minimum amount of SOL to receive (slippage protection)
+   * @param {anchor.BN} limit - Maximum amount of token A expected to receive
    * @returns {Promise<string>} Transaction signature
    * @throws Will throw if the slippage limit is not met or if there's insufficient liquidity
    */
   async sell(
-    pool: PublicKey,
-    payer: Keypair,
+    owner: PublicKey,
+    mintA: PublicKey,
+    mintB: PublicKey,
     user: Keypair,
-    mint: PublicKey,
+    userTaA: PublicKey,
+    userTaB: PublicKey,
+    tokenProgramA: PublicKey,
+    tokenProgramB: PublicKey,
     amount: anchor.BN,
-    limit: anchor.BN = new anchor.BN(0)
+    limit: anchor.BN
   ) {
-    console.log(`💱 Selling ${amount.toString()} tokens...`);
-    console.log(`📊 Slippage limit: ${limit.toString()} lamports`);
-
-    const vault = await getAssociatedTokenAddress(mint, pool, true);
-
-    console.log("📡 Sending sell transaction...");
-    const signature = await this.program.methods
+    this.log("📡 Sending sell transaction...");
+    const signature = await this.amm.methods
       .sell({
         amount,
         limit,
       })
       .accounts({
-        pool,
-        mint,
-        vault,
+        owner,
         user: user.publicKey,
-        program: this.program.programId,
+        mintA,
+        mintB,
+        userTaA,
+        userTaB,
+        tokenProgramA,
+        tokenProgramB,
       })
-      .signers([payer, user])
+      .signers([user])
       .rpc();
 
     this.logTx(signature, "Sell");
-    console.log("✅ Sell successful!");
+    this.log("✅ Sell successful!");
     return signature;
   }
 
   /**
    * Claims accumulated royalty fees from a pool
    * @param {PublicKey} pool - Address of the trading pool
-   * @param {Keypair} payer - Keypair that will pay for the transaction
    * @param {Keypair} claimer - Keypair authorized to claim royalties (must be royalties owner)
-   * @param {PublicKey} [receiver] - Optional address to receive the royalties (defaults to wallet address)
+   * @param {PublicKey} mintA - Address of the token mint A
+   * @param {PublicKey} receiverTaA - Address of the receiver's token account for the A side
+   * @param {PublicKey} tokenProgramA - Token program for the A side
    * @returns {Promise<string>} Transaction signature
    * @throws Will throw if claimer is not the authorized royalties owner
    */
   async claimRoyalties(
     pool: PublicKey,
-    payer: Keypair,
     claimer: Keypair,
-    receiver: PublicKey = this.wallet.publicKey
+    mintA: PublicKey,
+    receiverTaA: PublicKey,
+    tokenProgramA: PublicKey
   ) {
-    return await this.program.methods
+    const signature = await this.amm.methods
       .claim()
       .accounts({
         pool,
         claimer: claimer.publicKey,
-        receiver,
+        receiverTaA,
+        mintA,
+        tokenProgramA,
       })
-      .signers([payer, claimer])
+      .signers([claimer])
       .rpc();
+
+    this.logTx(signature, "Claim royalties");
+    return signature;
   }
 
   /**
-   * Fetches the current state of a trading pool
-   * @param {PublicKey} pool - Address of the trading pool
-   * @returns {Promise<any>} Pool state including token reserves, fees, and other parameters
-   * @throws Will throw if the pool address is invalid or doesn't exist
+   * Creates a new factory
+   * @param {Keypair} payer  - Keypair that will pay for the transaction
+   * @param {Keypair} owner  - Keypair that will own the factory
+   * @param {PublicKey} mint - Public key of the token mint for the A side
+   * @param {Object} params  - Factory initialization parameters
+   * @param {anchor.BN} params.shift - Constant product shift
+   * @param {anchor.BN} params.initialTokenReserves - Initial token reserves for pools
+   * @param {Object} params.feeParams - Fee parameters
+   * @param {anchor.BN} params.feeParams.normalizationPeriod - Normalization period in slots
+   * @param {number} params.feeParams.decay - Fee decay rate
+   * @param {number} params.feeParams.royaltiesBps - Royalty fee in basis points
+   * @param {Object} params.tokenParams - Token parameters
+   * @param {number} params.tokenParams.decimals - Token decimals
+   * @param {boolean} params.tokenParams.mutable - Whether token metadata is mutable
+   * @returns {Promise<string>} Transaction signature
    */
-  async getPoolState(pool: PublicKey) {
-    console.log(`🔍 Fetching pool state for ${pool.toString()}...`);
-    return await this.program.account.pool.fetch(pool);
+  async createFactory(
+    payer: Keypair,
+    owner: Keypair,
+    mint: PublicKey,
+    params: {
+      shift: anchor.BN;
+      initialTokenReserves: anchor.BN;
+      feeParams: {
+        normalizationPeriod: anchor.BN;
+        decay: number;
+        royaltiesBps: number;
+      };
+      tokenParams: {
+        decimals: number;
+        mutable: boolean;
+      };
+    }
+  ): Promise<string> {
+    this.log("🏭 Creating new factory...");
+    const signature = await this.factory.methods
+      .initialize(params)
+      .accounts({
+        payer: payer.publicKey,
+        owner: owner.publicKey,
+        mintA: mint,
+      })
+      .signers([owner, payer])
+      .rpc();
+
+    this.logTx(signature, "Factory creation");
+    this.log("✅ Factory created successfully!");
+    return signature;
+  }
+
+  /**
+   * Launches a new trading pool from an existing factory
+   * @param {Keypair} payer - Keypair that will pay for the transaction
+   * @param {Keypair} owner - Keypair of the factory owner
+   * @param {PublicKey} mintA- Keypair that will control the A side token mint
+   * @param {Keypair} mintB - Keypair that will control the B side token mint
+   * @param {Keypair} mintAuthority - Keypair that will control the token mint
+   * @param {PublicKey} tokenProgramA - Public key of the token program for the A side
+   * @param {PublicKey} tokenProgramB - Public key of the token program for the B side
+   * @param {Object} launchCfg - Launch configuration parameters
+   * @param {Object} launchCfg.tokenConfig - Token configuration parameters
+   * @param {string} launchCfg.tokenConfig.name - Token name
+   * @param {string} launchCfg.tokenConfig.symbol - Token symbol
+   * @param {string} launchCfg.tokenConfig.uri - Token metadata URI
+   * @param {number} launchCfg.feeFreeBuys - Number of fee-free buys allowed
+   * @param {anchor.BN} [devBuyAmount] - Optional amount of SOL (in lamports) for initial token purchase
+   * @param {Keypair} [dev] - Optional Keypair to receive initial dev tokens
+   * @param {PublicKey} [devTaA] - Optional token account of the receiver for the A side
+   * @param {PublicKey} [devTaB] - Optional token account of the receiver for the B side
+   * @returns {Promise<{ signature: string, mint: PublicKey }>} Transaction signature and mint address
+   */
+  async launchFromFactory(
+    payer: Keypair,
+    owner: Keypair,
+    mintA: PublicKey,
+    mintB: Keypair,
+    mintBAuthority: Keypair,
+    tokenProgramA: PublicKey,
+    tokenProgramB: PublicKey,
+    launchCfg: {
+      tokenConfig: {
+        name: string;
+        symbol: string;
+        uri: string;
+      };
+      reference: anchor.BN;
+      feeFreeBuys: number;
+    },
+    devBuyAmount?: anchor.BN,
+    dev?: Keypair,
+    devTaA?: PublicKey,
+    devTaB?: PublicKey
+  ): Promise<{
+    signature: string;
+  }> {
+    const [factory, bump] = PublicKey.findProgramAddressSync(
+      [Buffer.from("factory"), owner.publicKey.toBuffer()],
+      this.factory.programId
+    );
+
+    const params = {
+      ...launchCfg,
+      bump,
+    };
+
+    const tx = this.factory.methods
+      .launch(params)
+      .accounts({
+        payer: payer.publicKey,
+        owner: owner.publicKey,
+        mintA: mintA,
+        mintB: mintB.publicKey,
+        mintBAuthority: mintBAuthority.publicKey,
+        tokenProgramA: tokenProgramA,
+        tokenProgramB: tokenProgramB,
+      })
+      .signers([owner, payer, mintBAuthority, mintB]);
+
+    // Send transaction
+    const launchSignature = await tx.rpc();
+    // TODO combine trasnactions
+
+    this.logTx(launchSignature, "Pool creation from factory");
+
+    // If dev buy is requested, add the buy instruction
+    if (devBuyAmount && dev && devTaA && devTaB) {
+      this.log("📡 Sending transaction...");
+
+      const signature = await this.amm.methods
+        .buy({
+          amount: devBuyAmount,
+          limit: new anchor.BN(0),
+        })
+        .accounts({
+          user: dev.publicKey,
+          mintA: mintA,
+          mintB: mintB.publicKey,
+          userTaA: devTaA,
+          userTaB: devTaB,
+          tokenProgramA: tokenProgramA,
+          tokenProgramB: tokenProgramB,
+        })
+        .signers([dev])
+        .rpc();
+
+      this.logTx(signature, "Dev buy");
+    }
+
+    return {
+      signature: launchSignature,
+    };
+  }
+
+  /**
+   * Disables a pool
+   * @param {Keypair} owner - Keypair of the pool owner
+   * @param {PublicKey} pool - Address of the trading pool
+   * @returns {Promise<string>} Transaction signature
+   */
+  async disablePool(owner: Keypair, pool: PublicKey) {
+    const signature = await this.amm.methods
+      .disable()
+      .accounts({ pool, owner: owner.publicKey })
+      .signers([owner])
+      .rpc();
+
+    this.logTx(signature, "Disable pool");
+    return signature;
+  }
+
+  /**
+   * Enables a pool
+   * @param {Keypair} owner - Keypair of the pool owner
+   * @param {PublicKey} pool - Address of the trading pool
+   * @returns {Promise<string>} Transaction signature
+   */
+  async enablePool(owner: Keypair, pool: PublicKey) {
+    const signature = await this.amm.methods
+      .enable()
+      .accounts({ pool, owner: owner.publicKey })
+      .signers([owner])
+      .rpc();
+
+    this.logTx(signature, "Enable pool");
+    return signature;
   }
 }

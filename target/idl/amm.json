@@ -36,7 +36,15 @@
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mint_a"
+              },
+              {
+                "kind": "account",
+                "path": "mint_b"
               }
             ]
           }
@@ -47,18 +55,30 @@
           "signer": true
         },
         {
-          "name": "mint",
-          "writable": true
+          "name": "owner"
         },
         {
-          "name": "user_ta",
+          "name": "mint_a"
+        },
+        {
+          "name": "mint_b"
+        },
+        {
+          "name": "user_ta_a",
           "docs": [
             "Can be any token account owned by the user for this mint"
           ],
           "writable": true
         },
         {
-          "name": "vault",
+          "name": "user_ta_b",
+          "docs": [
+            "Can be any token account owned by the user for this mint"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault_a",
           "writable": true,
           "pda": {
             "seeds": [
@@ -68,58 +88,36 @@
               },
               {
                 "kind": "account",
-                "path": "token_program"
+                "path": "mint_a"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_b",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pool"
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "mint_b"
               }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
+            ]
           }
+        },
+        {
+          "name": "token_program_a"
+        },
+        {
+          "name": "token_program_b"
         },
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "token_program"
         },
         {
           "name": "program",
@@ -164,11 +162,36 @@
           "signer": true
         },
         {
-          "name": "receiver",
+          "name": "mint_a",
           "docs": [
-            "The account that will receive the claimed funds"
+            "The token mint of the tokens used in the pool."
+          ]
+        },
+        {
+          "name": "vault_a",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "mint_a"
+              }
+            ]
+          }
+        },
+        {
+          "name": "receiver_ta_a",
+          "docs": [
+            "Can be any token account owned by the user for this mint"
           ],
           "writable": true
+        },
+        {
+          "name": "token_program_a"
         }
       ],
       "args": []
@@ -193,101 +216,27 @@
         },
         {
           "name": "owner",
-          "docs": [
-            "The user who pays for creation and owns the owner signature."
-          ],
-          "writable": true,
           "signer": true
         },
         {
           "name": "token_wallet_authority",
-          "docs": [
-            "Token wallet authority"
-          ],
-          "writable": true,
           "signer": true
         },
         {
-          "name": "royalties_owner",
-          "docs": [
-            "The account that will receive royalties (can be the same as owner or different)."
-          ],
-          "writable": true
+          "name": "mint_a"
         },
         {
-          "name": "mint",
-          "docs": [
-            "The token mint of the tokens used in the pool."
-          ],
-          "writable": true
+          "name": "mint_b"
         },
         {
-          "name": "token_wallet",
+          "name": "token_wallet_b",
           "docs": [
-            "Token wallet where the initial token reserves come from"
+            "Token wallet that funds the pool with token B."
           ],
-          "writable": true,
-          "pda": {
-            "seeds": [
-              {
-                "kind": "account",
-                "path": "token_wallet_authority"
-              },
-              {
-                "kind": "account",
-                "path": "token_program"
-              },
-              {
-                "kind": "account",
-                "path": "mint"
-              }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
-          }
+          "writable": true
         },
         {
           "name": "pool",
-          "docs": [
-            "The PDA that holds the `Pool` state.",
-            "We use the seed = [POOL_SEED, mint.key()] and store the `bump` automatically.",
-            "We allocate enough space for Pool::LEN + 8 (discriminator)."
-          ],
           "writable": true,
           "pda": {
             "seeds": [
@@ -302,17 +251,21 @@
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mint_a"
+              },
+              {
+                "kind": "account",
+                "path": "mint_b"
               }
             ]
           }
         },
         {
-          "name": "vault",
-          "docs": [
-            "The Vault ATA owned by the Pool PDA.",
-            "Anchor will create it if necessary."
-          ],
+          "name": "vault_a",
           "writable": true,
           "pda": {
             "seeds": [
@@ -322,61 +275,35 @@
               },
               {
                 "kind": "account",
-                "path": "token_program"
-              },
-              {
-                "kind": "account",
-                "path": "mint"
+                "path": "mint_a"
               }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
+            ]
           }
         },
         {
-          "name": "token_program",
+          "name": "vault_b",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pool"
+              },
+              {
+                "kind": "account",
+                "path": "mint_b"
+              }
+            ]
+          }
+        },
+        {
+          "name": "token_program_a",
           "docs": [
             "Required programs and sysvars"
           ]
         },
         {
-          "name": "associated_token_program",
-          "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
+          "name": "token_program_b"
         },
         {
           "name": "system_program",
@@ -397,6 +324,54 @@
           }
         }
       ]
+    },
+    {
+      "name": "disable",
+      "discriminator": [
+        185,
+        173,
+        187,
+        90,
+        216,
+        15,
+        238,
+        233
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true
+        },
+        {
+          "name": "pool",
+          "writable": true
+        }
+      ],
+      "args": []
+    },
+    {
+      "name": "enable",
+      "discriminator": [
+        159,
+        34,
+        127,
+        41,
+        193,
+        53,
+        124,
+        27
+      ],
+      "accounts": [
+        {
+          "name": "owner",
+          "signer": true
+        },
+        {
+          "name": "pool",
+          "writable": true
+        }
+      ],
+      "args": []
     },
     {
       "name": "quote_buy",
@@ -426,13 +401,27 @@
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mint_a"
+              },
+              {
+                "kind": "account",
+                "path": "mint_b"
               }
             ]
           }
         },
         {
-          "name": "mint"
+          "name": "owner"
+        },
+        {
+          "name": "mint_a"
+        },
+        {
+          "name": "mint_b"
         },
         {
           "name": "program",
@@ -483,13 +472,27 @@
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mint_a"
+              },
+              {
+                "kind": "account",
+                "path": "mint_b"
               }
             ]
           }
         },
         {
-          "name": "mint"
+          "name": "owner"
+        },
+        {
+          "name": "mint_a"
+        },
+        {
+          "name": "mint_b"
         },
         {
           "name": "program",
@@ -541,7 +544,15 @@
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "owner"
+              },
+              {
+                "kind": "account",
+                "path": "mint_a"
+              },
+              {
+                "kind": "account",
+                "path": "mint_b"
               }
             ]
           }
@@ -552,18 +563,30 @@
           "signer": true
         },
         {
-          "name": "mint",
-          "writable": true
+          "name": "owner"
         },
         {
-          "name": "user_ta",
+          "name": "mint_a"
+        },
+        {
+          "name": "mint_b"
+        },
+        {
+          "name": "user_ta_a",
           "docs": [
             "Can be any token account owned by the user for this mint"
           ],
           "writable": true
         },
         {
-          "name": "vault",
+          "name": "user_ta_b",
+          "docs": [
+            "Can be any token account owned by the user for this mint"
+          ],
+          "writable": true
+        },
+        {
+          "name": "vault_a",
           "writable": true,
           "pda": {
             "seeds": [
@@ -573,58 +596,36 @@
               },
               {
                 "kind": "account",
-                "path": "token_program"
+                "path": "mint_a"
+              }
+            ]
+          }
+        },
+        {
+          "name": "vault_b",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "account",
+                "path": "pool"
               },
               {
                 "kind": "account",
-                "path": "mint"
+                "path": "mint_b"
               }
-            ],
-            "program": {
-              "kind": "const",
-              "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
-              ]
-            }
+            ]
           }
+        },
+        {
+          "name": "token_program_a"
+        },
+        {
+          "name": "token_program_b"
         },
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
-        },
-        {
-          "name": "token_program"
         },
         {
           "name": "program",
@@ -702,51 +703,71 @@
   "errors": [
     {
       "code": 6000,
+      "name": "PoolDisabled",
+      "msg": "Pool Disabled"
+    },
+    {
+      "code": 6001,
+      "name": "OwnerMustBeSystemAccount",
+      "msg": "Owner must be a system account (wallet), not a PDA"
+    },
+    {
+      "code": 6002,
+      "name": "InvalidFeeDecay",
+      "msg": "Invalid Fee Decay"
+    },
+    {
+      "code": 6003,
       "name": "InvalidInitialTokenReserves",
       "msg": "Initial token reserves must be greater than 0"
     },
     {
-      "code": 6001,
+      "code": 6004,
+      "name": "InvalidMint",
+      "msg": "Invalid Mint"
+    },
+    {
+      "code": 6005,
       "name": "InvalidTokenAccount",
       "msg": "Invalid Token Account"
     },
     {
-      "code": 6002,
+      "code": 6006,
       "name": "InsufficientFunds",
       "msg": "Insufficient Funds"
     },
     {
-      "code": 6003,
-      "name": "InvalidConstant",
-      "msg": "Constant must be greater than 0"
+      "code": 6007,
+      "name": "InvalidShift",
+      "msg": "Shift must be greater than 0"
     },
     {
-      "code": 6004,
+      "code": 6008,
       "name": "InvalidFees",
       "msg": "Fees must be between 0 and 10000 basis points"
     },
     {
-      "code": 6005,
+      "code": 6009,
       "name": "MathOverflow",
       "msg": "MathOverflow"
     },
     {
-      "code": 6006,
+      "code": 6010,
       "name": "InsufficientOutput",
       "msg": "Insufficient output"
     },
     {
-      "code": 6007,
+      "code": 6011,
       "name": "InsufficientInput",
       "msg": "Insufficient input"
     },
     {
-      "code": 6008,
+      "code": 6012,
       "name": "IllegalClaimant",
       "msg": "Illegal Claimant"
     },
     {
-      "code": 6009,
+      "code": 6013,
       "name": "PoolEmpty",
       "msg": "Pool Empty"
     }
@@ -774,11 +795,11 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "constant",
+            "name": "shift",
             "type": "u128"
           },
           {
-            "name": "initial_token_reserves",
+            "name": "initial_token_b_reserves",
             "type": "u64"
           },
           {
@@ -832,13 +853,6 @@
             "type": "u16"
           },
           {
-            "name": "protocol_fee_bps",
-            "docs": [
-              "Protocol fee in basis points."
-            ],
-            "type": "u16"
-          },
-          {
             "name": "fee_exempt_buys",
             "docs": [
               "Number of fee exempt buys."
@@ -858,15 +872,27 @@
             "type": "bool"
           },
           {
-            "name": "lamports_reserves",
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_a",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_b",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_a_reserves",
             "type": "u128"
           },
           {
-            "name": "token_reserves",
+            "name": "token_b_reserves",
             "type": "u128"
           },
           {
-            "name": "constant",
+            "name": "shift",
             "type": "u128"
           },
           {
@@ -874,7 +900,7 @@
             "type": "u64"
           },
           {
-            "name": "protocol_fees",
+            "name": "vertigo_fees",
             "type": "u64"
           },
           {
@@ -888,14 +914,6 @@
                 "name": "FeeParams"
               }
             }
-          },
-          {
-            "name": "royalties_owner",
-            "type": "pubkey"
-          },
-          {
-            "name": "owner",
-            "type": "pubkey"
           }
         ]
       }
@@ -910,7 +928,11 @@
             "type": "pubkey"
           },
           {
-            "name": "mint",
+            "name": "mint_a",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_b",
             "type": "pubkey"
           },
           {
@@ -918,15 +940,11 @@
             "type": "pubkey"
           },
           {
-            "name": "royalties_owner",
-            "type": "pubkey"
-          },
-          {
             "name": "initial_token_reserves",
             "type": "u64"
           },
           {
-            "name": "constant",
+            "name": "shift",
             "type": "u128"
           },
           {
@@ -978,23 +996,23 @@
         "kind": "struct",
         "fields": [
           {
-            "name": "new_lamports_reserves",
+            "name": "new_reserves_a",
             "type": "u128"
           },
           {
-            "name": "new_token_reserves",
+            "name": "new_reserves_b",
             "type": "u128"
           },
           {
-            "name": "lamports_amount",
+            "name": "amount_a",
             "type": "u64"
           },
           {
-            "name": "token_amount",
+            "name": "amount_b",
             "type": "u64"
           },
           {
-            "name": "fees_lamports",
+            "name": "fee_a",
             "type": "u64"
           }
         ]

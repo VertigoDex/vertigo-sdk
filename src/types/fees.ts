@@ -13,8 +13,6 @@ export interface FeeParams {
   reference: anchor.BN;
   /** Royalty fee in basis points (1/100th of a percent) */
   royaltiesBps: number;
-  /** Protocol fee in basis points (1/100th of a percent) */
-  protocolFeeBps: number;
   /** Number of buys exempt from fees */
   feeExemptBuys: number;
 }
