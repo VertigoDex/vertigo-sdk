@@ -9,6 +9,8 @@
 
 Vertigo revolutionizes token launches on Solana with a focus on fairness, simplicity, and transparency. Our innovative AMM design eliminates common launch problems like sniping and liquidity requirements, while providing a seamless experience for both creators and traders.
 
+📚 **[Read the full documentation](https://vertigo.gitbook.io/vertigo-docs)** to learn more about Vertigo's features and capabilities.
+
 ## Key Features
 
 ### 🛡️ Advanced Snipe Protection
