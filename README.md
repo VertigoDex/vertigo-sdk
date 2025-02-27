@@ -1,36 +1,55 @@
-# VERTIGO
+# Vertigo
 
-## Introduction
+<div align="center">
+  <img src="assets/vertigo-logo.png" alt="Vertigo Logo" width="200"/>
+  <h3>The New Meta for Fair Token Launches on Solana</h3>
+</div>
 
-**VERTIGO** is a unique AMM designed for Token launches.
+## Overview
 
-## Features
-1. Snipe Prevention
-2. Single Sided Liquidity
-3. One Time Setup
-4. Configurable Initial Price
-5. Permanent Creator Royalties
+Vertigo revolutionizes token launches on Solana with a focus on fairness, simplicity, and transparency. Our innovative AMM design eliminates common launch problems like sniping and liquidity requirements, while providing a seamless experience for both creators and traders.
 
-### Snipe Prevention
-Pool Fees are set to 100% at launch and decay quickly after launch.
-This turns sniping the pool into a Dutch Auction rather than a free-for-all.
+## Key Features
 
-Example:
-A sniper snipes the pool at slot 0 with a 1 SOL buy.
-The fee is 100%, so 100% of the 1 SOL is taken as a fee.
-The sniper receives no tokens.
-The fee is split between the royalty receiver and the pool.
+### 🛡️ Advanced Snipe Protection
+- Innovative fee mechanism that penalizes early snipers
+- Creates a fair playing field for human traders
+- Automatic fee decay system post-launch
+- Turns sniping attempts into a Dutch auction mechanism
 
-### Single Sided Liquidity
-The modified Constant Product Formula allows for simple AMM price finding without having to provide both tokens.
-The pool works without liquidity bins, and no migration is necessary.
+### 💧 Zero Initial Liquidity Required
+- Launch at any market cap without locking SOL or USDC
+- Single-sided token deposits
+- No liquidity burn requirements
+- Innovative price discovery mechanism
 
-### One Time Setup
-Pool behaviour is dynamic, but the pool itself is static.
-Due to its design, no migration is necessary either.
+### 🚀 Simple Launch Process
+Launch your token in three simple steps:
+1. Set your desired initial market cap
+2. Configure your fee structure
+3. Set your launch time
 
-### Configurable Initial Price
-By tweaking the parameters any initial price can be set **without** having to provide liquidity.
+### 🔒 Built-in Safety Features
+- Permanent liquidity locking
+- Transparent fee structures
+- Visible dev transactions
+- Immutable pool parameters after creation
 
-### Permanent Creator Royalties
-The pool creator can set a fee and a receiver for that fee that will be paid out ad infinitum.
+### 💰 Customizable Economics
+- Configurable initial market cap
+- Flexible fee structures
+- Permanent royalty system
+- Dynamic pool behavior with static implementation
+
+## Getting Started
+
+### Prerequisites
+- Solana CLI tools
+- Node.js 16+
+- Yarn or npm
+
+### Installation
+```bash
+npm install @vertigo/sdk
+# or
+yarn add @vertigo/sdk
