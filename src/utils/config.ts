@@ -27,6 +27,7 @@ export function createPoolConfig(
  * @param {number} [decay=1.0] - Rate at which fees decay back to base rate (0.0 to 1.0)
  * @param {number} [royaltiesBps=50] - Royalty fee in basis points (1 bps = 0.01%)
  * @param {number} [feeExemptBuys=0] - Number of initial buys exempt from fees
+ * @param {anchor.BN} [reference=new anchor.BN(0)] - Reference timestamp for fee calculations
  * @returns {FeeParams} Fee parameters object
  */
 export function createFeeParams(

@@ -1,4 +1,4 @@
-import { VertigoSDK } from "@vertigoamm/vertigo-sdk";
+import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
 import { Connection, Keypair, LAMPORTS_PER_SOL } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { createMint } from "@solana/spl-token";

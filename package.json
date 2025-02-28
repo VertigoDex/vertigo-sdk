@@ -1,5 +1,5 @@
 {
-  "name": "@vertigoamm/vertigo-sdk",
+  "name": "@vertigo-amm/vertigo-sdk",
   "version": "0.1.0",
   "description": "SDK for interacting with the Vertigo AMM protocol",
   "main": "dist/index.js",

@@ -1,4 +1,4 @@
-import { VertigoSDK } from "@vertigoamm/vertigo-sdk";
+import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
 import { Connection, Keypair } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 
