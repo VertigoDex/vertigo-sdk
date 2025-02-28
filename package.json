@@ -1,6 +1,6 @@
 {
-  "name": "@vertigoamm/vertigo-sdk",
-  "version": "0.1.0",
+  "name": "@vertigo-amm/vertigo-sdk",
+  "version": "0.1.1",
   "description": "SDK for interacting with the Vertigo AMM protocol",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
@@ -41,8 +41,5 @@
     "prettier": "^2.6.2",
     "ts-mocha": "^10.0.0",
     "typescript": "~4.9.5"
-  },
-  "publishConfig": {
-    "access": "restricted"
   }
 }
