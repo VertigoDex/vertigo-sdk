@@ -45,24 +45,12 @@ async function main() {
   );
   const wallet = new anchor.Wallet(walletKeypair);
 
-<<<<<<< HEAD
   // Initialize Vertigo SDK
-  const vertigo = new VertigoSDK(connection, wallet);
+  const vertigo = new VertigoSDK(connection);
 
   /* 
   2. Prepare relevant params for pool and mint 
   */
-=======
-// Pool configuration parameters
-const POOL_PARAMS: PoolConfig = {
-  // Virtual SOL shift that determines the pool's price curve
-  // Higher values create a flatter curve with less price impact
-  shift: new anchor.BN(LAMPORTS_PER_SOL).muln(100), // 100 virtual SOL
-
-  // Initial token supply to seed the pool with
-  // 1 billion tokens with 6 decimal places
-  initialTokenBReserves: new anchor.BN(1_000_000_000).muln(10 ** DECIMALS),
->>>>>>> 60a586369a2dce9308c48c3a961f17a6ecb1d838
 
   // Number of decimal places for the token mint
   const DECIMALS = 6;
