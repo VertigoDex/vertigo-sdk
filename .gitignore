@@ -4,3 +4,5 @@ yarn.lock
 dist/
 target/**/*.d.ts
 target/**/*.js
+users/**
+.DS_Store

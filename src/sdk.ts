@@ -1,11 +1,12 @@
 import * as anchor from "@coral-xyz/anchor";
 import { BN, type Program } from "@coral-xyz/anchor";
 import { type Keypair, type Connection, PublicKey } from "@solana/web3.js";
-import type { Amm } from "../../target/types/amm";
-import type { Factory } from "../../target/types/factory";
+import type { Amm } from "../target/types/amm";
+import type { Factory } from "../target/types/factory";
 
 import { POOL_SEED, type PoolConfig } from "./types";
 import dotenv from "dotenv";
+import { factory } from "typescript";
 
 dotenv.config();
 
@@ -78,37 +79,51 @@ export class VertigoSDK {
 
   /**
    * Launches a new trading pool with the specified configuration
-   * @param {PoolConfig} poolParams - Pool configuration parameters including bonding curve constant and fee structure
-   * @param {Keypair} payer - Keypair that will pay for the transaction
-   * @param {Keypair} owner - Keypair that will own the pool
-   * @param {Keypair} tokenWalletAuthority - Keypair with authority over the token wallet
-   * @param {PublicKey} tokenWalletB - Public key of the token wallet for the B side
-   * @param {PublicKey} mintA - Public key of the token mint for the A side
-   * @param {PublicKey} mintB - Public key of the token mint for the B side
-   * @param {PublicKey} tokenProgramA - Token program for the A side
-   * @param {PublicKey} tokenProgramB - Token program for the B side
-   * @param {anchor.BN} [devBuyAmount] - Optional amount of SOL (in lamports) for initial token purchase
-   * @param {Keypair} [dev] - Optional Keypair to receive initial dev tokens
+   * @param {PoolConfig} args.poolParams - Pool configuration parameters including bonding curve constant and fee structure
+   * @param {Keypair} args.payer - Keypair that will pay for the transaction
+   * @param {Keypair} args.owner - Keypair that will own the pool
+   * @param {Keypair} args.tokenWalletAuthority - Keypair with authority over the token wallet
+   * @param {PublicKey} args.tokenWalletB - Public key of the token wallet for the B side
+   * @param {PublicKey} args.mintA - Public key of the token mint for the A side
+   * @param {PublicKey} args.mintB - Public key of the token mint for the B side
+   * @param {PublicKey} args.tokenProgramA - Token program for the A side
+   * @param {PublicKey} args.tokenProgramB - Token program for the B side
+   * @param {anchor.BN} [args.devBuyAmount] - Optional amount of SOL (in lamports) for initial token purchase
+   * @param {Keypair} [args.dev] - Optional Keypair to receive initial dev tokens
    *
    * @returns {Promise<{
    *   signature: string,
    * }>} Object containing transaction signature and relevant addresses
    */
-  async launchPool(
-    poolParams: PoolConfig,
-    payer: Keypair,
-    owner: Keypair,
-    tokenWalletAuthority: Keypair,
-    tokenWalletB: PublicKey,
-    mintA: PublicKey,
-    mintB: PublicKey,
-    tokenProgramA: PublicKey,
-    tokenProgramB: PublicKey,
-    devBuyAmount?: anchor.BN,
-    dev?: Keypair,
-    devTaA?: PublicKey,
-    devTaB?: PublicKey
-  ): Promise<{ signature: string }> {
+  async launchPool({
+    poolParams,
+    payer,
+    owner,
+    tokenWalletAuthority,
+    tokenWalletB,
+    mintA,
+    mintB,
+    tokenProgramA,
+    tokenProgramB,
+    devBuyAmount,
+    dev,
+    devTaA,
+    devTaB,
+  }: {
+    poolParams: PoolConfig;
+    payer: Keypair;
+    owner: Keypair;
+    tokenWalletAuthority: Keypair;
+    tokenWalletB: PublicKey;
+    mintA: PublicKey;
+    mintB: PublicKey;
+    tokenProgramA: PublicKey;
+    tokenProgramB: PublicKey;
+    devBuyAmount?: anchor.BN;
+    dev?: Keypair;
+    devTaA?: PublicKey;
+    devTaB?: PublicKey;
+  }): Promise<{ signature: string; poolAddress: PublicKey }> {
     this.log("🚀 Launching new pool...");
 
     const [pool, bump] = PublicKey.findProgramAddressSync(
@@ -170,25 +185,32 @@ export class VertigoSDK {
 
     return {
       signature: createSignature,
+      poolAddress: pool,
     };
   }
 
   /**
    * Gets a quote for buying tokens from a pool
-   * @param {anchor.BN} amount - Amount of token A to buy
-   * @param {anchor.BN} limit - Maximum amount of token B expected to receive
-   * @param {PublicKey} owner - Pool owner's public key
-   * @param {PublicKey} mintA - Address of the token mint for the A side
-   * @param {PublicKey} mintB - Address of the token mint for the B side
+   * @param {anchor.BN} args.amount - Amount of token A to buy
+   * @param {anchor.BN} args.limit - Maximum amount of token B expected to receive
+   * @param {PublicKey} args.owner - Pool owner's public key
+   * @param {PublicKey} args.mintA - Address of the token mint for the A side
+   * @param {PublicKey} args.mintB - Address of the token mint for the B side
    * @returns {Promise<{amountB: BN, feeA: BN}>} Quote containing expected token amount and fees
    */
-  async quoteBuy(
-    amount: anchor.BN,
-    limit: anchor.BN,
-    owner: PublicKey,
-    mintA: PublicKey,
-    mintB: PublicKey
-  ) {
+  async quoteBuy({
+    amount,
+    limit,
+    owner,
+    mintA,
+    mintB,
+  }: {
+    amount: anchor.BN;
+    limit: anchor.BN;
+    owner: PublicKey;
+    mintA: PublicKey;
+    mintB: PublicKey;
+  }): Promise<{ amountB: anchor.BN; feeA: anchor.BN }> {
     return this.amm.methods
       .quoteBuy({ amount, limit })
       .accounts({ owner, mintA, mintB })
@@ -197,20 +219,26 @@ export class VertigoSDK {
 
   /**
    * Gets a quote for selling tokens to a pool
-   * @param {anchor.BN} amount - Amount of token B to sell
-   * @param {anchor.BN} limit - Minimum amount of token A expected to receive
-   * @param {PublicKey} owner - Pool owner's public key
-   * @param {PublicKey} mintA - Address of the token mint for the A side
-   * @param {PublicKey} mintB - Address of the token mint for the B side
+   * @param {anchor.BN} args.amount - Amount of token B to sell
+   * @param {anchor.BN} args.limit - Minimum amount of token A expected to receive
+   * @param {PublicKey} args.owner - Pool owner's public key
+   * @param {PublicKey} args.mintA - Address of the token mint for the A side
+   * @param {PublicKey} args.mintB - Address of the token mint for the B side
    * @returns {Promise<{amountA: BN, feeA: BN}>} Quote containing expected token A amount and fees
    */
-  async quoteSell(
-    amount: anchor.BN,
-    limit: anchor.BN,
-    owner: PublicKey,
-    mintA: PublicKey,
-    mintB: PublicKey
-  ) {
+  async quoteSell({
+    amount,
+    limit,
+    owner,
+    mintA,
+    mintB,
+  }: {
+    amount: anchor.BN;
+    limit: anchor.BN;
+    owner: PublicKey;
+    mintA: PublicKey;
+    mintB: PublicKey;
+  }): Promise<{ amountA: anchor.BN; feeA: anchor.BN }> {
     return this.amm.methods
       .quoteSell({ amount, limit })
       .accounts({ owner, mintA, mintB })
@@ -219,31 +247,44 @@ export class VertigoSDK {
 
   /**
    * Buys tokens from a pool using the bonding curve price
-   * @param {PublicKey} owner - Address of the pool owner
-   * @param {Keypair} user - Address of the user
-   * @param {PublicKey} mintA - Address of the token mint for the A side
-   * @param {PublicKey} mintB - Address of the token mint for the B side
-   * @param {PublicKey} userTaA - Address of the user's token account for the A side
-   * @param {PublicKey} userTaB - Address of the user's token account for the B side
-   * @param {PublicKey} tokenProgramA - Token program for the A side
-   * @param {PublicKey} tokenProgramB - Token program for the B side
-   * @param {anchor.BN} amount - Amount of SOL to spend (in lamports)
-   * @param {anchor.BN} limit - Maximum amount of token B expected to receive
+   * @param {Object} args - The arguments object
+   * @param {PublicKey} args.owner - Address of the pool owner
+   * @param {Keypair} args.user - Address of the user
+   * @param {PublicKey} args.mintA - Address of the token mint for the A side
+   * @param {PublicKey} args.mintB - Address of the token mint for the B side
+   * @param {PublicKey} args.userTaA - Address of the user's token account for the A side
+   * @param {PublicKey} args.userTaB - Address of the user's token account for the B side
+   * @param {PublicKey} args.tokenProgramA - Token program for the A side
+   * @param {PublicKey} args.tokenProgramB - Token program for the B side
+   * @param {anchor.BN} args.amount - Amount of SOL to spend (in lamports)
+   * @param {anchor.BN} args.limit - Maximum amount of token B expected to receive
    * @returns {Promise<string>} Transaction signature
    * @throws Will throw if the slippage limit is not met or if there's insufficient liquidity
    */
-  async buy(
-    owner: PublicKey,
-    user: Keypair,
-    mintA: PublicKey,
-    mintB: PublicKey,
-    userTaA: PublicKey,
-    userTaB: PublicKey,
-    tokenProgramA: PublicKey,
-    tokenProgramB: PublicKey,
-    amount: anchor.BN,
-    limit: anchor.BN
-  ) {
+  async buy({
+    owner,
+    user,
+    mintA,
+    mintB,
+    userTaA,
+    userTaB,
+    tokenProgramA,
+    tokenProgramB,
+    amount,
+    limit,
+  }: {
+    owner: PublicKey;
+    user: Keypair;
+    mintA: PublicKey;
+    mintB: PublicKey;
+    userTaA: PublicKey;
+    userTaB: PublicKey;
+    tokenProgramA: PublicKey;
+    tokenProgramB: PublicKey;
+    amount: anchor.BN;
+    limit: anchor.BN;
+  }): Promise<string> {
+    this.log("📡 Sending buy transaction...");
     const signature = await this.amm.methods
       .buy({
         amount,
@@ -275,31 +316,43 @@ export class VertigoSDK {
 
   /**
    * Sells tokens back to the pool at the current bonding curve price
-   * @param {PublicKey} owner - Public key of the pool owner
-   * @param {PublicKey} mintA - Address of the token mint for the A side
-   * @param {PublicKey} mintB - Address of the token mint for the B side
-   * @param {Keypair} user - User's keypair
-   * @param {PublicKey} userTaA - Address of the user's token account for the A side
-   * @param {PublicKey} userTaB - Address of the user's token account for the B side
-   * @param {PublicKey} tokenProgramA - Token program for the A side
-   * @param {PublicKey} tokenProgramB - Token program for the B side
-   * @param {anchor.BN} amount - Amount of tokens to sell
-   * @param {anchor.BN} limit - Maximum amount of token A expected to receive
+   * @param {Object} args - The arguments object
+   * @param {PublicKey} args.owner - Public key of the pool owner
+   * @param {PublicKey} args.mintA - Address of the token mint for the A side
+   * @param {PublicKey} args.mintB - Address of the token mint for the B side
+   * @param {Keypair} args.user - User's keypair
+   * @param {PublicKey} args.userTaA - Address of the user's token account for the A side
+   * @param {PublicKey} args.userTaB - Address of the user's token account for the B side
+   * @param {PublicKey} args.tokenProgramA - Token program for the A side
+   * @param {PublicKey} args.tokenProgramB - Token program for the B side
+   * @param {anchor.BN} args.amount - Amount of tokens to sell
+   * @param {anchor.BN} args.limit - Maximum amount of token A expected to receive
    * @returns {Promise<string>} Transaction signature
    * @throws Will throw if the slippage limit is not met or if there's insufficient liquidity
    */
-  async sell(
-    owner: PublicKey,
-    mintA: PublicKey,
-    mintB: PublicKey,
-    user: Keypair,
-    userTaA: PublicKey,
-    userTaB: PublicKey,
-    tokenProgramA: PublicKey,
-    tokenProgramB: PublicKey,
-    amount: anchor.BN,
-    limit: anchor.BN
-  ) {
+  async sell({
+    owner,
+    mintA,
+    mintB,
+    user,
+    userTaA,
+    userTaB,
+    tokenProgramA,
+    tokenProgramB,
+    amount,
+    limit,
+  }: {
+    owner: PublicKey;
+    mintA: PublicKey;
+    mintB: PublicKey;
+    user: Keypair;
+    userTaA: PublicKey;
+    userTaB: PublicKey;
+    tokenProgramA: PublicKey;
+    tokenProgramB: PublicKey;
+    amount: anchor.BN;
+    limit: anchor.BN;
+  }): Promise<string> {
     this.log("📡 Sending sell transaction...");
     const signature = await this.amm.methods
       .sell({
@@ -326,21 +379,28 @@ export class VertigoSDK {
 
   /**
    * Claims accumulated royalty fees from a pool
-   * @param {PublicKey} pool - Address of the trading pool
-   * @param {Keypair} claimer - Keypair authorized to claim royalties (must be royalties owner)
-   * @param {PublicKey} mintA - Address of the token mint A
-   * @param {PublicKey} receiverTaA - Address of the receiver's token account for the A side
-   * @param {PublicKey} tokenProgramA - Token program for the A side
+   * @param {Object} args - The arguments object
+   * @param {PublicKey} args.pool - Address of the trading pool
+   * @param {Keypair} args.claimer - Keypair authorized to claim royalties (must be royalties owner)
+   * @param {PublicKey} args.mintA - Address of the token mint A
+   * @param {PublicKey} args.receiverTaA - Address of the receiver's token account for the A side
+   * @param {PublicKey} args.tokenProgramA - Token program for the A side
    * @returns {Promise<string>} Transaction signature
    * @throws Will throw if claimer is not the authorized royalties owner
    */
-  async claimRoyalties(
-    pool: PublicKey,
-    claimer: Keypair,
-    mintA: PublicKey,
-    receiverTaA: PublicKey,
-    tokenProgramA: PublicKey
-  ) {
+  async claimRoyalties({
+    pool,
+    claimer,
+    mintA,
+    receiverTaA,
+    tokenProgramA,
+  }: {
+    pool: PublicKey;
+    claimer: Keypair;
+    mintA: PublicKey;
+    receiverTaA: PublicKey;
+    tokenProgramA: PublicKey;
+  }): Promise<string> {
     const signature = await this.amm.methods
       .claim()
       .accounts({
@@ -359,11 +419,11 @@ export class VertigoSDK {
 
   /**
    * Creates a new factory
-   * @param {Keypair} payer  - Keypair that will pay for the transaction
-   * @param {Keypair} owner  - Keypair that will own the factory
-   * @param {PublicKey} mint - Public key of the token mint for the A side
-   * @param {Object} params  - Factory initialization parameters
-   * @param {anchor.BN} params.shift - Constant product shift
+   * @param {Keypair} args.payer  - Keypair that will pay for the transaction
+   * @param {Keypair} args.owner  - Keypair that will own the factory
+   * @param {PublicKey} args.mint - Public key of the token mint for the A side
+   * @param {Object} args.params  - Factory initialization parameters
+   * @param {anchor.BN} args.params.shift - Constant product shift
    * @param {anchor.BN} params.initialTokenReserves - Initial token reserves for pools
    * @param {Object} params.feeParams - Fee parameters
    * @param {anchor.BN} params.feeParams.normalizationPeriod - Normalization period in slots
@@ -374,10 +434,15 @@ export class VertigoSDK {
    * @param {boolean} params.tokenParams.mutable - Whether token metadata is mutable
    * @returns {Promise<string>} Transaction signature
    */
-  async createFactory(
-    payer: Keypair,
-    owner: Keypair,
-    mint: PublicKey,
+  async createFactory({
+    payer,
+    owner,
+    mint,
+    params,
+  }: {
+    payer: Keypair;
+    owner: Keypair;
+    mint: PublicKey;
     params: {
       shift: anchor.BN;
       initialTokenReserves: anchor.BN;
@@ -390,8 +455,8 @@ export class VertigoSDK {
         decimals: number;
         mutable: boolean;
       };
-    }
-  ): Promise<string> {
+    };
+  }): Promise<string> {
     this.log("🏭 Creating new factory...");
     const signature = await this.factory.methods
       .initialize(params)
@@ -410,33 +475,47 @@ export class VertigoSDK {
 
   /**
    * Launches a new trading pool from an existing factory
-   * @param {Keypair} payer - Keypair that will pay for the transaction
-   * @param {Keypair} owner - Keypair of the factory owner
-   * @param {PublicKey} mintA- Keypair that will control the A side token mint
-   * @param {Keypair} mintB - Keypair that will control the B side token mint
-   * @param {Keypair} mintAuthority - Keypair that will control the token mint
-   * @param {PublicKey} tokenProgramA - Public key of the token program for the A side
-   * @param {PublicKey} tokenProgramB - Public key of the token program for the B side
-   * @param {Object} launchCfg - Launch configuration parameters
-   * @param {Object} launchCfg.tokenConfig - Token configuration parameters
-   * @param {string} launchCfg.tokenConfig.name - Token name
-   * @param {string} launchCfg.tokenConfig.symbol - Token symbol
-   * @param {string} launchCfg.tokenConfig.uri - Token metadata URI
-   * @param {number} launchCfg.feeFreeBuys - Number of fee-free buys allowed
-   * @param {anchor.BN} [devBuyAmount] - Optional amount of SOL (in lamports) for initial token purchase
-   * @param {Keypair} [dev] - Optional Keypair to receive initial dev tokens
-   * @param {PublicKey} [devTaA] - Optional token account of the receiver for the A side
-   * @param {PublicKey} [devTaB] - Optional token account of the receiver for the B side
+   * @param {Object} args - The arguments object
+   * @param {Keypair} args.payer - Keypair that will pay for the transaction
+   * @param {Keypair} args.owner - Keypair of the factory owner
+   * @param {PublicKey} args.mintA - Keypair that will control the A side token mint
+   * @param {Keypair} args.mintB - Keypair that will control the B side token mint
+   * @param {Keypair} args.mintBAuthority - Keypair that will control the token mint
+   * @param {PublicKey} args.tokenProgramA - Public key of the token program for the A side
+   * @param {PublicKey} args.tokenProgramB - Public key of the token program for the B side
+   * @param {Object} args.launchCfg - Launch configuration parameters
+   * @param {Object} args.launchCfg.tokenConfig - Token configuration parameters
+   * @param {string} args.launchCfg.tokenConfig.name - Token name
+   * @param {string} args.launchCfg.tokenConfig.symbol - Token symbol
+   * @param {string} args.launchCfg.tokenConfig.uri - Token metadata URI
+   * @param {number} args.launchCfg.feeFreeBuys - Number of fee-free buys allowed
+   * @param {anchor.BN} [args.devBuyAmount] - Optional amount of SOL (in lamports) for initial token purchase
+   * @param {Keypair} [args.dev] - Optional Keypair to receive initial dev tokens
+   * @param {PublicKey} [args.devTaA] - Optional token account of the receiver for the A side
+   * @param {PublicKey} [args.devTaB] - Optional token account of the receiver for the B side
    * @returns {Promise<{ signature: string, mint: PublicKey }>} Transaction signature and mint address
    */
-  async launchFromFactory(
-    payer: Keypair,
-    owner: Keypair,
-    mintA: PublicKey,
-    mintB: Keypair,
-    mintBAuthority: Keypair,
-    tokenProgramA: PublicKey,
-    tokenProgramB: PublicKey,
+  async launchFromFactory({
+    payer,
+    owner,
+    mintA,
+    mintB,
+    mintBAuthority,
+    tokenProgramA,
+    tokenProgramB,
+    launchCfg,
+    devBuyAmount,
+    dev,
+    devTaA,
+    devTaB,
+  }: {
+    payer: Keypair;
+    owner: Keypair;
+    mintA: PublicKey;
+    mintB: Keypair;
+    mintBAuthority: Keypair;
+    tokenProgramA: PublicKey;
+    tokenProgramB: PublicKey;
     launchCfg: {
       tokenConfig: {
         name: string;
@@ -445,14 +524,12 @@ export class VertigoSDK {
       };
       reference: anchor.BN;
       feeFreeBuys: number;
-    },
-    devBuyAmount?: anchor.BN,
-    dev?: Keypair,
-    devTaA?: PublicKey,
-    devTaB?: PublicKey
-  ): Promise<{
-    signature: string;
-  }> {
+    };
+    devBuyAmount?: anchor.BN;
+    dev?: Keypair;
+    devTaA?: PublicKey;
+    devTaB?: PublicKey;
+  }): Promise<{ signature: string }> {
     const [factory, bump] = PublicKey.findProgramAddressSync(
       [Buffer.from("factory"), owner.publicKey.toBuffer()],
       this.factory.programId
@@ -513,11 +590,12 @@ export class VertigoSDK {
 
   /**
    * Disables a pool
+   * @param {Object} args - The arguments object
    * @param {Keypair} owner - Keypair of the pool owner
    * @param {PublicKey} pool - Address of the trading pool
    * @returns {Promise<string>} Transaction signature
    */
-  async disablePool(owner: Keypair, pool: PublicKey) {
+  async disablePool({ owner, pool }: { owner: Keypair; pool: PublicKey }) {
     const signature = await this.amm.methods
       .disable()
       .accounts({ pool, owner: owner.publicKey })
@@ -530,11 +608,12 @@ export class VertigoSDK {
 
   /**
    * Enables a pool
+   * @param {Object} args - The arguments object
    * @param {Keypair} owner - Keypair of the pool owner
    * @param {PublicKey} pool - Address of the trading pool
    * @returns {Promise<string>} Transaction signature
    */
-  async enablePool(owner: Keypair, pool: PublicKey) {
+  async enablePool({ owner, pool }: { owner: Keypair; pool: PublicKey }) {
     const signature = await this.amm.methods
       .enable()
       .accounts({ pool, owner: owner.publicKey })
