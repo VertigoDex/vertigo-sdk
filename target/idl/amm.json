@@ -803,10 +803,6 @@
             "type": "u64"
           },
           {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
             "name": "fee_params",
             "type": {
               "defined": {

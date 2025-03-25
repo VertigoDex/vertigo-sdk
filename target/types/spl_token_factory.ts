@@ -1,7 +1,13 @@
-{
-  "address": "2ReT8B8js25vtVQ119cmmgZZK3wTUEX82DW7tfU7igbk",
+/**
+ * Program IDL in camelCase format in order to be used in JS/TS.
+ *
+ * Note that this is only a type helper and is not the actual IDL. The original
+ * IDL can be found at `target/idl/spl_token_factory.json`.
+ */
+export type SplTokenFactory = {
+  "address": "5aVnnjbhWpyxUdo2orqASygwfjKpbPcWFvVnfGU1GrNi",
   "metadata": {
-    "name": "factory",
+    "name": "splTokenFactory",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
@@ -61,17 +67,17 @@
               },
               {
                 "kind": "account",
-                "path": "mint_a"
+                "path": "mintA"
               }
             ]
           }
         },
         {
-          "name": "mint_a",
+          "name": "mintA",
           "writable": true
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "docs": [
             "Required programs and sysvars"
           ],
@@ -87,7 +93,7 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "InitializeParams"
+              "name": "initializeParams"
             }
           }
         }
@@ -113,23 +119,17 @@
         },
         {
           "name": "owner",
-          "docs": [
-            "The user who pays for creation and owns the owner signature."
-          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "amm",
-          "docs": [
-            "The Vertigo program."
-          ],
           "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX"
         },
         {
           "name": "factory",
           "docs": [
-            "The factory state account."
+            "Box the Factory account as it might contain substantial data"
           ],
           "pda": {
             "seeds": [
@@ -151,26 +151,128 @@
               },
               {
                 "kind": "account",
-                "path": "mint_a"
+                "path": "mintA"
               }
             ]
           }
         },
         {
-          "name": "mint_b_authority",
+          "name": "mintBAuthority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mintB",
           "docs": [
-            "The authority allowed to mint tokens from `mint`."
+            "Box the Mint account as it contains extension data"
           ],
           "writable": true,
           "signer": true
         },
         {
-          "name": "mint_b",
+          "name": "metadataB",
           "writable": true,
-          "signer": true
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  11,
+                  112,
+                  101,
+                  177,
+                  227,
+                  209,
+                  124,
+                  69,
+                  56,
+                  157,
+                  82,
+                  127,
+                  107,
+                  4,
+                  195,
+                  205,
+                  88,
+                  184,
+                  108,
+                  115,
+                  26,
+                  160,
+                  253,
+                  181,
+                  73,
+                  182,
+                  209,
+                  188,
+                  3,
+                  248,
+                  41,
+                  70
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mintB"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                11,
+                112,
+                101,
+                177,
+                227,
+                209,
+                124,
+                69,
+                56,
+                157,
+                82,
+                127,
+                107,
+                4,
+                195,
+                205,
+                88,
+                184,
+                108,
+                115,
+                26,
+                160,
+                253,
+                181,
+                73,
+                182,
+                209,
+                188,
+                3,
+                248,
+                41,
+                70
+              ]
+            }
+          }
         },
         {
-          "name": "mint_a"
+          "name": "mintA",
+          "docs": [
+            "Box the Mint account as it contains extension data"
+          ]
         },
         {
           "name": "pool",
@@ -192,11 +294,11 @@
               },
               {
                 "kind": "account",
-                "path": "mint_a"
+                "path": "mintA"
               },
               {
                 "kind": "account",
-                "path": "mint_b"
+                "path": "mintB"
               }
             ],
             "program": {
@@ -239,7 +341,7 @@
           }
         },
         {
-          "name": "vault_a",
+          "name": "vaultA",
           "writable": true,
           "pda": {
             "seeds": [
@@ -249,7 +351,7 @@
               },
               {
                 "kind": "account",
-                "path": "mint_a"
+                "path": "mintA"
               }
             ],
             "program": {
@@ -292,7 +394,7 @@
           }
         },
         {
-          "name": "vault_b",
+          "name": "vaultB",
           "writable": true,
           "pda": {
             "seeds": [
@@ -302,7 +404,7 @@
               },
               {
                 "kind": "account",
-                "path": "mint_b"
+                "path": "mintB"
               }
             ],
             "program": {
@@ -345,24 +447,24 @@
           }
         },
         {
-          "name": "token_wallet_b",
+          "name": "tokenWalletB",
           "docs": [
-            "Token wallet where the initial token reserves come from"
+            "Box the TokenAccount as it contains substantial data"
           ],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "mint_b_authority"
+                "path": "mintBAuthority"
               },
               {
                 "kind": "account",
-                "path": "token_program_b"
+                "path": "tokenProgramB"
               },
               {
                 "kind": "account",
-                "path": "mint_b"
+                "path": "mintB"
               }
             ],
             "program": {
@@ -405,18 +507,23 @@
           }
         },
         {
-          "name": "token_program_a"
+          "name": "tokenProgramA"
         },
         {
-          "name": "token_program_b"
+          "name": "tokenProgramB",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "associated_token_program",
+          "name": "associatedTokenProgram",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "system_program",
+          "name": "systemProgram",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "metadataProgram",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
         },
         {
           "name": "rent",
@@ -428,7 +535,7 @@
           "name": "params",
           "type": {
             "defined": {
-              "name": "LaunchParams"
+              "name": "launchParams"
             }
           }
         }
@@ -437,7 +544,7 @@
   ],
   "accounts": [
     {
-      "name": "Factory",
+      "name": "factory",
       "discriminator": [
         159,
         68,
@@ -452,7 +559,7 @@
   ],
   "events": [
     {
-      "name": "FactoryInitialized",
+      "name": "factoryInitialized",
       "discriminator": [
         20,
         86,
@@ -468,78 +575,78 @@
   "errors": [
     {
       "code": 6000,
-      "name": "InvalidMint",
+      "name": "invalidMint",
       "msg": "Invalid base mint"
     },
     {
       "code": 6001,
-      "name": "InvalidTokenAccount",
+      "name": "invalidTokenAccount",
       "msg": "Invalid Token Account"
     },
     {
       "code": 6002,
-      "name": "InvalidMetadataAddress",
+      "name": "invalidMetadataAddress",
       "msg": "Invalid metadata address"
     },
     {
       "code": 6003,
-      "name": "InvalidOwner",
+      "name": "invalidOwner",
       "msg": "Invalid factory owner"
     },
     {
       "code": 6004,
-      "name": "InvalidInitialTokenReserves",
+      "name": "invalidInitialTokenReserves",
       "msg": "Initial token reserves must be greater than 0"
     },
     {
       "code": 6005,
-      "name": "InvalidShift",
+      "name": "invalidShift",
       "msg": "Shift must be greater than 0"
     },
     {
       "code": 6006,
-      "name": "InvalidFees",
+      "name": "invalidFees",
       "msg": "Fees must be between 0 and 10000 basis points"
     },
     {
       "code": 6007,
-      "name": "MathOverflow",
-      "msg": "MathOverflow"
+      "name": "mathOverflow",
+      "msg": "mathOverflow"
     },
     {
       "code": 6008,
-      "name": "InsufficientOutput",
+      "name": "insufficientOutput",
       "msg": "Insufficient output"
     },
     {
       "code": 6009,
-      "name": "InsufficientInput",
+      "name": "insufficientInput",
       "msg": "Insufficient input"
     },
     {
       "code": 6010,
-      "name": "IllegalClaimant",
+      "name": "illegalClaimant",
       "msg": "Illegal Claimant"
     },
     {
       "code": 6011,
-      "name": "PoolEmpty",
+      "name": "poolEmpty",
       "msg": "Pool Empty"
     },
     {
       "code": 6012,
-      "name": "InvalidName",
+      "name": "invalidName",
       "msg": "Invalid name"
     },
     {
       "code": 6013,
-      "name": "InvalidSymbol",
+      "name": "invalidSymbol",
       "msg": "Invalid symbol"
     }
   ],
   "types": [
     {
-      "name": "Factory",
+      "name": "factory",
       "type": {
         "kind": "struct",
         "fields": [
@@ -552,22 +659,22 @@
             "type": "u128"
           },
           {
-            "name": "initial_token_reserves",
+            "name": "initialTokenReserves",
             "type": "u64"
           },
           {
-            "name": "fee_params",
+            "name": "feeParams",
             "type": {
               "defined": {
-                "name": "FeeParams"
+                "name": "feeParams"
               }
             }
           },
           {
-            "name": "token_params",
+            "name": "tokenParams",
             "type": {
               "defined": {
-                "name": "TokenParams"
+                "name": "tokenParams"
               }
             }
           },
@@ -576,14 +683,14 @@
             "type": "u8"
           },
           {
-            "name": "mint_a",
+            "name": "mintA",
             "type": "pubkey"
           }
         ]
       }
     },
     {
-      "name": "FactoryInitialized",
+      "name": "factoryInitialized",
       "type": {
         "kind": "struct",
         "fields": [
@@ -592,19 +699,19 @@
             "type": "pubkey"
           },
           {
-            "name": "mint_a",
+            "name": "mintA",
             "type": "pubkey"
           }
         ]
       }
     },
     {
-      "name": "FeeParams",
+      "name": "feeParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "normalization_period",
+            "name": "normalizationPeriod",
             "docs": [
               "The normalization period in slots.",
               "During this period, the fee will decay from 100% to the base fee."
@@ -620,7 +727,7 @@
             "type": "f64"
           },
           {
-            "name": "royalties_bps",
+            "name": "royaltiesBps",
             "docs": [
               "Royalties in basis points."
             ],
@@ -630,7 +737,7 @@
       }
     },
     {
-      "name": "InitializeParams",
+      "name": "initializeParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -639,22 +746,22 @@
             "type": "u128"
           },
           {
-            "name": "initial_token_reserves",
+            "name": "initialTokenReserves",
             "type": "u64"
           },
           {
-            "name": "fee_params",
+            "name": "feeParams",
             "type": {
               "defined": {
-                "name": "FeeParams"
+                "name": "feeParams"
               }
             }
           },
           {
-            "name": "token_params",
+            "name": "tokenParams",
             "type": {
               "defined": {
-                "name": "TokenParams"
+                "name": "tokenParams"
               }
             }
           }
@@ -662,15 +769,15 @@
       }
     },
     {
-      "name": "LaunchParams",
+      "name": "launchParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "token_config",
+            "name": "tokenConfig",
             "type": {
               "defined": {
-                "name": "TokenMetaData"
+                "name": "tokenMetaData"
               }
             }
           },
@@ -679,14 +786,14 @@
             "type": "u64"
           },
           {
-            "name": "fee_free_buys",
+            "name": "feeFreeBuys",
             "type": "u16"
           }
         ]
       }
     },
     {
-      "name": "TokenMetaData",
+      "name": "tokenMetaData",
       "type": {
         "kind": "struct",
         "fields": [
@@ -706,7 +813,7 @@
       }
     },
     {
-      "name": "TokenParams",
+      "name": "tokenParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -722,4 +829,4 @@
       }
     }
   ]
-}
+};

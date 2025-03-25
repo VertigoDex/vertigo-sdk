@@ -1,13 +1,7 @@
-/**
- * Program IDL in camelCase format in order to be used in JS/TS.
- *
- * Note that this is only a type helper and is not the actual IDL. The original
- * IDL can be found at `target/idl/factory.json`.
- */
-export type Factory = {
-  "address": "2ReT8B8js25vtVQ119cmmgZZK3wTUEX82DW7tfU7igbk",
+{
+  "address": "5aVnnjbhWpyxUdo2orqASygwfjKpbPcWFvVnfGU1GrNi",
   "metadata": {
-    "name": "factory",
+    "name": "spl_token_factory",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
@@ -67,17 +61,17 @@ export type Factory = {
               },
               {
                 "kind": "account",
-                "path": "mintA"
+                "path": "mint_a"
               }
             ]
           }
         },
         {
-          "name": "mintA",
+          "name": "mint_a",
           "writable": true
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "docs": [
             "Required programs and sysvars"
           ],
@@ -93,7 +87,7 @@ export type Factory = {
           "name": "params",
           "type": {
             "defined": {
-              "name": "initializeParams"
+              "name": "InitializeParams"
             }
           }
         }
@@ -119,23 +113,17 @@ export type Factory = {
         },
         {
           "name": "owner",
-          "docs": [
-            "The user who pays for creation and owns the owner signature."
-          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "amm",
-          "docs": [
-            "The Vertigo program."
-          ],
           "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX"
         },
         {
           "name": "factory",
           "docs": [
-            "The factory state account."
+            "Box the Factory account as it might contain substantial data"
           ],
           "pda": {
             "seeds": [
@@ -157,26 +145,128 @@ export type Factory = {
               },
               {
                 "kind": "account",
-                "path": "mintA"
+                "path": "mint_a"
               }
             ]
           }
         },
         {
-          "name": "mintBAuthority",
+          "name": "mint_b_authority",
+          "writable": true,
+          "signer": true
+        },
+        {
+          "name": "mint_b",
           "docs": [
-            "The authority allowed to mint tokens from `mint`."
+            "Box the Mint account as it contains extension data"
           ],
           "writable": true,
           "signer": true
         },
         {
-          "name": "mintB",
+          "name": "metadata_b",
           "writable": true,
-          "signer": true
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  11,
+                  112,
+                  101,
+                  177,
+                  227,
+                  209,
+                  124,
+                  69,
+                  56,
+                  157,
+                  82,
+                  127,
+                  107,
+                  4,
+                  195,
+                  205,
+                  88,
+                  184,
+                  108,
+                  115,
+                  26,
+                  160,
+                  253,
+                  181,
+                  73,
+                  182,
+                  209,
+                  188,
+                  3,
+                  248,
+                  41,
+                  70
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint_b"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                11,
+                112,
+                101,
+                177,
+                227,
+                209,
+                124,
+                69,
+                56,
+                157,
+                82,
+                127,
+                107,
+                4,
+                195,
+                205,
+                88,
+                184,
+                108,
+                115,
+                26,
+                160,
+                253,
+                181,
+                73,
+                182,
+                209,
+                188,
+                3,
+                248,
+                41,
+                70
+              ]
+            }
+          }
         },
         {
-          "name": "mintA"
+          "name": "mint_a",
+          "docs": [
+            "Box the Mint account as it contains extension data"
+          ]
         },
         {
           "name": "pool",
@@ -198,11 +288,11 @@ export type Factory = {
               },
               {
                 "kind": "account",
-                "path": "mintA"
+                "path": "mint_a"
               },
               {
                 "kind": "account",
-                "path": "mintB"
+                "path": "mint_b"
               }
             ],
             "program": {
@@ -245,7 +335,7 @@ export type Factory = {
           }
         },
         {
-          "name": "vaultA",
+          "name": "vault_a",
           "writable": true,
           "pda": {
             "seeds": [
@@ -255,7 +345,7 @@ export type Factory = {
               },
               {
                 "kind": "account",
-                "path": "mintA"
+                "path": "mint_a"
               }
             ],
             "program": {
@@ -298,7 +388,7 @@ export type Factory = {
           }
         },
         {
-          "name": "vaultB",
+          "name": "vault_b",
           "writable": true,
           "pda": {
             "seeds": [
@@ -308,7 +398,7 @@ export type Factory = {
               },
               {
                 "kind": "account",
-                "path": "mintB"
+                "path": "mint_b"
               }
             ],
             "program": {
@@ -351,24 +441,24 @@ export type Factory = {
           }
         },
         {
-          "name": "tokenWalletB",
+          "name": "token_wallet_b",
           "docs": [
-            "Token wallet where the initial token reserves come from"
+            "Box the TokenAccount as it contains substantial data"
           ],
           "writable": true,
           "pda": {
             "seeds": [
               {
                 "kind": "account",
-                "path": "mintBAuthority"
+                "path": "mint_b_authority"
               },
               {
                 "kind": "account",
-                "path": "tokenProgramB"
+                "path": "token_program_b"
               },
               {
                 "kind": "account",
-                "path": "mintB"
+                "path": "mint_b"
               }
             ],
             "program": {
@@ -411,18 +501,23 @@ export type Factory = {
           }
         },
         {
-          "name": "tokenProgramA"
+          "name": "token_program_a"
         },
         {
-          "name": "tokenProgramB"
+          "name": "token_program_b",
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
-          "name": "associatedTokenProgram",
+          "name": "associated_token_program",
           "address": "ATokenGPvbdGVxr1b2hvZbsiqW5xWH25efTNsLJA8knL"
         },
         {
-          "name": "systemProgram",
+          "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
         },
         {
           "name": "rent",
@@ -434,7 +529,7 @@ export type Factory = {
           "name": "params",
           "type": {
             "defined": {
-              "name": "launchParams"
+              "name": "LaunchParams"
             }
           }
         }
@@ -443,7 +538,7 @@ export type Factory = {
   ],
   "accounts": [
     {
-      "name": "factory",
+      "name": "Factory",
       "discriminator": [
         159,
         68,
@@ -458,7 +553,7 @@ export type Factory = {
   ],
   "events": [
     {
-      "name": "factoryInitialized",
+      "name": "FactoryInitialized",
       "discriminator": [
         20,
         86,
@@ -474,78 +569,78 @@ export type Factory = {
   "errors": [
     {
       "code": 6000,
-      "name": "invalidMint",
+      "name": "InvalidMint",
       "msg": "Invalid base mint"
     },
     {
       "code": 6001,
-      "name": "invalidTokenAccount",
+      "name": "InvalidTokenAccount",
       "msg": "Invalid Token Account"
     },
     {
       "code": 6002,
-      "name": "invalidMetadataAddress",
+      "name": "InvalidMetadataAddress",
       "msg": "Invalid metadata address"
     },
     {
       "code": 6003,
-      "name": "invalidOwner",
+      "name": "InvalidOwner",
       "msg": "Invalid factory owner"
     },
     {
       "code": 6004,
-      "name": "invalidInitialTokenReserves",
+      "name": "InvalidInitialTokenReserves",
       "msg": "Initial token reserves must be greater than 0"
     },
     {
       "code": 6005,
-      "name": "invalidShift",
+      "name": "InvalidShift",
       "msg": "Shift must be greater than 0"
     },
     {
       "code": 6006,
-      "name": "invalidFees",
+      "name": "InvalidFees",
       "msg": "Fees must be between 0 and 10000 basis points"
     },
     {
       "code": 6007,
-      "name": "mathOverflow",
-      "msg": "mathOverflow"
+      "name": "MathOverflow",
+      "msg": "MathOverflow"
     },
     {
       "code": 6008,
-      "name": "insufficientOutput",
+      "name": "InsufficientOutput",
       "msg": "Insufficient output"
     },
     {
       "code": 6009,
-      "name": "insufficientInput",
+      "name": "InsufficientInput",
       "msg": "Insufficient input"
     },
     {
       "code": 6010,
-      "name": "illegalClaimant",
+      "name": "IllegalClaimant",
       "msg": "Illegal Claimant"
     },
     {
       "code": 6011,
-      "name": "poolEmpty",
+      "name": "PoolEmpty",
       "msg": "Pool Empty"
     },
     {
       "code": 6012,
-      "name": "invalidName",
+      "name": "InvalidName",
       "msg": "Invalid name"
     },
     {
       "code": 6013,
-      "name": "invalidSymbol",
+      "name": "InvalidSymbol",
       "msg": "Invalid symbol"
     }
   ],
   "types": [
     {
-      "name": "factory",
+      "name": "Factory",
       "type": {
         "kind": "struct",
         "fields": [
@@ -558,22 +653,22 @@ export type Factory = {
             "type": "u128"
           },
           {
-            "name": "initialTokenReserves",
+            "name": "initial_token_reserves",
             "type": "u64"
           },
           {
-            "name": "feeParams",
+            "name": "fee_params",
             "type": {
               "defined": {
-                "name": "feeParams"
+                "name": "FeeParams"
               }
             }
           },
           {
-            "name": "tokenParams",
+            "name": "token_params",
             "type": {
               "defined": {
-                "name": "tokenParams"
+                "name": "TokenParams"
               }
             }
           },
@@ -582,14 +677,14 @@ export type Factory = {
             "type": "u8"
           },
           {
-            "name": "mintA",
+            "name": "mint_a",
             "type": "pubkey"
           }
         ]
       }
     },
     {
-      "name": "factoryInitialized",
+      "name": "FactoryInitialized",
       "type": {
         "kind": "struct",
         "fields": [
@@ -598,19 +693,19 @@ export type Factory = {
             "type": "pubkey"
           },
           {
-            "name": "mintA",
+            "name": "mint_a",
             "type": "pubkey"
           }
         ]
       }
     },
     {
-      "name": "feeParams",
+      "name": "FeeParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "normalizationPeriod",
+            "name": "normalization_period",
             "docs": [
               "The normalization period in slots.",
               "During this period, the fee will decay from 100% to the base fee."
@@ -626,7 +721,7 @@ export type Factory = {
             "type": "f64"
           },
           {
-            "name": "royaltiesBps",
+            "name": "royalties_bps",
             "docs": [
               "Royalties in basis points."
             ],
@@ -636,7 +731,7 @@ export type Factory = {
       }
     },
     {
-      "name": "initializeParams",
+      "name": "InitializeParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -645,22 +740,22 @@ export type Factory = {
             "type": "u128"
           },
           {
-            "name": "initialTokenReserves",
+            "name": "initial_token_reserves",
             "type": "u64"
           },
           {
-            "name": "feeParams",
+            "name": "fee_params",
             "type": {
               "defined": {
-                "name": "feeParams"
+                "name": "FeeParams"
               }
             }
           },
           {
-            "name": "tokenParams",
+            "name": "token_params",
             "type": {
               "defined": {
-                "name": "tokenParams"
+                "name": "TokenParams"
               }
             }
           }
@@ -668,15 +763,15 @@ export type Factory = {
       }
     },
     {
-      "name": "launchParams",
+      "name": "LaunchParams",
       "type": {
         "kind": "struct",
         "fields": [
           {
-            "name": "tokenConfig",
+            "name": "token_config",
             "type": {
               "defined": {
-                "name": "tokenMetaData"
+                "name": "TokenMetaData"
               }
             }
           },
@@ -685,14 +780,14 @@ export type Factory = {
             "type": "u64"
           },
           {
-            "name": "feeFreeBuys",
+            "name": "fee_free_buys",
             "type": "u16"
           }
         ]
       }
     },
     {
-      "name": "tokenMetaData",
+      "name": "TokenMetaData",
       "type": {
         "kind": "struct",
         "fields": [
@@ -712,7 +807,7 @@ export type Factory = {
       }
     },
     {
-      "name": "tokenParams",
+      "name": "TokenParams",
       "type": {
         "kind": "struct",
         "fields": [
@@ -728,4 +823,4 @@ export type Factory = {
       }
     }
   ]
-};
+}

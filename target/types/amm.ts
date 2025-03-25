@@ -809,10 +809,6 @@ export type Amm = {
             "type": "u64"
           },
           {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
             "name": "feeParams",
             "type": {
               "defined": {
