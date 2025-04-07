@@ -1,9 +1,9 @@
 {
   "name": "@vertigo-amm/vertigo-sdk",
-  "version": "0.1.2",
+  "version": "0.1.6",
   "description": "SDK for interacting with the Vertigo AMM protocol",
   "main": "dist/index.js",
-  "types": "dist/index.d.ts",
+  "types": "dist/src/index.d.ts",
   "files": [
     "dist",
     "README.md"
@@ -20,8 +20,8 @@
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "build": "tsc && bun build src/index.ts --outdir ./dist --target node",
-    "build:types": "tsc --emitDeclarationOnly",
+    "build": "npm run prebuild && bun build src/index.ts --outdir ./dist --target node && npm run build:types",
+    "build:types": "tsc --emitDeclarationOnly --project tsconfig.json",
     "prebuild": "rm -rf dist",
     "test": "ts-mocha -p ./tsconfig.json tests/**/*.ts"
   },

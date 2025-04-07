@@ -14,19 +14,13 @@
     "noImplicitAny": false,
     "allowJs": true,
     "declaration": true,
+    "declarationMap": true,
     "isolatedModules": false,
-    "rootDir": "./src",
+    "rootDir": ".",
     "sourceMap": false,
     "emitDecoratorMetadata": false,
     "experimentalDecorators": false
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": [
-    "node_modules",
-    "dist",
-    "examples",
-    "target",
-    "**/target/**",
-    "./target/**/*"
-  ]
+  "include": ["src/**/*", "target/**/*"],
+  "exclude": ["node_modules", "dist", "examples", "tests"]
 }

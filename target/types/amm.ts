@@ -332,54 +332,6 @@ export type Amm = {
       ]
     },
     {
-      "name": "disable",
-      "discriminator": [
-        185,
-        173,
-        187,
-        90,
-        216,
-        15,
-        238,
-        233
-      ],
-      "accounts": [
-        {
-          "name": "owner",
-          "signer": true
-        },
-        {
-          "name": "pool",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "enable",
-      "discriminator": [
-        159,
-        34,
-        127,
-        41,
-        193,
-        53,
-        124,
-        27
-      ],
-      "accounts": [
-        {
-          "name": "owner",
-          "signer": true
-        },
-        {
-          "name": "pool",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "quoteBuy",
       "discriminator": [
         83,
@@ -422,6 +374,9 @@ export type Amm = {
         },
         {
           "name": "owner"
+        },
+        {
+          "name": "user"
         },
         {
           "name": "mintA"
@@ -493,6 +448,9 @@ export type Amm = {
         },
         {
           "name": "owner"
+        },
+        {
+          "name": "user"
         },
         {
           "name": "mintA"
@@ -809,10 +767,6 @@ export type Amm = {
             "type": "u64"
           },
           {
-            "name": "bump",
-            "type": "u8"
-          },
-          {
             "name": "feeParams",
             "type": {
               "defined": {
@@ -859,11 +813,13 @@ export type Amm = {
             "type": "u16"
           },
           {
-            "name": "feeExemptBuys",
+            "name": "privilegedSwapper",
             "docs": [
               "Number of fee exempt buys."
             ],
-            "type": "u16"
+            "type": {
+              "option": "pubkey"
+            }
           }
         ]
       }
