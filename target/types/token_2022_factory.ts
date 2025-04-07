@@ -686,8 +686,10 @@ export type Token2022Factory = {
             "type": "u64"
           },
           {
-            "name": "feeFreeBuys",
-            "type": "u16"
+            "name": "privilegedSwapper",
+            "type": {
+              "option": "pubkey"
+            }
           }
         ]
       }

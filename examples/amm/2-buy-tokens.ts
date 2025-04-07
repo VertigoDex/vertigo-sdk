@@ -9,12 +9,10 @@ import {
   createAssociatedTokenAccount,
   getAssociatedTokenAddressSync,
   NATIVE_MINT,
+  TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { getRpcUrl } from "../utils";
 import fs from "node:fs";
-import { VertigoSDK } from "../../src";
+import { getRpcUrl, VertigoSDK } from "../../src";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { wrapSol } from "../../../tests/utils";
@@ -25,10 +23,10 @@ const argv = yargs(hideBin(process.argv))
     description: "Solana network to use",
     default: "localnet",
   })
-  .option("pool-owner", {
+  .option("path-to-owner", {
     type: "string",
-    description: "Pool owner address",
-    demandOption: true,
+    description: "Path to owner keypair file",
+    default: `${process.env.HOME}/.config/solana/id.json`,
   })
   .option("path-to-user", {
     type: "string",
@@ -37,28 +35,28 @@ const argv = yargs(hideBin(process.argv))
   })
   .option("mint-a", {
     type: "string",
-    description: "Mint A address",
+    description: "Native mint address",
     default: NATIVE_MINT.toString(),
   })
   .option("mint-b", {
     type: "string",
-    description: "Mint B address",
+    description: "Custom token mint address",
     demandOption: true,
   })
   .option("token-program-a", {
     type: "string",
-    description: "Token program A address",
+    description: "Token program address",
     default: TOKEN_PROGRAM_ID.toString(),
   })
   .option("token-program-b", {
     type: "string",
-    description: "Token program B address",
+    description: "Token program address",
     default: TOKEN_PROGRAM_ID.toString(),
   })
   .option("amount", {
     type: "number",
     description: "Amount of SOL to spend",
-    demandOption: true,
+    default: 1,
   })
   .option("limit", {
     type: "number",
@@ -68,37 +66,37 @@ const argv = yargs(hideBin(process.argv))
   .parseSync();
 
 async function main() {
-  /*
-  1. Initialize the SDK 
-  */
-
   // Connect to Solana
   const connection = new Connection(getRpcUrl(argv.network), "confirmed");
 
   // Load wallet from path
   const wallet = new anchor.Wallet(
     Keypair.fromSecretKey(
-      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
+      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-owner"], "utf-8")))
     )
   );
 
-  const provider = new anchor.AnchorProvider(connection, wallet);
+  // Load owner from path
+  const owner = Keypair.fromSecretKey(
+    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-owner"], "utf-8")))
+  );
 
   // Load user from path
   const user = Keypair.fromSecretKey(
     Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
   );
+  const provider = new anchor.AnchorProvider(connection, wallet);
 
   const vertigo = new VertigoSDK(connection, wallet);
 
-  const userTaA = getAssociatedTokenAddressSync(
-    new PublicKey(argv["mint-a"]),
+  const userTaA = await getAssociatedTokenAddressSync(
+    NATIVE_MINT,
     user.publicKey,
     false,
     new PublicKey(argv["token-program-a"])
   );
 
-  // Special wSOL quality of life stuff
+  // Fund some wSol for the user if Mint A is SOL
   if (argv["mint-a"] === NATIVE_MINT.toString()) {
     // Check if the user has a wSOL account
     // If not, create one
@@ -148,36 +146,29 @@ async function main() {
     }
   }
 
-  const userTaB = getAssociatedTokenAddressSync(
+  const userTaB = await getAssociatedTokenAddressSync(
     new PublicKey(argv["mint-b"]),
     user.publicKey,
     false,
     new PublicKey(argv["token-program-b"])
   );
 
-  // Check if user token accounts exist
-  try {
-    await connection.getTokenAccountBalance(userTaA);
-  } catch (error) {
-    throw new Error(
-      `User token account A (${userTaA.toString()}) does not exist`
-    );
-  }
-
-  await vertigo.buy({
-    owner: new PublicKey(argv["pool-owner"]),
+  const signature = await vertigo.buy({
+    owner: owner.publicKey,
     user,
-    mintA: new PublicKey(argv["mint-a"]),
+    mintA: NATIVE_MINT,
     mintB: new PublicKey(argv["mint-b"]),
     userTaA,
     userTaB,
     tokenProgramA: new PublicKey(argv["token-program-a"]),
     tokenProgramB: new PublicKey(argv["token-program-b"]),
     params: {
-      amount: new anchor.BN(LAMPORTS_PER_SOL).muln(argv.amount),
+      amount: new anchor.BN(Number(argv.amount) * LAMPORTS_PER_SOL),
       limit: new anchor.BN(argv.limit),
     },
   });
+
+  console.log(`Buy transaction signature: ${signature}`);
 }
 
 main();

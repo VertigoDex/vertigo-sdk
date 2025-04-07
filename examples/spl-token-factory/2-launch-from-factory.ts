@@ -1,64 +1,191 @@
 import { VertigoSDK } from "../../src/sdk";
-import { Connection, Keypair } from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
 
 // imports to load from local file
 import fs from "node:fs";
-import { loadLocalWallet } from "../utils";
-import { FactoryLaunchParams } from "../../src";
+import { getRpcUrl } from "../utils";
 import { NATIVE_MINT, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
+const argv = yargs(hideBin(process.argv))
+  .option("network", {
+    type: "string",
+    description: "Solana network to use",
+    default: "localnet",
+  })
+  .option("path-to-payer", {
+    type: "string",
+    description: "Path to payer keypair file",
+    default: `${process.env.HOME}/.config/solana/id.json`,
+  })
+  .option("path-to-owner", {
+    type: "string",
+    description: "Path to owner keypair file",
+    default: `${process.env.HOME}/.config/solana/id.json`,
+  })
+  .option("launch-config", {
+    type: "string",
+    description: "Path to launch config file",
+    demandOption: true,
+  })
+  .option("mint-a", {
+    type: "string",
+    description: "Path to mint A keypair file",
+    default: NATIVE_MINT.toString(),
+  })
+  .option("path-to-mint-b", {
+    type: "string",
+    description: "Path to mint B keypair file",
+    optional: true,
+  })
+  .option("path-to-mint-b-authority", {
+    type: "string",
+    description: "Path to mint B authority keypair file",
+    optional: true,
+  })
+  .option("token-program-a", {
+    type: "string",
+    description: "Token program address",
+    default: TOKEN_PROGRAM_ID.toString(),
+  })
+  .option("path-to-user", {
+    type: "string",
+    description: "Path to user keypair file",
+    optional: true,
+  })
+  .option("privileged-swapper", {
+    type: "string",
+    description: "Address of the privileged swapper",
+    optional: true,
+  })
+  .option("dev-buy-amount", {
+    type: "number",
+    description: "Amount of SOL to spend on dev buy",
+    optional: true,
+  })
+  .option("dev-buy-limit", {
+    type: "number",
+    description: "Limit for the dev buy order",
+    optional: true,
+  })
+  .option("nonce", {
+    type: "number",
+    description: "Nonce for the factory PDA",
+    default: 0,
+  })
+  .parseSync();
+
 // Connect to Solana
-const connection = new Connection("http://127.0.0.1:8899", "confirmed");
+const connection = new Connection(getRpcUrl(argv.network), "confirmed");
 
-const wallet = loadLocalWallet();
-
-const ownerPath = "./users/owner.json";
-const owner = Keypair.fromSecretKey(
-  Buffer.from(JSON.parse(fs.readFileSync(ownerPath, "utf-8")))
+// Load wallet from path
+const wallet = new anchor.Wallet(
+  Keypair.fromSecretKey(
+    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-payer"], "utf-8")))
+  )
 );
 
-const vertigo = new VertigoSDK(connection, wallet);
+// Load owner from path
+const owner = Keypair.fromSecretKey(
+  Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-owner"], "utf-8")))
+);
 
-const tokenParams = {
-  name: "Test Token",
-  symbol: "TEST",
-  uri: "https://test.com/metadata.json",
-  feeFreebuys: 1,
+// Validate launch config path is provided
+if (!argv["launch-config"]) {
+  throw new Error("Launch config path must be provided via --launch-config");
+}
+
+// check if launch config is a file
+try {
+  if (!fs.existsSync(argv["launch-config"])) {
+    throw new Error("Launch config file does not exist");
+  }
+  JSON.parse(fs.readFileSync(argv["launch-config"], "utf-8"));
+} catch (error) {
+  throw new Error("Launch config file is not valid or does not exist");
+}
+
+// Load launch config
+const launchConfig = JSON.parse(
+  fs.readFileSync(argv["launch-config"], "utf-8")
+);
+
+// Validate privilegedSwapper if provided
+if (
+  launchConfig.privilegedSwapper !== null &&
+  (typeof launchConfig.privilegedSwapper !== "string" ||
+    !PublicKey.isOnCurve(new PublicKey(launchConfig.privilegedSwapper)))
+) {
+  throw new Error(
+    "Launch config privilegedSwapper must be null or a valid public key string"
+  );
+}
+
+// Create or load mint B and authority keypairs
+const mintB = argv["path-to-mint-b"]
+  ? Keypair.fromSecretKey(
+      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-mint-b"], "utf-8")))
+    )
+  : Keypair.generate();
+
+const mintBAuthority = argv["path-to-mint-b-authority"]
+  ? Keypair.fromSecretKey(
+      Buffer.from(
+        JSON.parse(fs.readFileSync(argv["path-to-mint-b-authority"], "utf-8"))
+      )
+    )
+  : owner;
+
+const launchCfg = {
+  tokenConfig: {
+    name: launchConfig.tokenConfig.name,
+    symbol: launchConfig.tokenConfig.symbol,
+    uri: launchConfig.tokenConfig.uri,
+  },
+  privilegedSwapper: launchConfig.privilegedSwapper
+    ? new PublicKey(launchConfig.privilegedSwapper)
+    : null,
+  reference: new anchor.BN(launchConfig.reference),
+  nonce: launchConfig.nonce,
 };
 
-const mintB = Keypair.generate();
-const mintBAuthority = Keypair.generate();
-const launchCfg: FactoryLaunchParams = {
-  tokenConfig: tokenParams,
-  feeFreeBuys: 1,
-  reference: new anchor.BN(0),
-};
+// Validate required fields in launch config
+if (
+  !launchConfig.tokenConfig ||
+  !launchConfig.tokenConfig.name ||
+  !launchConfig.tokenConfig.symbol ||
+  !launchConfig.tokenConfig.uri
+) {
+  throw new Error(
+    "Missing required launch config fields: name, symbol, or uri"
+  );
+}
 
 async function main() {
+  const vertigo = new VertigoSDK(connection, wallet, {
+    explorer: "solscan",
+  });
+
+  console.log(`Owner: ${owner.publicKey.toBase58()}`);
+  console.log(`Mint B: ${mintB.publicKey.toBase58()}`);
+  console.log(`Mint B Authority: ${mintBAuthority.publicKey.toBase58()}`);
+  console.log(`Token Program A: ${argv["token-program-a"]}`);
+
   const { signature, poolAddress } = await vertigo.SPLTokenFactory.launch({
     payer: wallet.payer,
     owner,
-    mintA: NATIVE_MINT,
+    mintA: new PublicKey(argv["mint-a"]), // defaults to NATIVE_MINT if not provided
     mintB,
     mintBAuthority,
-    tokenProgramA: TOKEN_PROGRAM_ID,
-    launchCfg,
+    tokenProgramA: new PublicKey(argv["token-program-a"]), // defaults to SPL Token Program
+    params: launchCfg,
   });
 
   console.log(`Signature: ${signature}`);
   console.log(`Pool address: ${poolAddress}`);
   console.log("Mint address: ", mintB.publicKey.toBase58());
-
-  // Write pool address to file
-  const addressesPath = "./addresses.json";
-  fs.writeFileSync(
-    addressesPath,
-    JSON.stringify({
-      poolAddress: poolAddress.toBase58(),
-      mintAddress: mintB.publicKey.toBase58(),
-    })
-  );
 }
 
-await main();
+main();

@@ -22,8 +22,8 @@ const POOL_PARAMS = {
     normalizationPeriod: new anchor.BN(20), // 20 slots
     decay: 10,
     royaltiesBps: 100, // 1%
-    feeExemptBuys: 1,
     reference: new anchor.BN(0),
+    privilegedSwapper: null,
   },
 };
 

@@ -1,27 +1,29 @@
 import * as anchor from "@coral-xyz/anchor";
-import { type Program } from "@coral-xyz/anchor";
-import { type Keypair, type Connection, PublicKey } from "@solana/web3.js";
+import { Program } from "@coral-xyz/anchor";
+import { type Connection, Keypair, PublicKey } from "@solana/web3.js";
 import type { Amm } from "../target/types/amm";
 import { Token2022Factory } from "./token-2022-factory";
 import { SplTokenFactory } from "./spl-token-factory";
 import { SDKError, SDKErrorType } from "./types/error";
+import { confirmTransaction, getPoolPda } from "./utils/helpers";
+import { VertigoConfig } from "./config";
+import { defaultConfig } from "./utils/config";
+import { DevBuyArgs, SDKConfig } from "./types/sdk";
+import {
+  createAssociatedTokenAccount,
+  createAssociatedTokenAccountInstruction,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
 
-import { confirmTransaction } from "./utils/helpers";
-
-import dotenv from "dotenv";
-import { PoolConfig, POOL_SEED } from "./types";
-import { VertigoConfig } from "./vertigo-config";
-dotenv.config();
-
-/**
- * Configuration options for the Vertigo SDK
- */
-export interface SDKConfig {
-  /** Log level for SDK operations */
-  logLevel?: "verbose" | "tx" | "none";
-  /** Explorer to use for transaction links */
-  explorer?: "solscan" | "solanaExplorer";
-}
+import {
+  BuyRequest,
+  ClaimRequest,
+  CreateRequest,
+  QuoteBuyRequest,
+  QuoteSellRequest,
+  SellRequest,
+  SwapResponse,
+} from "./types/generated/amm";
 
 /**
  * Main SDK class for interacting with the Vertigo protocol
@@ -37,17 +39,20 @@ export class VertigoSDK {
   constructor(
     connection: Connection,
     wallet: anchor.Wallet,
-    sdkConfig: SDKConfig = {}
+    sdkConfig: SDKConfig = defaultConfig
   ) {
     try {
       this.config = new VertigoConfig(connection, wallet, sdkConfig);
-      this.Token2022Factory = new Token2022Factory(this.config);
-      this.SPLTokenFactory = new SplTokenFactory(this.config);
 
-      this.amm = new anchor.Program(
-        require(process.env.PATH_TO_AMM_IDL as string),
-        this.config.provider
-      ) as Program<Amm>;
+      const ammIdl = require(this.config.ammProgramPath as string);
+
+      if (this.config.ammProgramIdOverride) {
+        ammIdl.address = this.config.ammProgramIdOverride;
+      }
+
+      this.amm = new Program(ammIdl, this.config.provider) as Program<Amm>;
+      this.Token2022Factory = new Token2022Factory(this.config, this.amm);
+      this.SPLTokenFactory = new SplTokenFactory(this.config, this.amm);
     } catch (error) {
       throw new SDKError(
         "Failed to initialize SDK",
@@ -72,11 +77,13 @@ export class VertigoSDK {
    * @param {Keypair} [args.dev] - Optional Keypair to receive initial dev tokens
    *
    * @returns {Promise<{
-   *   signature: string,
+   *   deploySignature: string,
+   *   devBuySignature: string | null,
+   *   poolAddress: PublicKey
    * }>} Object containing transaction signature and relevant addresses
    */
   async launchPool({
-    poolParams,
+    params,
     payer,
     owner,
     tokenWalletAuthority,
@@ -88,44 +95,28 @@ export class VertigoSDK {
     devBuyAmount,
     dev,
     devTaA,
-    devTaB,
-  }: {
-    poolParams: PoolConfig;
-    payer: Keypair;
-    owner: Keypair;
-    tokenWalletAuthority: Keypair;
-    tokenWalletB: PublicKey;
-    mintA: PublicKey;
-    mintB: PublicKey;
-    tokenProgramA: PublicKey;
-    tokenProgramB: PublicKey;
-    devBuyAmount?: anchor.BN;
-    dev?: Keypair;
-    devTaA?: PublicKey;
-    devTaB?: PublicKey;
-  }): Promise<{ signature: string; poolAddress: PublicKey }> {
+  }: CreateRequest & Partial<DevBuyArgs>): Promise<{
+    deploySignature: string;
+    devBuySignature: string | null;
+    poolAddress: PublicKey;
+  }> {
     this.config.log("🚀 Launching new pool...");
 
-    const [pool, bump] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from(POOL_SEED),
-        owner.publicKey.toBuffer(),
-        mintA.toBuffer(),
-        mintB.toBuffer(),
-      ],
-      this.amm.programId
-    );
+    const privilegedSwapper =
+      devBuyAmount && dev && devTaA ? dev.publicKey : null;
+    // TODO: drop the devTaB requirement and create it if it does not exist.
 
     // Prepare pool creation params
-    const params = {
-      ...poolParams,
-      bump,
+    const createParams = {
+      ...params,
     };
+    createParams.feeParams.privilegedSwapper = privilegedSwapper;
 
     this.config.log("📡 Sending pool creation transaction...");
+
     // Create the pool
     const createSignature = await this.amm.methods
-      .create(params)
+      .create(createParams)
       .accounts({
         payer: payer.publicKey,
         owner: owner.publicKey,
@@ -142,8 +133,31 @@ export class VertigoSDK {
     this.config.logTx(createSignature, "Pool creation");
     this.config.log("✅ Pool successfully created!");
 
-    if (devBuyAmount && dev && devTaA && devTaB) {
-      const buySignature = await this.amm.methods
+    let buySignature: string | null = null;
+    if (privilegedSwapper) {
+      // get and create the dev TaB if it doesn't exist
+      const devTaB = getAssociatedTokenAddressSync(
+        mintB,
+        dev.publicKey,
+        false,
+        tokenProgramB
+      );
+      try {
+        await this.config.connection.getTokenAccountBalance(devTaB);
+      } catch {
+        await createAssociatedTokenAccount(
+          this.config.connection,
+          dev,
+          mintB,
+          dev.publicKey,
+          undefined,
+          tokenProgramB
+        );
+      }
+
+      // send the dev buy transaction
+      this.config.log("📡 Sending dev buy transaction...");
+      buySignature = await this.amm.methods
         .buy({
           amount: devBuyAmount,
           limit: new anchor.BN(0),
@@ -163,8 +177,16 @@ export class VertigoSDK {
       this.config.logTx(buySignature, "Dev buy");
     }
 
+    const [pool, _] = getPoolPda(
+      owner.publicKey,
+      mintA,
+      mintB,
+      this.amm.programId
+    );
+
     return {
-      signature: createSignature,
+      deploySignature: createSignature,
+      devBuySignature: buySignature,
       poolAddress: pool,
     };
   }
@@ -181,26 +203,18 @@ export class VertigoSDK {
    * @throws {SDKError} If the quote fails or validation fails
    */
   async quoteBuy({
-    amount,
-    limit,
+    params,
     owner,
+    user,
     mintA,
     mintB,
-  }: {
-    amount: anchor.BN;
-    limit: anchor.BN;
-    owner: PublicKey;
-    mintA: PublicKey;
-    mintB: PublicKey;
-  }) {
+  }: QuoteBuyRequest): Promise<SwapResponse> {
     try {
-      return await this.amm.methods
-        .quoteBuy({
-          amount,
-          limit,
-        })
+      return this.amm.methods
+        .quoteBuy(params)
         .accounts({
           owner,
+          user,
           mintA,
           mintB,
         })
@@ -227,26 +241,18 @@ export class VertigoSDK {
    * @throws {SDKError} If the quote fails or validation fails
    */
   async quoteSell({
-    amount,
-    limit,
+    params,
     owner,
+    user,
     mintA,
     mintB,
-  }: {
-    amount: anchor.BN;
-    limit: anchor.BN;
-    owner: PublicKey;
-    mintA: PublicKey;
-    mintB: PublicKey;
-  }) {
+  }: QuoteSellRequest): Promise<SwapResponse> {
     try {
-      return await this.amm.methods
-        .quoteSell({
-          amount,
-          limit,
-        })
+      return this.amm.methods
+        .quoteSell(params)
         .accounts({
           owner,
+          user,
           mintA,
           mintB,
         })
@@ -268,7 +274,7 @@ export class VertigoSDK {
    * @param {PublicKey} params.mintA - Address of the token mint for the A side
    * @param {PublicKey} params.mintB - Address of the token mint for the B side
    * @param {PublicKey} params.userTaA - Address of the user's token account for the A side
-   * @param {PublicKey} params.userTaB - Address of the user's token account for the B side
+   * @param {PublicKey} [params.userTaB] - Optional address of the user's token account for the B side
    * @param {PublicKey} params.tokenProgramA - Token program for the A side
    * @param {PublicKey} params.tokenProgramB - Token program for the B side
    * @param {anchor.BN} params.amount - Amount of SOL to spend (in lamports)
@@ -277,35 +283,57 @@ export class VertigoSDK {
    * @throws {SDKError} Will throw if the slippage limit is not met or if there's insufficient liquidity
    */
   async buy({
-    amount,
-    limit,
+    params,
     owner,
     user,
     mintA,
     mintB,
     userTaA,
-    userTaB,
+    userTaB: providedUserTaB,
     tokenProgramA,
     tokenProgramB,
-  }: {
-    amount: anchor.BN;
-    limit: anchor.BN;
-    owner: PublicKey;
-    user: Keypair;
-    mintA: PublicKey;
-    mintB: PublicKey;
-    userTaA: PublicKey;
-    userTaB: PublicKey;
-    tokenProgramA: PublicKey;
-    tokenProgramB: PublicKey;
-  }) {
+  }: BuyRequest) {
     try {
       this.config.log("📡 Sending buy transaction...");
-      const signature = await this.amm.methods
-        .buy({
-          amount,
-          limit,
-        })
+
+      // Derive receiving token account address if not provided
+      const userTaB =
+        providedUserTaB ||
+        getAssociatedTokenAddressSync(
+          mintB,
+          user.publicKey,
+          false,
+          tokenProgramB
+        );
+
+      // Check if receiving token account exists
+      const tx = new anchor.web3.Transaction();
+
+      let userTaBExists = false;
+      try {
+        const balance = await this.config.connection.getTokenAccountBalance(
+          userTaB
+        );
+        userTaBExists = true;
+      } catch {
+        userTaBExists = false;
+      }
+
+      if (!userTaBExists) {
+        tx.add(
+          createAssociatedTokenAccountInstruction(
+            user.publicKey,
+            userTaB,
+            user.publicKey,
+            mintB,
+            tokenProgramB
+          )
+        );
+      }
+
+      // Add the buy instruction
+      const buyIx = await this.amm.methods
+        .buy(params)
         .accounts({
           owner,
           user: user.publicKey,
@@ -317,10 +345,14 @@ export class VertigoSDK {
           tokenProgramB,
         })
         .signers([user])
-        .rpc();
+        .instruction();
 
-      await confirmTransaction(this.config.connection, signature);
+      tx.add(buyIx);
+
+      // Create and send the transaction
+      const signature = await this.config.provider.sendAndConfirm(tx, [user]);
       this.config.logTx(signature, "Buy");
+
       return signature;
     } catch (error) {
       throw new SDKError(
@@ -338,7 +370,7 @@ export class VertigoSDK {
    * @param {PublicKey} params.mintA - Address of the token mint for the A side
    * @param {PublicKey} params.mintB - Address of the token mint for the B side
    * @param {Keypair} params.user - User's keypair
-   * @param {PublicKey} params.userTaA - Address of the user's token account for the A side
+   * @param {PublicKey} [params.userTaA] - Optional address of the user's token account for the A side
    * @param {PublicKey} params.userTaB - Address of the user's token account for the B side
    * @param {PublicKey} params.tokenProgramA - Token program for the A side
    * @param {PublicKey} params.tokenProgramB - Token program for the B side
@@ -348,35 +380,53 @@ export class VertigoSDK {
    * @throws {SDKError} Will throw if the slippage limit is not met or if there's insufficient liquidity
    */
   async sell({
-    amount,
-    limit,
+    params,
     owner,
     user,
     mintA,
     mintB,
-    userTaA,
+    userTaA: providedUserTaA,
     userTaB,
     tokenProgramA,
     tokenProgramB,
-  }: {
-    amount: anchor.BN;
-    limit: anchor.BN;
-    owner: PublicKey;
-    user: Keypair;
-    mintA: PublicKey;
-    mintB: PublicKey;
-    userTaA: PublicKey;
-    userTaB: PublicKey;
-    tokenProgramA: PublicKey;
-    tokenProgramB: PublicKey;
-  }) {
+  }: SellRequest) {
     try {
       this.config.log("📡 Sending sell transaction...");
-      const signature = await this.amm.methods
-        .sell({
-          amount,
-          limit,
-        })
+
+      // Derive receiving token account address if not provided
+      const userTaA =
+        providedUserTaA ||
+        getAssociatedTokenAddressSync(
+          mintA,
+          user.publicKey,
+          false,
+          tokenProgramA
+        );
+
+      // Check if receiving token account exists
+      const instructions = [];
+      let userTaAExists = true;
+      try {
+        await this.config.connection.getTokenAccountBalance(userTaA);
+      } catch {
+        userTaAExists = false;
+      }
+
+      if (!userTaAExists) {
+        instructions.push(
+          createAssociatedTokenAccountInstruction(
+            user.publicKey,
+            userTaA,
+            user.publicKey,
+            mintA,
+            tokenProgramA
+          )
+        );
+      }
+
+      // Add the sell instruction
+      const sellIx = await this.amm.methods
+        .sell(params)
         .accounts({
           owner,
           user: user.publicKey,
@@ -387,8 +437,15 @@ export class VertigoSDK {
           tokenProgramA,
           tokenProgramB,
         })
-        .signers([user])
-        .rpc();
+        .instruction();
+
+      instructions.push(sellIx);
+
+      // Create and send the transaction
+      const transaction = new anchor.web3.Transaction().add(...instructions);
+      const signature = await this.config.provider.sendAndConfirm(transaction, [
+        user,
+      ]);
 
       await confirmTransaction(this.config.connection, signature);
       this.config.logTx(signature, "Sell");
@@ -419,13 +476,7 @@ export class VertigoSDK {
     mintA,
     receiverTaA,
     tokenProgramA,
-  }: {
-    pool: PublicKey;
-    claimer: Keypair;
-    mintA: PublicKey;
-    receiverTaA: PublicKey;
-    tokenProgramA: PublicKey;
-  }): Promise<string> {
+  }: ClaimRequest): Promise<string> {
     const signature = await this.amm.methods
       .claim()
       .accounts({
@@ -439,42 +490,6 @@ export class VertigoSDK {
       .rpc();
 
     this.config.logTx(signature, "Claim royalties");
-    return signature;
-  }
-
-  /**
-   * Disables a pool
-   * @param {Object} args - The arguments object
-   * @param {Keypair} owner - Keypair of the pool owner
-   * @param {PublicKey} pool - Address of the trading pool
-   * @returns {Promise<string>} Transaction signature
-   */
-  async disablePool({ owner, pool }: { owner: Keypair; pool: PublicKey }) {
-    const signature = await this.amm.methods
-      .disable()
-      .accounts({ pool, owner: owner.publicKey })
-      .signers([owner])
-      .rpc();
-
-    this.config.logTx(signature, "Disable pool");
-    return signature;
-  }
-
-  /**
-   * Enables a pool
-   * @param {Object} args - The arguments object
-   * @param {Keypair} owner - Keypair of the pool owner
-   * @param {PublicKey} pool - Address of the trading pool
-   * @returns {Promise<string>} Transaction signature
-   */
-  async enablePool({ owner, pool }: { owner: Keypair; pool: PublicKey }) {
-    const signature = await this.amm.methods
-      .enable()
-      .accounts({ pool, owner: owner.publicKey })
-      .signers([owner])
-      .rpc();
-
-    this.config.logTx(signature, "Enable pool");
     return signature;
   }
 }

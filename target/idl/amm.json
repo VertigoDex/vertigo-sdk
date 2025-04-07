@@ -326,54 +326,6 @@
       ]
     },
     {
-      "name": "disable",
-      "discriminator": [
-        185,
-        173,
-        187,
-        90,
-        216,
-        15,
-        238,
-        233
-      ],
-      "accounts": [
-        {
-          "name": "owner",
-          "signer": true
-        },
-        {
-          "name": "pool",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
-      "name": "enable",
-      "discriminator": [
-        159,
-        34,
-        127,
-        41,
-        193,
-        53,
-        124,
-        27
-      ],
-      "accounts": [
-        {
-          "name": "owner",
-          "signer": true
-        },
-        {
-          "name": "pool",
-          "writable": true
-        }
-      ],
-      "args": []
-    },
-    {
       "name": "quote_buy",
       "discriminator": [
         83,
@@ -416,6 +368,9 @@
         },
         {
           "name": "owner"
+        },
+        {
+          "name": "user"
         },
         {
           "name": "mint_a"
@@ -487,6 +442,9 @@
         },
         {
           "name": "owner"
+        },
+        {
+          "name": "user"
         },
         {
           "name": "mint_a"
@@ -849,11 +807,13 @@
             "type": "u16"
           },
           {
-            "name": "fee_exempt_buys",
+            "name": "privileged_swapper",
             "docs": [
               "Number of fee exempt buys."
             ],
-            "type": "u16"
+            "type": {
+              "option": "pubkey"
+            }
           }
         ]
       }

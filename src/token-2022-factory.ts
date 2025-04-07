@@ -1,26 +1,37 @@
 import { Program } from "@coral-xyz/anchor";
 import { Keypair, PublicKey } from "@solana/web3.js";
 import { Token2022Factory as Token2022FactoryIdl } from "../../target/types/token_2022_factory";
-import { VertigoConfig } from "./vertigo-config";
-import { FactoryInitParams, FactoryLaunchParams, POOL_SEED } from "./types";
+import { VertigoConfig } from "./config";
 import * as anchor from "@coral-xyz/anchor";
 import { Amm } from "../../target/types/amm";
-import { TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
+import {
+  createAssociatedTokenAccountInstruction,
+  TOKEN_2022_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
+import {
+  InitializeRequest,
+  LaunchRequest,
+} from "./types/generated/token_2022_factory";
+import { DevBuyArgs } from "./types/sdk";
+import { getPoolPda } from "./utils";
 export class Token2022Factory {
   private factory: Program<Token2022FactoryIdl>;
   private config: VertigoConfig;
   private amm: Program<Amm>;
 
-  constructor(config: VertigoConfig) {
+  constructor(config: VertigoConfig, amm: Program<Amm>) {
     this.config = config;
-    this.factory = new Program(
-      require(process.env.PATH_TO_TOKEN_2022_FACTORY_IDL as string),
-      config.provider
-    );
-    this.amm = new Program(
-      require(process.env.PATH_TO_AMM_IDL as string),
-      config.provider
-    ) as Program<Amm>;
+
+    this.amm = amm;
+
+    const token2022FactoryIdl = require(config.token2022ProgramPath as string);
+
+    if (config.token2022ProgramIdOverride) {
+      token2022FactoryIdl.address = config.token2022ProgramIdOverride;
+    }
+
+    this.factory = new Program(token2022FactoryIdl, config.provider);
   }
 
   /**
@@ -43,21 +54,16 @@ export class Token2022Factory {
   async initialize({
     payer,
     owner,
-    mint,
+    mintA,
     params,
-  }: {
-    payer: Keypair;
-    owner: Keypair;
-    mint: PublicKey;
-    params: FactoryInitParams;
-  }): Promise<string> {
+  }: InitializeRequest): Promise<string> {
     this.config.log("🏭 Creating new factory...");
     const signature = await this.factory.methods
       .initialize(params)
       .accounts({
         payer: payer.publicKey,
         owner: owner.publicKey,
-        mintA: mint,
+        mintA,
       })
       .signers([owner, payer])
       .rpc();
@@ -86,7 +92,6 @@ export class Token2022Factory {
    * @param {anchor.BN} [args.devBuyAmount] - Optional amount of SOL (in lamports) for initial token purchase
    * @param {Keypair} [args.dev] - Optional Keypair to receive initial dev tokens
    * @param {PublicKey} [args.devTaA] - Optional token account of the receiver for the A side
-   * @param {PublicKey} [args.devTaB] - Optional token account of the receiver for the B side
    * @returns {Promise<{ signature: string, mint: PublicKey }>} Transaction signature and mint address
    */
   async launch({
@@ -96,53 +101,30 @@ export class Token2022Factory {
     mintB,
     mintBAuthority,
     tokenProgramA,
-    launchCfg,
+    params,
     devBuyAmount,
     dev,
     devTaA,
-    devTaB,
-  }: {
-    payer: Keypair;
-    owner: Keypair;
-    mintA: PublicKey;
-    mintB: Keypair;
-    mintBAuthority: Keypair;
-    tokenProgramA: PublicKey;
-    launchCfg: FactoryLaunchParams;
-    devBuyAmount?: anchor.BN;
-    dev?: Keypair;
-    devTaA?: PublicKey;
-    devTaB?: PublicKey;
-  }): Promise<{
+  }: LaunchRequest & Partial<DevBuyArgs>): Promise<{
     signature: string;
+    devBuySignature: string;
     poolAddress: PublicKey;
   }> {
-    const [factory, bump] = PublicKey.findProgramAddressSync(
-      [Buffer.from("factory"), owner.publicKey.toBuffer()],
-      this.factory.programId
-    );
-
-    const [pool, _] = PublicKey.findProgramAddressSync(
-      [
-        Buffer.from(POOL_SEED),
-        owner.publicKey.toBuffer(),
-        mintA.toBuffer(),
-        mintB.publicKey.toBuffer(),
-      ],
+    const [pool, _] = getPoolPda(
+      owner.publicKey,
+      mintA,
+      mintB.publicKey,
       this.amm.programId
     );
 
-    const params = {
-      ...launchCfg,
-      bump,
-    };
+    const launchParams = params;
 
     if (!params.reference) {
-      params.reference = new anchor.BN(0);
+      launchParams.reference = new anchor.BN(0);
     }
 
-    const tx = this.factory.methods
-      .launch(params)
+    const launchTx = await this.factory.methods
+      .launch(launchParams)
       .accounts({
         payer: payer.publicKey,
         owner: owner.publicKey,
@@ -151,24 +133,51 @@ export class Token2022Factory {
         mintBAuthority: mintBAuthority.publicKey,
         tokenProgramA: tokenProgramA,
       })
-      .signers([owner, payer, mintBAuthority, mintB]);
+      .signers([owner, payer, mintBAuthority, mintB])
+      .rpc();
 
-    // Send transaction
-    const launchSignature = await tx.rpc();
-    // TODO combine trasnactions
+    this.config.logTx(launchTx, "Launch");
 
-    this.config.logTx(launchSignature, "Pool creation from factory");
+    const tx = new anchor.web3.Transaction();
+    let devBuySignature = null;
 
-    // If dev buy is requested, add the buy instruction
-    if (devBuyAmount && dev && devTaA && devTaB) {
-      this.config.log("📡 Sending transaction...");
+    if (devBuyAmount && dev && devTaA) {
+      // Check if the dev TaB exists, if not create it
+      let userTaBExists = false;
+      const devTaB = getAssociatedTokenAddressSync(
+        mintB.publicKey,
+        dev.publicKey,
+        false,
+        TOKEN_2022_PROGRAM_ID
+      );
+      try {
+        const balance = await this.config.connection.getTokenAccountBalance(
+          devTaB
+        );
+        userTaBExists = true;
+      } catch {
+        userTaBExists = false;
+      }
 
-      const signature = await this.amm.methods
+      if (!userTaBExists) {
+        tx.add(
+          createAssociatedTokenAccountInstruction(
+            dev.publicKey,
+            devTaB,
+            dev.publicKey,
+            mintB.publicKey,
+            TOKEN_2022_PROGRAM_ID
+          )
+        );
+      }
+
+      const buyIx = await this.amm.methods
         .buy({
           amount: devBuyAmount,
           limit: new anchor.BN(0),
         })
         .accounts({
+          owner: owner.publicKey,
           user: dev.publicKey,
           mintA: mintA,
           mintB: mintB.publicKey,
@@ -178,13 +187,23 @@ export class Token2022Factory {
           tokenProgramB: TOKEN_2022_PROGRAM_ID,
         })
         .signers([dev])
-        .rpc();
+        .instruction();
 
-      this.config.logTx(signature, "Dev buy");
+      tx.add(buyIx);
+      devBuySignature = await this.config.provider.sendAndConfirm(tx, [dev]);
+
+      this.config.logTx(devBuySignature, "Dev buy");
+
+      return {
+        signature: launchTx,
+        devBuySignature: devBuySignature,
+        poolAddress: pool,
+      };
     }
 
     return {
-      signature: launchSignature,
+      signature: launchTx,
+      devBuySignature: null,
       poolAddress: pool,
     };
   }

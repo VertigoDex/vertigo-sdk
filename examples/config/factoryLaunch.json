@@ -1,0 +1,10 @@
+{
+  "tokenConfig": {
+    "name": "Test Token",
+    "symbol": "TEST",
+    "uri": "https://test.com/metadata.json"
+  },
+  "privilegedSwapper": null,
+  "reference": 0,
+  "nonce": 0
+}

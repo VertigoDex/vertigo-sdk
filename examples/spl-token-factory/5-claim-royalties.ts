@@ -1,40 +1,96 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
-import { NATIVE_MINT } from "@solana/spl-token";
-
-import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { loadLocalWallet } from "../utils";
+import * as anchor from "@coral-xyz/anchor";
+import {
+  TOKEN_PROGRAM_ID,
+  NATIVE_MINT,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
+import { getRpcUrl } from "../utils";
 import fs from "node:fs";
 import { VertigoSDK } from "../../src";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+
+const argv = yargs(hideBin(process.argv))
+  .option("network", {
+    type: "string",
+    description: "Solana network to use",
+    default: "localnet",
+  })
+  .option("path-to-claimer", {
+    type: "string",
+    description: "Path to claimer keypair file",
+    default: `${process.env.HOME}/.config/solana/id.json`,
+  })
+  .option("pool", {
+    type: "string",
+    description: "Pool address",
+    demandOption: true,
+  })
+  .option("mint-a", {
+    type: "string",
+    description: "Mint A address (defaults to native SOL mint)",
+    default: NATIVE_MINT.toString(),
+  })
+  .option("receiver-mint-a-token-account", {
+    type: "string",
+    description:
+      "Receiver mint A token account address (defaults to claimer's associated token account)",
+  })
+  .parseSync();
 
 async function main() {
-  /*
- 1. Initialize the SDK 
- */
-
   // Connect to Solana
-  const connection = new Connection("http://127.0.0.1:8899", "confirmed");
-  const wallet = loadLocalWallet();
+  const connection = new Connection(getRpcUrl(argv.network), "confirmed");
 
-  const ownerPath = "./users/owner.json";
-  const owner = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(ownerPath, "utf-8")))
+  // Load wallet from path
+  const wallet = new anchor.Wallet(
+    Keypair.fromSecretKey(
+      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-claimer"], "utf-8")))
+    )
   );
 
-  const addressesPath = "./addresses.json";
-  const ADDRESSES = JSON.parse(fs.readFileSync(addressesPath, "utf-8"));
-  const USER_ADDRESSES = JSON.parse(
-    fs.readFileSync("./user-addresses.json", "utf-8")
-  );
+  // Load claimer - either from provided address or default to owner
+  const claimer = argv.claimer
+    ? Keypair.fromSecretKey(
+        Buffer.from(
+          JSON.parse(fs.readFileSync(argv["path-to-claimer"], "utf-8"))
+        )
+      )
+    : wallet.payer;
+
+  const mintA = new PublicKey(argv["mint-a"]);
+
+  // Get receiver token account - either provided or default to claimer's ATA
+  const receiverTokenAccount = argv["receiver-mint-a-token-account"]
+    ? new PublicKey(argv["receiver-mint-a-token-account"])
+    : getAssociatedTokenAddressSync(
+        mintA,
+        claimer.publicKey,
+        false,
+        TOKEN_PROGRAM_ID
+      );
+
+  // Check if receiver token account exists
+  try {
+    await connection.getTokenAccountBalance(receiverTokenAccount);
+  } catch (error) {
+    throw new Error(
+      `Receiver token account (${receiverTokenAccount.toString()}) does not exist`
+    );
+  }
 
   const vertigo = new VertigoSDK(connection, wallet);
 
   const signature = await vertigo.claimRoyalties({
-    pool: new PublicKey(ADDRESSES.poolAddress),
-    claimer: owner,
+    pool: new PublicKey(argv.pool),
+    claimer,
     mintA: NATIVE_MINT,
-    receiverTaA: new PublicKey(USER_ADDRESSES.userTaA),
+    receiverTaA: receiverTokenAccount,
     tokenProgramA: TOKEN_PROGRAM_ID,
   });
+
+  console.log(`Claim royalties transaction signature: ${signature}`);
 }
 
-await main();
+main();

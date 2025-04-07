@@ -3,12 +3,10 @@ import * as anchor from "@coral-xyz/anchor";
 import {
   getAssociatedTokenAddressSync,
   NATIVE_MINT,
-  TOKEN_2022_PROGRAM_ID,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import { getRpcUrl } from "../utils";
 import fs from "node:fs";
-import { VertigoSDK } from "../../src";
+import { getRpcUrl, VertigoSDK } from "../../src";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 
@@ -20,10 +18,10 @@ const argv = yargs(hideBin(process.argv))
     description: "Solana network to use",
     default: "localnet",
   })
-  .option("pool-owner", {
+  .option("path-to-owner", {
     type: "string",
-    description: "Pool owner address",
-    demandOption: true,
+    description: "Path to owner keypair file",
+    default: `${process.env.HOME}/.config/solana/id.json`,
   })
   .option("path-to-user", {
     type: "string",
@@ -32,23 +30,23 @@ const argv = yargs(hideBin(process.argv))
   })
   .option("mint-a", {
     type: "string",
-    description: "Mint A address",
+    description: "Native mint address",
     default: NATIVE_MINT.toString(),
   })
   .option("mint-b", {
     type: "string",
-    description: "Mint B address",
+    description: "Custom token mint address",
     demandOption: true,
   })
   .option("token-program-a", {
     type: "string",
-    description: "Token program A address",
+    description: "Token program address",
     default: TOKEN_PROGRAM_ID.toString(),
   })
   .option("token-program-b", {
     type: "string",
-    description: "Token program B address",
-    default: TOKEN_2022_PROGRAM_ID.toString(),
+    description: "Token program address",
+    default: TOKEN_PROGRAM_ID.toString(),
   })
   .option("amount", {
     type: "number",
@@ -69,8 +67,13 @@ async function main() {
   // Load wallet from path
   const wallet = new anchor.Wallet(
     Keypair.fromSecretKey(
-      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
+      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-owner"], "utf-8")))
     )
+  );
+
+  // Load owner from path
+  const owner = Keypair.fromSecretKey(
+    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-owner"], "utf-8")))
   );
 
   // Load user from path
@@ -86,6 +89,7 @@ async function main() {
     false,
     new PublicKey(argv["token-program-a"])
   );
+
   const userTaB = await getAssociatedTokenAddressSync(
     new PublicKey(argv["mint-b"]),
     user.publicKey,
@@ -93,11 +97,8 @@ async function main() {
     new PublicKey(argv["token-program-b"])
   );
 
-  console.log("User token account A: ", userTaA.toString());
-  console.log("User token account B: ", userTaB.toString());
-
-  await vertigo.sell({
-    owner: new PublicKey(argv["pool-owner"]),
+  const signature = await vertigo.sell({
+    owner: owner.publicKey,
     user,
     mintA: new PublicKey(argv["mint-a"]),
     mintB: new PublicKey(argv["mint-b"]),
@@ -106,10 +107,12 @@ async function main() {
     tokenProgramA: new PublicKey(argv["token-program-a"]),
     tokenProgramB: new PublicKey(argv["token-program-b"]),
     params: {
-      amount: new anchor.BN(argv.amount).muln(10 ** DECIMALS),
+      amount: new anchor.BN(Number(argv.amount) * 10 ** DECIMALS),
       limit: new anchor.BN(argv.limit),
     },
   });
+
+  console.log(`Sell transaction signature: ${signature}`);
 }
 
 main();

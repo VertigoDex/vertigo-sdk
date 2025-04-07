@@ -1,0 +1,14 @@
+{
+  "shift": "100000000000",
+  "initialTokenReserves": "1000000000000000",
+  "feeParams": {
+    "normalizationPeriod": 10,
+    "decay": 1.0,
+    "royaltiesBps": 50
+  },
+  "tokenParams": {
+    "decimals": 6,
+    "mutable": true
+  },
+  "nonce": 0
+}

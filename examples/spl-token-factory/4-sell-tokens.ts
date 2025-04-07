@@ -1,49 +1,114 @@
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
-import { NATIVE_MINT, TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { loadLocalWallet } from "../utils";
+import {
+  getAssociatedTokenAddressSync,
+  NATIVE_MINT,
+  TOKEN_PROGRAM_ID,
+} from "@solana/spl-token";
+import { getRpcUrl } from "../utils";
 import fs from "node:fs";
 import { VertigoSDK } from "../../src";
-import { DECIMALS } from "../consts";
+import yargs from "yargs";
+import { hideBin } from "yargs/helpers";
+
+const DECIMALS = 6;
+
+const argv = yargs(hideBin(process.argv))
+  .option("network", {
+    type: "string",
+    description: "Solana network to use",
+    default: "localnet",
+  })
+  .option("pool-owner", {
+    type: "string",
+    description: "Pool owner address",
+    demandOption: true,
+  })
+  .option("path-to-user", {
+    type: "string",
+    description: "Path to user keypair file",
+    default: `${process.env.HOME}/.config/solana/id.json`,
+  })
+  .option("mint-a", {
+    type: "string",
+    description: "Mint A address",
+    default: NATIVE_MINT.toString(),
+  })
+  .option("mint-b", {
+    type: "string",
+    description: "Mint B address",
+    demandOption: true,
+  })
+  .option("token-program-a", {
+    type: "string",
+    description: "Token program A address",
+    default: TOKEN_PROGRAM_ID.toString(),
+  })
+  .option("token-program-b", {
+    type: "string",
+    description: "Token program B address",
+    default: TOKEN_PROGRAM_ID.toString(),
+  })
+  .option("amount", {
+    type: "number",
+    description: "Amount of tokens to sell",
+    demandOption: true,
+  })
+  .option("limit", {
+    type: "number",
+    description: "Limit for the sell order",
+    default: 0,
+  })
+  .parseSync();
 
 async function main() {
-  /*
- 1. Initialize the SDK 
- */
-
   // Connect to Solana
-  const connection = new Connection("http://127.0.0.1:8899", "confirmed");
-  const wallet = loadLocalWallet();
+  const connection = new Connection(getRpcUrl(argv.network), "confirmed");
 
-  const ownerPath = "./users/owner.json";
-  const owner = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(ownerPath, "utf-8")))
+  // Load wallet from path
+  const wallet = new anchor.Wallet(
+    Keypair.fromSecretKey(
+      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
+    )
   );
-  const userPath = "./users/user.json";
+
+  // Load user from path
   const user = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(userPath, "utf-8")))
-  );
-
-  const addressesPath = "./addresses.json";
-  const ADDRESSES = JSON.parse(fs.readFileSync(addressesPath, "utf-8"));
-  const USER_ADDRESSES = JSON.parse(
-    fs.readFileSync("./user-addresses.json", "utf-8")
+    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
   );
 
   const vertigo = new VertigoSDK(connection, wallet);
 
-  const signature = await vertigo.sell({
-    owner: owner.publicKey,
+  const userTaA = await getAssociatedTokenAddressSync(
+    new PublicKey(argv["mint-a"]),
+    user.publicKey,
+    false,
+    new PublicKey(argv["token-program-a"])
+  );
+  const userTaB = await getAssociatedTokenAddressSync(
+    new PublicKey(argv["mint-b"]),
+    user.publicKey,
+    false,
+    new PublicKey(argv["token-program-b"])
+  );
+
+  console.log("User token account A: ", userTaA.toString());
+  console.log("User token account B: ", userTaB.toString());
+
+  await vertigo.sell({
+    owner: new PublicKey(argv["pool-owner"]),
     user,
-    mintA: NATIVE_MINT,
-    mintB: new PublicKey(ADDRESSES.mintAddress),
-    userTaA: new PublicKey(USER_ADDRESSES.userTaA),
-    userTaB: new PublicKey(USER_ADDRESSES.userTaB),
-    tokenProgramA: TOKEN_PROGRAM_ID,
-    tokenProgramB: TOKEN_PROGRAM_ID,
-    amount: new anchor.BN(100_000).muln(10 ** DECIMALS),
-    limit: new anchor.BN(0),
+    mintA: new PublicKey(argv["mint-a"]),
+    mintB: new PublicKey(argv["mint-b"]),
+    userTaA,
+    userTaB,
+    tokenProgramA: new PublicKey(argv["token-program-a"]),
+    tokenProgramB: new PublicKey(argv["token-program-b"]),
+    params: {
+      amount: new anchor.BN(argv.amount).muln(10 ** DECIMALS),
+      limit: new anchor.BN(argv.limit),
+    },
   });
 }
 
-await main();
+main();

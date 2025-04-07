@@ -680,8 +680,10 @@
             "type": "u64"
           },
           {
-            "name": "fee_free_buys",
-            "type": "u16"
+            "name": "privileged_swapper",
+            "type": {
+              "option": "pubkey"
+            }
           }
         ]
       }
