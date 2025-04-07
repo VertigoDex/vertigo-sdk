@@ -1,7 +1,8 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Program } from "@coral-xyz/anchor";
-import { type Connection, Keypair, PublicKey } from "@solana/web3.js";
-import type { Amm } from "../target/types/amm";
+import { type Connection, PublicKey } from "@solana/web3.js";
+import type { Amm } from "./types/idl/amm";
+
 import { Token2022Factory } from "./token-2022-factory";
 import { SplTokenFactory } from "./spl-token-factory";
 import { SDKError, SDKErrorType } from "./types/error";
@@ -45,12 +46,16 @@ export class VertigoSDK {
       this.config = new VertigoConfig(connection, wallet, sdkConfig);
 
       const ammIdl = require(this.config.ammProgramPath as string);
+      const backupAmmIdl = ammIdl;
 
       if (this.config.ammProgramIdOverride) {
         ammIdl.address = this.config.ammProgramIdOverride;
       }
 
-      this.amm = new Program(ammIdl, this.config.provider) as Program<Amm>;
+      this.amm = new Program(
+        backupAmmIdl,
+        this.config.provider
+      ) as Program<Amm>;
       this.Token2022Factory = new Token2022Factory(this.config, this.amm);
       this.SPLTokenFactory = new SplTokenFactory(this.config, this.amm);
     } catch (error) {
