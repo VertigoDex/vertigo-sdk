@@ -1,9 +1,9 @@
 import { Program } from "@coral-xyz/anchor";
-import { PublicKey } from "@solana/web3.js";
-import { Token2022Factory as Token2022FactoryIdl } from "./types/idl/token_2022_factory";
+import { Keypair, PublicKey } from "@solana/web3.js";
+import { Token2022Factory as Token2022FactoryIdl } from "../../target/types/token_2022_factory";
 import { VertigoConfig } from "./config";
 import * as anchor from "@coral-xyz/anchor";
-import { Amm } from "./types/idl/amm";
+import { Amm } from "../../target/types/amm";
 import {
   createAssociatedTokenAccountInstruction,
   TOKEN_2022_PROGRAM_ID,
@@ -15,7 +15,6 @@ import {
 } from "./types/generated/token_2022_factory";
 import { DevBuyArgs } from "./types/sdk";
 import { getPoolPda } from "./utils";
-
 export class Token2022Factory {
   private factory: Program<Token2022FactoryIdl>;
   private config: VertigoConfig;
