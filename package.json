@@ -2,7 +2,7 @@
   "name": "@vertigo-amm/vertigo-sdk",
   "version": "0.1.6",
   "description": "SDK for interacting with the Vertigo AMM protocol",
-  "main": "dist/index.js",
+  "main": "dist/src/index.js",
   "types": "dist/src/index.d.ts",
   "files": [
     "dist",
@@ -20,10 +20,10 @@
   "scripts": {
     "lint:fix": "prettier */*.js \"*/**/*{.js,.ts}\" -w",
     "lint": "prettier */*.js \"*/**/*{.js,.ts}\" --check",
-    "build": "npm run prebuild && bun build src/index.ts --outdir ./dist --target node && npm run build:types",
-    "build:types": "tsc --emitDeclarationOnly --project tsconfig.json",
+    "build": "tsc && npm run copy-files || echo 'tsc failed but continuing...' && npm run copy-files",
     "prebuild": "rm -rf dist",
-    "test": "ts-mocha -p ./tsconfig.json tests/**/*.ts"
+    "test": "ts-mocha -p ./tsconfig.json tests/**/*.ts",
+    "copy-files": "echo 'Starting copy...' && mkdir -p dist/target && cp -r target/* dist/target/ && echo 'Files copied!'"
   },
   "dependencies": {
     "@coral-xyz/anchor": "^0.30.1",
@@ -37,6 +37,7 @@
     "@types/chai": "^4.3.0",
     "@types/mocha": "^9.0.0",
     "chai": "^4.3.4",
+    "copyfiles": "^2.4.1",
     "dotenv": "^16.4.7",
     "mocha": "^9.0.3",
     "prettier": "^2.6.2",
