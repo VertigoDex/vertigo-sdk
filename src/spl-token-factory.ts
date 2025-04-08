@@ -1,9 +1,9 @@
 import { Program } from "@coral-xyz/anchor";
 import * as anchor from "@coral-xyz/anchor";
 import { VertigoConfig } from "./config";
-import { SplTokenFactory as SplTokenFactoryIdl } from "../../target/types/spl_token_factory";
+import { SplTokenFactory as SplTokenFactoryIdl } from "./../target/types/spl_token_factory";
 import { PublicKey } from "@solana/web3.js";
-import { Amm } from "../../target/types/amm";
+import { Amm } from "./types/idl/amm";
 import {
   getAssociatedTokenAddressSync,
   TOKEN_PROGRAM_ID,

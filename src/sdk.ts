@@ -44,6 +44,7 @@ export class VertigoSDK {
       this.config = new VertigoConfig(connection, wallet, sdkConfig);
 
       const ammIdl = require(this.config.ammProgramPath as string);
+      const backupAmmIdl = require(this.config.ammProgramPath as string);
 
       if (this.config.ammProgramIdOverride) {
         ammIdl.address = this.config.ammProgramIdOverride;
