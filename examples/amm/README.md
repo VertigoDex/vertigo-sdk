@@ -31,14 +31,14 @@ export TOKEN_WALLET_ADDRESS=
 
 ```
 bun run ./1-launch-pool.ts \
- --network devnet \
- --path-to-payer ~/.config/solana/id.json \
- --path-to-owner ~/.config/solana/id.json \
- --path-to-user ~/.config/solana/id.json \
- --path-to-token-wallet-authority ./token-wallet-authority.json \
- --token-wallet-address $TOKEN_WALLET_ADDRESS \
- --mint-b $MINT_B_ADDRESS \
- --path-to-pool-params ../config/poolParams.json \
+   --network devnet \
+   --path-to-payer ~/.config/solana/id.json \
+   --path-to-owner ~/.config/solana/id.json \
+   --path-to-user ~/.config/solana/id.json \
+   --path-to-token-wallet-authority ./token-wallet-authority.json \
+   --token-wallet-address $TOKEN_WALLET_ADDRESS \
+   --mint-b $MINT_B_ADDRESS \
+   --path-to-pool-params ../config/poolParams.json \
 
 ```
 
@@ -53,12 +53,12 @@ export POOL_ADDRESS=
 ```
 
 bun run ./2-buy-tokens.ts \
- --network devnet \
- --path-to-owner ~/.config/solana/id.json \
- --path-to-user ~/.config/solana/id.json \
---mint-b $MINT_B_ADDRESS \
---amount .1 \
---limit 0
+   --network devnet \
+   --path-to-owner ~/.config/solana/id.json \
+   --path-to-user ~/.config/solana/id.json \
+   --mint-b $MINT_B_ADDRESS \
+   --amount .1 \
+   --limit 0
 
 ```
 
@@ -66,12 +66,12 @@ bun run ./2-buy-tokens.ts \
 
 ```
 bun run ./3-sell-tokens.ts \
- --network devnet \
- --path-to-owner ~/.config/solana/id.json \
- --path-to-user ~/.config/solana/id.json \
- --mint-b $MINT_B_ADDRESS \
- --amount 10000 \
- --limit 0
+   --network devnet \
+   --path-to-owner ~/.config/solana/id.json \
+   --path-to-user ~/.config/solana/id.json \
+   --mint-b $MINT_B_ADDRESS \
+   --amount 10000 \
+   --limit 0
 
 ```
 
