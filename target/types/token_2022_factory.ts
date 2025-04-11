@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/token_2022_factory.json`.
  */
 export type Token2022Factory = {
-  "address": "BMgJAGouMECUVVkSiucu8CiqdNWjPE2aGGN2zyj5bSwi",
+  "address": "FAcTgvrF2jAiPnWEZGLCV3PTQJrypa8GXLFowBv8T4Vs",
   "metadata": {
     "name": "token2022Factory",
     "version": "0.1.0",
@@ -68,6 +68,10 @@ export type Token2022Factory = {
               {
                 "kind": "account",
                 "path": "mintA"
+              },
+              {
+                "kind": "arg",
+                "path": "params.nonce"
               }
             ]
           }
@@ -130,7 +134,7 @@ export type Token2022Factory = {
           "docs": [
             "The Vertigo program."
           ],
-          "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX"
+          "address": "vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"
         },
         {
           "name": "factory",
@@ -158,6 +162,10 @@ export type Token2022Factory = {
               {
                 "kind": "account",
                 "path": "mintA"
+              },
+              {
+                "kind": "arg",
+                "path": "params.nonce"
               }
             ]
           }
@@ -208,38 +216,38 @@ export type Token2022Factory = {
             "program": {
               "kind": "const",
               "value": [
-                7,
-                87,
-                18,
-                62,
-                70,
-                176,
-                102,
-                18,
-                46,
-                201,
-                152,
-                185,
-                42,
+                13,
+                203,
+                179,
+                20,
+                172,
+                60,
+                167,
+                140,
+                165,
+                103,
+                213,
+                134,
+                29,
+                33,
+                40,
                 214,
-                249,
-                37,
-                56,
-                200,
-                147,
-                177,
-                133,
-                12,
-                123,
-                15,
-                51,
+                192,
+                178,
+                98,
+                232,
+                190,
+                131,
+                38,
                 221,
-                221,
-                4,
-                248,
-                132,
-                21,
-                210
+                171,
+                228,
+                122,
+                172,
+                65,
+                242,
+                162,
+                135
               ]
             }
           }
@@ -261,38 +269,38 @@ export type Token2022Factory = {
             "program": {
               "kind": "const",
               "value": [
-                7,
-                87,
-                18,
-                62,
-                70,
-                176,
-                102,
-                18,
-                46,
-                201,
-                152,
-                185,
-                42,
+                13,
+                203,
+                179,
+                20,
+                172,
+                60,
+                167,
+                140,
+                165,
+                103,
+                213,
+                134,
+                29,
+                33,
+                40,
                 214,
-                249,
-                37,
-                56,
-                200,
-                147,
-                177,
-                133,
-                12,
-                123,
-                15,
-                51,
+                192,
+                178,
+                98,
+                232,
+                190,
+                131,
+                38,
                 221,
-                221,
-                4,
-                248,
-                132,
-                21,
-                210
+                171,
+                228,
+                122,
+                172,
+                65,
+                242,
+                162,
+                135
               ]
             }
           }
@@ -314,38 +322,38 @@ export type Token2022Factory = {
             "program": {
               "kind": "const",
               "value": [
-                7,
-                87,
-                18,
-                62,
-                70,
-                176,
-                102,
-                18,
-                46,
-                201,
-                152,
-                185,
-                42,
+                13,
+                203,
+                179,
+                20,
+                172,
+                60,
+                167,
+                140,
+                165,
+                103,
+                213,
+                134,
+                29,
+                33,
+                40,
                 214,
-                249,
-                37,
-                56,
-                200,
-                147,
-                177,
-                133,
-                12,
-                123,
-                15,
-                51,
+                192,
+                178,
+                98,
+                232,
+                190,
+                131,
+                38,
                 221,
-                221,
-                4,
-                248,
-                132,
-                21,
-                210
+                171,
+                228,
+                122,
+                172,
+                65,
+                242,
+                162,
+                135
               ]
             }
           }
@@ -664,6 +672,10 @@ export type Token2022Factory = {
                 "name": "tokenParams"
               }
             }
+          },
+          {
+            "name": "nonce",
+            "type": "u8"
           }
         ]
       }
@@ -690,6 +702,10 @@ export type Token2022Factory = {
             "type": {
               "option": "pubkey"
             }
+          },
+          {
+            "name": "nonce",
+            "type": "u8"
           }
         ]
       }

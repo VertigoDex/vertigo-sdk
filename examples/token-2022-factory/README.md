@@ -19,7 +19,7 @@ This creates your token factory that can launch multiple tokens
 
 ```bash
 bun run ./1-initialize.ts \
-    --network localnet \
+    --network devnet \
     --path-to-payer ~/.config/solana/id.json \
     --path-to-owner ~/.config/solana/id.json \
     --path-to-factory-params ../config/factoryInit.json
@@ -31,7 +31,7 @@ Creates your new Token 2022 token with customized parameters
 
 ```bash
 bun run ./2-launch-from-factory.ts \
-    --network localnet \
+    --network devnet \
     --path-to-payer ~/.config/solana/id.json \
     --path-to-owner ~/.config/solana/id.json \
     --launch-config ../config/factoryLaunch.json
@@ -41,9 +41,9 @@ The above command will output output a **pool address** and **mint address** - s
 Run the following command to export the mint address to an environment variable to be used in the next steps
 
 ```bash
-export MINT_ADDRESS=Gg4VozZxU3fHJX2KdbNcUAGffCsatoGGqBLRmfwABjYo
+export MINT_ADDRESS=
 export POOL_OWNER_ADDRESS=$(solana address)
-export POOL_ADDRESS=4nqChYYEeCzejKbP2ydg164DsPCYTsZGpZ4QCZnZCYLz
+export POOL_ADDRESS=
 ```
 
 ### 3. Buy Tokens
@@ -54,7 +54,7 @@ Note the pool owner address is the public address of the owner of the pool. In t
 
 ```bash
 bun run ./3-buy-tokens.ts \
-    --network localnet \
+    --network devnet \
     --path-to-user ~/.config/solana/id.json \
     --pool-owner $POOL_OWNER_ADDRESS \
     --mint-b $MINT_ADDRESS \
@@ -67,7 +67,7 @@ Sell your tokens back for SOL. Again since you are the pool owner, you can use y
 
 ```bash
 bun run ./4-sell-tokens.ts \
-    --network localnet \
+    --network devnet \
     --path-to-user ~/.config/solana/id.json \
     --pool-owner $POOL_OWNER_ADDRESS \
     --mint-b $MINT_ADDRESS \
@@ -81,7 +81,7 @@ Token creators can collect their accumulated royalties. The script below will cl
 
 ```bash
 bun run ./5-claim-royalties.ts \
-    --network localnet \
+    --network devnet \
     --path-to-claimer ~/.config/solana/id.json \
     --pool $POOL_ADDRESS
 ```

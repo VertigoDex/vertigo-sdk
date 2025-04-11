@@ -18,8 +18,8 @@ bun run ./0-setup.ts \
 The script will output a **mint address** and **token wallet address**. Add them to the following command to store them as environment variables for the following steps.
 
 ```
-export MINT_B_ADDRESS=46ihhGo7wv7Kpv5s74WhUUQA3Rrbr61cHWyXd7TzGyRP
-export TOKEN_WALLET_ADDRESS=BmTnPaq6XsjsX6McdZh3n4i65U1u6o9WHReEZTknFABm
+export MINT_B_ADDRESS=
+export TOKEN_WALLET_ADDRESS=
 ```
 
 2. Launch a pool
@@ -41,7 +41,7 @@ bun run ./1-launch-pool.ts \
 This will output a **pool address**. Add it to the following command to store it as an environment variable for the following steps.
 
 ```
-export POOL_ADDRESS=FsnESDMBzJoe9PFs6zDWH9BdzyYQN7PmDEJvpta8MycB
+export POOL_ADDRESS=
 ```
 
 3. Buy tokens

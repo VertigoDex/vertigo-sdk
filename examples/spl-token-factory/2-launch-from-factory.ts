@@ -6,7 +6,7 @@ import { hideBin } from "yargs/helpers";
 
 // imports to load from local file
 import fs from "node:fs";
-import { getRpcUrl } from "../utils";
+import { getRpcUrl } from "../../src/utils";
 import { NATIVE_MINT, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 
 const argv = yargs(hideBin(process.argv))
@@ -164,9 +164,7 @@ if (
 }
 
 async function main() {
-  const vertigo = new VertigoSDK(connection, wallet, {
-    explorer: "solscan",
-  });
+  const vertigo = new VertigoSDK(connection, wallet);
 
   console.log(`Owner: ${owner.publicKey.toBase58()}`);
   console.log(`Mint B: ${mintB.publicKey.toBase58()}`);
