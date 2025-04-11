@@ -13,6 +13,10 @@ Before you begin, make sure your local Solana environment is set up and funded. 
 
 ## Step-by-Step Commands
 
+### Prerequisites
+
+Make sure to install the dependencies for the project by running `bun install`.
+
 ### 1. Initialize the Token Factory
 
 This creates your token factory that can launch multiple tokens
@@ -42,7 +46,7 @@ Run the following command to export the mint address to an environment variable 
 
 ```bash
 export MINT_ADDRESS=
-export POOL_OWNER_ADDRESS=$(solana address)
+export POOL_OWNER_ADDRESS=$(solana address --url devnet)
 export POOL_ADDRESS=
 ```
 
