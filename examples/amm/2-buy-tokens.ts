@@ -15,7 +15,7 @@ import fs from "node:fs";
 import { getRpcUrl, VertigoSDK } from "../../src";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import { wrapSol } from "../../../tests/utils";
+import { wrapSol } from "../utils";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {
