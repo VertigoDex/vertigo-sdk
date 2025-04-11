@@ -17,9 +17,13 @@
     "declarationMap": true,
     "isolatedModules": false,
     "rootDir": ".",
-    "sourceMap": false,
+    "sourceMap": true,
     "emitDecoratorMetadata": false,
-    "experimentalDecorators": false
+    "experimentalDecorators": false,
+    "baseUrl": ".",
+    "paths": {
+      "*": ["*", "src/*"]
+    }
   },
   "include": ["src/**/*", "target/**/*"],
   "exclude": ["node_modules", "dist", "examples", "tests"]
