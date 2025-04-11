@@ -4,6 +4,10 @@
 
 The following is a guide for interacting with the AMM methods on the vertigo SDK.
 
+### Prerequisites
+
+Make sure to install the dependencies for the project by running `bun install`.
+
 1. Setup
    This script will create a token wallet authority, mint, and token wallet. It will also mint tokens to the token wallet. These are required to launch a pool. If path to required keypairs are not provided, the script will generate new keypairs and save them to the current directory.
 
