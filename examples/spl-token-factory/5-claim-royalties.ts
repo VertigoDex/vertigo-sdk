@@ -5,7 +5,7 @@ import {
   NATIVE_MINT,
   getAssociatedTokenAddressSync,
 } from "@solana/spl-token";
-import { getRpcUrl } from "../utils";
+import { getRpcUrl } from "../../src/utils";
 import fs from "node:fs";
 import { VertigoSDK } from "../../src";
 import yargs from "yargs";

@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/spl_token_factory.json`.
  */
 export type SplTokenFactory = {
-  "address": "5aVnnjbhWpyxUdo2orqASygwfjKpbPcWFvVnfGU1GrNi",
+  "address": "FactRtzKDU69a88rVZbnTofJFSVSDtzEHQG36NigvJjS",
   "metadata": {
     "name": "splTokenFactory",
     "version": "0.1.0",
@@ -68,6 +68,10 @@ export type SplTokenFactory = {
               {
                 "kind": "account",
                 "path": "mintA"
+              },
+              {
+                "kind": "arg",
+                "path": "params.nonce"
               }
             ]
           }
@@ -124,7 +128,7 @@ export type SplTokenFactory = {
         },
         {
           "name": "amm",
-          "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX"
+          "address": "vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"
         },
         {
           "name": "factory",
@@ -152,6 +156,10 @@ export type SplTokenFactory = {
               {
                 "kind": "account",
                 "path": "mintA"
+              },
+              {
+                "kind": "arg",
+                "path": "params.nonce"
               }
             ]
           }
@@ -304,38 +312,38 @@ export type SplTokenFactory = {
             "program": {
               "kind": "const",
               "value": [
-                7,
-                87,
-                18,
-                62,
-                70,
-                176,
-                102,
-                18,
-                46,
-                201,
-                152,
-                185,
-                42,
+                13,
+                203,
+                179,
+                20,
+                172,
+                60,
+                167,
+                140,
+                165,
+                103,
+                213,
+                134,
+                29,
+                33,
+                40,
                 214,
-                249,
-                37,
-                56,
-                200,
-                147,
-                177,
-                133,
-                12,
-                123,
-                15,
-                51,
+                192,
+                178,
+                98,
+                232,
+                190,
+                131,
+                38,
                 221,
-                221,
-                4,
-                248,
-                132,
-                21,
-                210
+                171,
+                228,
+                122,
+                172,
+                65,
+                242,
+                162,
+                135
               ]
             }
           }
@@ -357,38 +365,38 @@ export type SplTokenFactory = {
             "program": {
               "kind": "const",
               "value": [
-                7,
-                87,
-                18,
-                62,
-                70,
-                176,
-                102,
-                18,
-                46,
-                201,
-                152,
-                185,
-                42,
+                13,
+                203,
+                179,
+                20,
+                172,
+                60,
+                167,
+                140,
+                165,
+                103,
+                213,
+                134,
+                29,
+                33,
+                40,
                 214,
-                249,
-                37,
-                56,
-                200,
-                147,
-                177,
-                133,
-                12,
-                123,
-                15,
-                51,
+                192,
+                178,
+                98,
+                232,
+                190,
+                131,
+                38,
                 221,
-                221,
-                4,
-                248,
-                132,
-                21,
-                210
+                171,
+                228,
+                122,
+                172,
+                65,
+                242,
+                162,
+                135
               ]
             }
           }
@@ -410,38 +418,38 @@ export type SplTokenFactory = {
             "program": {
               "kind": "const",
               "value": [
-                7,
-                87,
-                18,
-                62,
-                70,
-                176,
-                102,
-                18,
-                46,
-                201,
-                152,
-                185,
-                42,
+                13,
+                203,
+                179,
+                20,
+                172,
+                60,
+                167,
+                140,
+                165,
+                103,
+                213,
+                134,
+                29,
+                33,
+                40,
                 214,
-                249,
-                37,
-                56,
-                200,
-                147,
-                177,
-                133,
-                12,
-                123,
-                15,
-                51,
+                192,
+                178,
+                98,
+                232,
+                190,
+                131,
+                38,
                 221,
-                221,
-                4,
-                248,
-                132,
-                21,
-                210
+                171,
+                228,
+                122,
+                172,
+                65,
+                242,
+                162,
+                135
               ]
             }
           }
@@ -764,6 +772,10 @@ export type SplTokenFactory = {
                 "name": "tokenParams"
               }
             }
+          },
+          {
+            "name": "nonce",
+            "type": "u8"
           }
         ]
       }
@@ -790,6 +802,10 @@ export type SplTokenFactory = {
             "type": {
               "option": "pubkey"
             }
+          },
+          {
+            "name": "nonce",
+            "type": "u8"
           }
         ]
       }

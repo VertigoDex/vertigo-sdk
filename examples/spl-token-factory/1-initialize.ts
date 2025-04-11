@@ -7,7 +7,7 @@ import * as anchor from "@coral-xyz/anchor";
 
 // imports to load from local file
 import { NATIVE_MINT } from "@solana/spl-token";
-import { getRpcUrl } from "../utils";
+import { getRpcUrl } from "../../src";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {
@@ -113,7 +113,6 @@ const factoryParams = {
 
 async function main() {
   const vertigo = new VertigoSDK(connection, wallet);
-  console.log("Vertigo SPL Token Factory");
 
   const signature = await vertigo.SPLTokenFactory.initialize({
     payer: wallet.payer,

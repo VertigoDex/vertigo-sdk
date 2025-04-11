@@ -13,9 +13,8 @@ import {
 } from "@solana/spl-token";
 
 import { TOKEN_PROGRAM_ID } from "@solana/spl-token";
-import { getRpcUrl } from "../utils";
 import fs from "node:fs";
-import { VertigoSDK } from "../../src";
+import { getRpcUrl, VertigoSDK } from "../../src";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { wrapSol } from "../../../tests/utils";

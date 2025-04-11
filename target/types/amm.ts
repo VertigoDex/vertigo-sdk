@@ -5,7 +5,7 @@
  * IDL can be found at `target/idl/amm.json`.
  */
 export type Amm = {
-  "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX",
+  "address": "vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ",
   "metadata": {
     "name": "amm",
     "version": "0.1.0",
@@ -127,7 +127,7 @@ export type Amm = {
         },
         {
           "name": "program",
-          "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX"
+          "address": "vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"
         }
       ],
       "args": [
@@ -386,7 +386,7 @@ export type Amm = {
         },
         {
           "name": "program",
-          "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX"
+          "address": "vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"
         }
       ],
       "args": [
@@ -460,7 +460,7 @@ export type Amm = {
         },
         {
           "name": "program",
-          "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX"
+          "address": "vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"
         }
       ],
       "args": [
@@ -593,7 +593,7 @@ export type Amm = {
         },
         {
           "name": "program",
-          "address": "VertYgoQmfURENqDcpNPQXb9sSx1Ua4Ban1Q5FGaPBX"
+          "address": "vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"
         }
       ],
       "args": [
