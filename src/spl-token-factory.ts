@@ -16,6 +16,7 @@ import {
 } from "./types/generated/spl_token_factory";
 import { DevBuyArgs } from "./types/sdk";
 import { getPoolPda } from "./utils/helpers";
+
 export class SplTokenFactory {
   private factory: Program<SplTokenFactoryIdl>;
   private config: VertigoConfig;
@@ -34,13 +35,31 @@ export class SplTokenFactory {
     this.amm = amm;
   }
 
+  /**
+   * Initializes a new token factory
+   * @param {Object} params - The parameters object
+   * @param {Keypair} params.payer - Keypair that will pay for the transaction
+   * @param {Keypair} params.owner - Keypair that will own the factory
+   * @param {PublicKey} params.mintA - Public key of the token mint for the A side
+   * @param {Object} params.params - Factory initialization parameters
+   * @param {BN} params.params.shift - Bonding curve shift parameter
+   * @param {BN} params.params.initialTokenReserves - Initial token reserves
+   * @param {Object} params.params.feeParams - Fee parameters
+   * @param {BN} params.params.feeParams.normalizationPeriod - Fee normalization period in slots
+   * @param {number} params.params.feeParams.decay - Fee decay rate
+   * @param {number} params.params.feeParams.royaltiesBps - Royalties in basis points
+   * @param {Object} params.params.tokenParams - Token parameters
+   * @param {number} params.params.tokenParams.decimals - Token decimals
+   * @param {boolean} params.params.tokenParams.mutable - Whether token metadata is mutable
+   * @param {number} params.params.nonce - Initialization nonce, unique per factory
+   * @returns {Promise<string>} Transaction signature
+   */
   async initialize({
     payer,
     owner,
     mintA,
     params,
   }: InitializeRequest): Promise<string> {
-    this.config.log("🏭 Creating new factory...");
     const signature = await this.factory.methods
       .initialize(params)
       .accounts({
@@ -65,17 +84,18 @@ export class SplTokenFactory {
    * @param {Keypair} args.mintB - Keypair that will control the B side token mint
    * @param {Keypair} args.mintBAuthority - Keypair that will control the token mint
    * @param {PublicKey} args.tokenProgramA - Public key of the token program for the A side
-   * @param {Object} args.launchCfg - Launch configuration parameters
-   * @param {Object} args.launchCfg.tokenConfig - Token configuration parameters
-   * @param {string} args.launchCfg.tokenConfig.name - Token name
-   * @param {string} args.launchCfg.tokenConfig.symbol - Token symbol
-   * @param {string} args.launchCfg.tokenConfig.uri - Token metadata URI
-   * @param {number} args.launchCfg.feeFreeBuys - Number of fee-free buys allowed
-   * @param {anchor.BN} args.launchCfg.reference - Reference price for the pool
+   * @param {Object} args.params - Launch configuration parameters
+   * @param {Object} args.params.tokenConfig - Token configuration parameters
+   * @param {string} args.params.tokenConfig.name - Token name
+   * @param {string} args.params.tokenConfig.symbol - Token symbol
+   * @param {string} args.params.tokenConfig.uri - Token metadata URI
+   * @param {anchor.BN} args.params.reference - Reference slot for the fee calculation
+   * @param {PublicKey | null} args.params.privilegedSwapper - Optional privileged swapper address
+   * @param {number} args.params.nonce - Nonce for the launch
    * @param {anchor.BN} [args.devBuyAmount] - Optional amount of SOL (in lamports) for initial token purchase
    * @param {Keypair} [args.dev] - Optional Keypair to receive initial dev tokens
    * @param {PublicKey} [args.devTaA] - Optional token account of the receiver for the A side
-   * @returns {Promise<{ signature: string, mint: PublicKey }>} Transaction signature and mint address
+   * @returns {Promise<{ signature: string, devBuySignature: string, poolAddress: PublicKey }>} Transaction signature, dev buy signature and pool address
    */
   async launch({
     payer,

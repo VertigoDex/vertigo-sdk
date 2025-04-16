@@ -195,9 +195,10 @@ export class VertigoSDK {
    * @param {Object} params - The parameters object
    * @param {anchor.BN} params.amount - Amount of token A to buy
    * @param {anchor.BN} params.limit - Maximum amount of token B expected to receive
-   * @param {PublicKey} params.owner - Pool owner's public key
-   * @param {PublicKey} params.mintA - Address of the token mint for the A side
-   * @param {PublicKey} params.mintB - Address of the token mint for the B side
+   * @param {PublicKey} owner - Pool owner's public key
+   * @param {PublicKey} user - User's public key
+   * @param {PublicKey} mintA - Address of the token mint for the A side
+   * @param {PublicKey} mintB - Address of the token mint for the B side
    * @returns {Promise<{amountB: BN, feeA: BN}>} Quote containing expected token amount and fees
    * @throws {SDKError} If the quote fails or validation fails
    */
@@ -207,9 +208,15 @@ export class VertigoSDK {
     user,
     mintA,
     mintB,
-  }: QuoteBuyRequest): Promise<SwapResponse> {
+  }: QuoteBuyRequest): Promise<{
+    newReservesA: number;
+    newReservesB: number;
+    amountA: number;
+    amountB: number;
+    feeA: number;
+  }> {
     try {
-      return this.amm.methods
+      const results: SwapResponse = await this.amm.methods
         .quoteBuy(params)
         .accounts({
           owner,
@@ -218,6 +225,14 @@ export class VertigoSDK {
           mintB,
         })
         .view();
+
+      return {
+        newReservesA: results.newReservesA.toNumber(),
+        newReservesB: results.newReservesB.toNumber(),
+        amountA: results.amountA.toNumber(),
+        amountB: results.amountB.toNumber(),
+        feeA: results.feeA.toNumber(),
+      };
     } catch (error) {
       console.error(error);
       throw new SDKError(
@@ -233,9 +248,10 @@ export class VertigoSDK {
    * @param {Object} params - The parameters object
    * @param {anchor.BN} params.amount - Amount of token B to sell
    * @param {anchor.BN} params.limit - Minimum amount of token A expected to receive
-   * @param {PublicKey} params.owner - Pool owner's public key
-   * @param {PublicKey} params.mintA - Address of the token mint for the A side
-   * @param {PublicKey} params.mintB - Address of the token mint for the B side
+   * @param {PublicKey} owner - Pool owner's public key
+   * @param {PublicKey} user - User's public key
+   * @param {PublicKey} mintA - Address of the token mint for the A side
+   * @param {PublicKey} mintB - Address of the token mint for the B side
    * @returns {Promise<{amountA: BN, feeA: BN}>} Quote containing expected token A amount and fees
    * @throws {SDKError} If the quote fails or validation fails
    */
@@ -245,9 +261,15 @@ export class VertigoSDK {
     user,
     mintA,
     mintB,
-  }: QuoteSellRequest): Promise<SwapResponse> {
+  }: QuoteSellRequest): Promise<{
+    newReservesA: number;
+    newReservesB: number;
+    amountA: number;
+    amountB: number;
+    feeA: number;
+  }> {
     try {
-      return this.amm.methods
+      const results: SwapResponse = await this.amm.methods
         .quoteSell(params)
         .accounts({
           owner,
@@ -256,6 +278,14 @@ export class VertigoSDK {
           mintB,
         })
         .view();
+
+      return {
+        newReservesA: results.newReservesA.toNumber(),
+        newReservesB: results.newReservesB.toNumber(),
+        amountA: results.amountA.toNumber(),
+        amountB: results.amountB.toNumber(),
+        feeA: results.feeA.toNumber(),
+      };
     } catch (error) {
       throw new SDKError(
         "Failed to get sell quote",
@@ -293,8 +323,6 @@ export class VertigoSDK {
     tokenProgramB,
   }: BuyRequest) {
     try {
-      this.config.log("📡 Sending buy transaction...");
-
       // Derive receiving token account address if not provided
       const userTaB =
         providedUserTaB ||
@@ -390,8 +418,6 @@ export class VertigoSDK {
     tokenProgramB,
   }: SellRequest) {
     try {
-      this.config.log("📡 Sending sell transaction...");
-
       // Derive receiving token account address if not provided
       const userTaA =
         providedUserTaA ||

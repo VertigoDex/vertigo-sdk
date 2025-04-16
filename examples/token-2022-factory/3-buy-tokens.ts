@@ -57,7 +57,7 @@ const argv = yargs(hideBin(process.argv))
   })
   .option("amount", {
     type: "number",
-    description: "Amount of SOL to spend",
+    description: "Amount of mintA to spend",
     demandOption: true,
   })
   .option("limit", {
@@ -148,6 +148,14 @@ async function main() {
     }
   }
 
+  // check TaA balance
+  const taABalance = await connection.getTokenAccountBalance(userTaA);
+  if (taABalance.value.uiAmount === 0) {
+    throw new Error(
+      `User TaA (${userTaA.toString()}) does not exist or has no balance. Please create a TaA for the user.`
+    );
+  }
+
   const userTaB = getAssociatedTokenAddressSync(
     new PublicKey(argv["mint-b"]),
     user.publicKey,
@@ -174,7 +182,7 @@ async function main() {
     tokenProgramA: new PublicKey(argv["token-program-a"]),
     tokenProgramB: new PublicKey(argv["token-program-b"]),
     params: {
-      amount: new anchor.BN(LAMPORTS_PER_SOL).muln(argv.amount),
+      amount: new anchor.BN(argv.amount),
       limit: new anchor.BN(argv.limit),
     },
   });

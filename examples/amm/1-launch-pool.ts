@@ -84,6 +84,11 @@ const argv = yargs(hideBin(process.argv))
     description: "Amount of SOL to spend in the dev buy",
     optional: true,
   })
+  .option("devBuyLimit", {
+    type: "number",
+    description: "Limit for the dev buy order",
+    optional: true,
+  })
   .option("path-to-pool-params", {
     type: "string",
     description: "Path to pool params JSON file",
@@ -161,9 +166,8 @@ async function main() {
   };
 
   if (argv.dev && argv.devTaA && argv.devTaB && argv.devBuyAmount) {
-    launchArgs.devBuyAmount = new anchor.BN(LAMPORTS_PER_SOL).muln(
-      argv.devBuyAmount
-    );
+    launchArgs.amount = new anchor.BN(argv.devBuyAmount);
+    launchArgs.limit = new anchor.BN(argv.devBuyAmount);
     launchArgs.devTaA = new PublicKey(argv.devTaA);
     launchArgs.dev = user;
   }

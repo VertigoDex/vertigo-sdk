@@ -35,21 +35,26 @@ export class Token2022Factory {
   }
 
   /**
-   * Creates a new factory
-   * @param {Keypair} args.payer  - Keypair that will pay for the transaction
-   * @param {Keypair} args.owner  - Keypair that will own the factory
-   * @param {PublicKey} args.mint - Public key of the token mint for the A side
-   * @param {Object} args.params  - Factory initialization parameters
-   * @param {anchor.BN} args.params.shift - Constant product shift
-   * @param {anchor.BN} params.initialTokenReserves - Initial token reserves for pools
-   * @param {Object} params.feeParams - Fee parameters
-   * @param {anchor.BN} params.feeParams.normalizationPeriod - Normalization period in slots
-   * @param {number} params.feeParams.decay - Fee decay rate
-   * @param {number} params.feeParams.royaltiesBps - Royalty fee in basis points
-   * @param {Object} params.tokenParams - Token parameters
-   * @param {number} params.tokenParams.decimals - Token decimals
-   * @param {boolean} params.tokenParams.mutable - Whether token metadata is mutable
-   * @returns {Promise<string>} Transaction signature
+   * Launches a new trading pool from an existing factory
+   * @param {Object} args - The arguments object
+   * @param {Keypair} args.payer - Keypair that will pay for the transaction
+   * @param {Keypair} args.owner - Keypair of the factory owner
+   * @param {PublicKey} args.mintA - Keypair that will control the A side token mint
+   * @param {Keypair} args.mintB - Keypair that will control the B side token mint
+   * @param {Keypair} args.mintBAuthority - Keypair that will control the token mint
+   * @param {PublicKey} args.tokenProgramA - Public key of the token program for the A side
+   * @param {Object} args.params - Launch configuration parameters
+   * @param {Object} args.params.tokenConfig - Token configuration parameters
+   * @param {string} args.params.tokenConfig.name - Token name
+   * @param {string} args.params.tokenConfig.symbol - Token symbol
+   * @param {string} args.params.tokenConfig.uri - Token metadata URI
+   * @param {anchor.BN} args.params.reference - Reference slot for the fee calculation
+   * @param {PublicKey | null} args.params.privilegedSwapper - Optional privileged swapper address
+   * @param {number} args.params.nonce - Nonce for the launch
+   * @param {anchor.BN} [args.devBuyAmount] - Optional amount of SOL (in lamports) for initial token purchase
+   * @param {Keypair} [args.dev] - Optional Keypair to receive initial dev tokens
+   * @param {PublicKey} [args.devTaA] - Optional token account of the receiver for the A side
+   * @returns {Promise<{ signature: string, devBuySignature: string, poolAddress: PublicKey }>} Transaction signature, dev buy signature and pool address
    */
   async initialize({
     payer,
@@ -57,7 +62,6 @@ export class Token2022Factory {
     mintA,
     params,
   }: InitializeRequest): Promise<string> {
-    this.config.log("🏭 Creating new factory...");
     const signature = await this.factory.methods
       .initialize(params)
       .accounts({
