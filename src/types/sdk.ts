@@ -21,7 +21,8 @@ export interface SDKConfig {
 }
 
 export interface DevBuyArgs {
-  devBuyAmount: anchor.BN;
+  amount: anchor.BN;
+  limit: anchor.BN;
   dev: Keypair;
   devTaA: PublicKey;
 }

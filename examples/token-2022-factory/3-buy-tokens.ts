@@ -1,9 +1,4 @@
-import {
-  Connection,
-  Keypair,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-} from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {
   createAssociatedTokenAccount,
@@ -107,7 +102,7 @@ async function main() {
       wSolBalance = await connection
         .getTokenAccountBalance(userTaA)
         .then((balance) => {
-          return balance.value.uiAmount;
+          return new anchor.BN(balance.value.amount).toNumber();
         });
     } catch (error) {
       await createAssociatedTokenAccount(
@@ -137,20 +132,15 @@ async function main() {
       const difference = amount - wSolBalance;
       if (difference > 0) {
         console.log(`Wrapping ${difference} SOL to wSOL...`);
-        await wrapSol(
-          provider,
-          difference * LAMPORTS_PER_SOL,
-          user.publicKey,
-          user,
-          null
-        );
+        await wrapSol(provider, difference, user.publicKey, user, null);
+        await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds
       }
     }
   }
 
   // check TaA balance
   const taABalance = await connection.getTokenAccountBalance(userTaA);
-  if (taABalance.value.uiAmount === 0) {
+  if (new anchor.BN(taABalance.value.amount).toNumber() === 0) {
     throw new Error(
       `User TaA (${userTaA.toString()}) does not exist or has no balance. Please create a TaA for the user.`
     );

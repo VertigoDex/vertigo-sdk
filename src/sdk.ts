@@ -35,6 +35,7 @@ export class VertigoSDK {
   private amm: Program<Amm>;
   public Token2022Factory: Token2022Factory;
   public SPLTokenFactory: SplTokenFactory;
+  public programId: PublicKey;
 
   constructor(
     connection: Connection,
@@ -51,6 +52,7 @@ export class VertigoSDK {
       }
 
       this.amm = new Program(ammIdl, this.config.provider) as Program<Amm>;
+      this.programId = this.amm.programId;
       this.Token2022Factory = new Token2022Factory(this.config, this.amm);
       this.SPLTokenFactory = new SplTokenFactory(this.config, this.amm);
     } catch (error) {
@@ -92,7 +94,8 @@ export class VertigoSDK {
     mintB,
     tokenProgramA,
     tokenProgramB,
-    devBuyAmount,
+    amount,
+    limit,
     dev,
     devTaA,
   }: CreateRequest & Partial<DevBuyArgs>): Promise<{
@@ -103,7 +106,7 @@ export class VertigoSDK {
     this.config.log("🚀 Launching new pool...");
 
     const privilegedSwapper =
-      devBuyAmount && dev && devTaA ? dev.publicKey : null;
+      amount && limit && dev && devTaA ? dev.publicKey : null;
 
     // Prepare pool creation params
     const createParams = {
@@ -158,8 +161,8 @@ export class VertigoSDK {
       this.config.log("📡 Sending dev buy transaction...");
       buySignature = await this.amm.methods
         .buy({
-          amount: devBuyAmount,
-          limit: new anchor.BN(0),
+          amount,
+          limit,
         })
         .accounts({
           owner: owner.publicKey,
@@ -208,15 +211,9 @@ export class VertigoSDK {
     user,
     mintA,
     mintB,
-  }: QuoteBuyRequest): Promise<{
-    newReservesA: number;
-    newReservesB: number;
-    amountA: number;
-    amountB: number;
-    feeA: number;
-  }> {
+  }: QuoteBuyRequest): Promise<SwapResponse> {
     try {
-      const results: SwapResponse = await this.amm.methods
+      return await this.amm.methods
         .quoteBuy(params)
         .accounts({
           owner,
@@ -225,14 +222,6 @@ export class VertigoSDK {
           mintB,
         })
         .view();
-
-      return {
-        newReservesA: results.newReservesA.toNumber(),
-        newReservesB: results.newReservesB.toNumber(),
-        amountA: results.amountA.toNumber(),
-        amountB: results.amountB.toNumber(),
-        feeA: results.feeA.toNumber(),
-      };
     } catch (error) {
       console.error(error);
       throw new SDKError(
@@ -261,15 +250,9 @@ export class VertigoSDK {
     user,
     mintA,
     mintB,
-  }: QuoteSellRequest): Promise<{
-    newReservesA: number;
-    newReservesB: number;
-    amountA: number;
-    amountB: number;
-    feeA: number;
-  }> {
+  }: QuoteSellRequest): Promise<SwapResponse> {
     try {
-      const results: SwapResponse = await this.amm.methods
+      return await this.amm.methods
         .quoteSell(params)
         .accounts({
           owner,
@@ -278,14 +261,6 @@ export class VertigoSDK {
           mintB,
         })
         .view();
-
-      return {
-        newReservesA: results.newReservesA.toNumber(),
-        newReservesB: results.newReservesB.toNumber(),
-        amountA: results.amountA.toNumber(),
-        amountB: results.amountB.toNumber(),
-        feeA: results.feeA.toNumber(),
-      };
     } catch (error) {
       throw new SDKError(
         "Failed to get sell quote",

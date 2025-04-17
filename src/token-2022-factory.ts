@@ -93,7 +93,8 @@ export class Token2022Factory {
    * @param {string} args.launchCfg.tokenConfig.uri - Token metadata URI
    * @param {number} args.launchCfg.feeFreeBuys - Number of fee-free buys allowed
    * @param {anchor.BN} args.launchCfg.reference - Reference price for the pool
-   * @param {anchor.BN} [args.devBuyAmount] - Optional amount of SOL (in lamports) for initial token purchase
+   * @param {anchor.BN} [args.amount] - Optional amount of Mint A to purchase
+   * @param {anchor.BN} [args.limit] - Optional limit for the initial token purchase
    * @param {Keypair} [args.dev] - Optional Keypair to receive initial dev tokens
    * @param {PublicKey} [args.devTaA] - Optional token account of the receiver for the A side
    * @returns {Promise<{ signature: string, mint: PublicKey }>} Transaction signature and mint address
@@ -106,7 +107,8 @@ export class Token2022Factory {
     mintBAuthority,
     tokenProgramA,
     params,
-    devBuyAmount,
+    amount,
+    limit,
     dev,
     devTaA,
   }: LaunchRequest & Partial<DevBuyArgs>): Promise<{
@@ -145,7 +147,7 @@ export class Token2022Factory {
     const tx = new anchor.web3.Transaction();
     let devBuySignature = null;
 
-    if (devBuyAmount && dev && devTaA) {
+    if (amount && limit && dev && devTaA) {
       // Check if the dev TaB exists, if not create it
       let userTaBExists = false;
       const devTaB = getAssociatedTokenAddressSync(
@@ -177,8 +179,8 @@ export class Token2022Factory {
 
       const buyIx = await this.amm.methods
         .buy({
-          amount: devBuyAmount,
-          limit: new anchor.BN(0),
+          amount,
+          limit,
         })
         .accounts({
           owner: owner.publicKey,

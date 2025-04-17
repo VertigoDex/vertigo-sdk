@@ -136,13 +136,7 @@ async function main() {
       const difference = amount - wSolBalance;
       if (difference > 0) {
         console.log(`Wrapping ${difference} SOL to wSOL...`);
-        await wrapSol(
-          provider,
-          difference * LAMPORTS_PER_SOL,
-          user.publicKey,
-          user,
-          null
-        );
+        await wrapSol(provider, difference, user.publicKey, user, null);
       }
     }
   } else {

@@ -81,7 +81,7 @@ const argv = yargs(hideBin(process.argv))
   })
   .option("devBuyAmount", {
     type: "number",
-    description: "Amount of SOL to spend in the dev buy",
+    description: "Amount of Mint A to spend in the dev buy",
     optional: true,
   })
   .option("devBuyLimit", {
@@ -161,8 +161,8 @@ async function main() {
     tokenWalletB: new PublicKey(argv["token-wallet-address"]),
     mintA: new PublicKey(argv["mint-a"]),
     mintB: new PublicKey(argv["mint-b"]),
-    tokenProgramA: argv["token-program-a"],
-    tokenProgramB: argv["token-program-b"],
+    tokenProgramA: new PublicKey(argv["token-program-a"]),
+    tokenProgramB: new PublicKey(argv["token-program-b"]),
   };
 
   if (argv.dev && argv.devTaA && argv.devTaB && argv.devBuyAmount) {

@@ -1,6 +1,8 @@
-import { PublicKey } from "@solana/web3.js";
-import { Keypair } from "@solana/web3.js";
-import { BN } from "@coral-xyz/anchor";
+import { PublicKey } from '@solana/web3.js';
+
+import { Keypair } from '@solana/web3.js';
+
+import { BN } from '@coral-xyz/anchor';
 
 /** Type definition */
 export interface Factory {
@@ -61,6 +63,8 @@ export interface TokenParams {
   mutable: boolean;
 }
 
+
+
 /** Request type for initialize instruction */
 export interface InitializeRequest {
   /** payer account - This account needs to sign the transaction */
@@ -71,8 +75,10 @@ export interface InitializeRequest {
   mintA: PublicKey;
 
   /** Instruction parameters */
-  params: InitializeParams;
+  params: InitializeParams
 }
+
+
 
 /** Request type for launch instruction */
 export interface LaunchRequest {
@@ -90,5 +96,5 @@ export interface LaunchRequest {
   tokenProgramA: PublicKey;
 
   /** Instruction parameters */
-  params: LaunchParams;
+  params: LaunchParams
 }

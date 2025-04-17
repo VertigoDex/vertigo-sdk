@@ -92,7 +92,8 @@ export class SplTokenFactory {
    * @param {anchor.BN} args.params.reference - Reference slot for the fee calculation
    * @param {PublicKey | null} args.params.privilegedSwapper - Optional privileged swapper address
    * @param {number} args.params.nonce - Nonce for the launch
-   * @param {anchor.BN} [args.devBuyAmount] - Optional amount of SOL (in lamports) for initial token purchase
+   * @param {anchor.BN} [args.amount] - Optional amount of Mint A to purchase
+   * @param {anchor.BN} [args.limit] - Optional limit for the initial token purchase
    * @param {Keypair} [args.dev] - Optional Keypair to receive initial dev tokens
    * @param {PublicKey} [args.devTaA] - Optional token account of the receiver for the A side
    * @returns {Promise<{ signature: string, devBuySignature: string, poolAddress: PublicKey }>} Transaction signature, dev buy signature and pool address
@@ -105,7 +106,8 @@ export class SplTokenFactory {
     mintBAuthority,
     tokenProgramA,
     params,
-    devBuyAmount,
+    amount,
+    limit,
     dev,
     devTaA,
   }: LaunchRequest & Partial<DevBuyArgs>): Promise<{
@@ -144,7 +146,7 @@ export class SplTokenFactory {
     const buyTx = new anchor.web3.Transaction();
     let devBuySignature = null;
 
-    if (devBuyAmount && dev && devTaA) {
+    if (amount && limit && dev && devTaA) {
       const devTaB = getAssociatedTokenAddressSync(
         mintB.publicKey,
         dev.publicKey,
@@ -176,8 +178,8 @@ export class SplTokenFactory {
 
       const buyIx = await this.amm.methods
         .buy({
-          amount: devBuyAmount,
-          limit: new anchor.BN(0),
+          amount,
+          limit,
         })
         .accounts({
           owner: owner.publicKey,
