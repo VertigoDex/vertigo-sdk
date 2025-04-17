@@ -34,6 +34,7 @@ export class VertigoSDK {
   private amm: Program<Amm>;
   public Token2022Factory: Token2022Factory;
   public SPLTokenFactory: SplTokenFactory;
+  public programId: PublicKey;
 
   constructor(
     connection: Connection,
@@ -50,6 +51,7 @@ export class VertigoSDK {
       }
 
       this.amm = new Program(ammIdl, this.config.provider) as Program<Amm>;
+      this.programId = this.amm.programId;
       this.Token2022Factory = new Token2022Factory(this.config, this.amm);
       this.SPLTokenFactory = new SplTokenFactory(this.config, this.amm);
     } catch (error) {
@@ -91,7 +93,8 @@ export class VertigoSDK {
     mintB,
     tokenProgramA,
     tokenProgramB,
-    devBuyAmount,
+    amount,
+    limit,
     dev,
     devTaA,
   }: CreateRequest & Partial<DevBuyArgs>): Promise<{
@@ -102,7 +105,7 @@ export class VertigoSDK {
     this.config.log("🚀 Launching new pool...");
 
     const privilegedSwapper =
-      devBuyAmount && dev && devTaA ? dev.publicKey : null;
+      amount && limit && dev && devTaA ? dev.publicKey : null;
 
     // Prepare pool creation params
     const createParams = {
@@ -157,8 +160,8 @@ export class VertigoSDK {
       this.config.log("📡 Sending dev buy transaction...");
       buySignature = await this.amm.methods
         .buy({
-          amount: devBuyAmount,
-          limit: new anchor.BN(0),
+          amount,
+          limit,
         })
         .accounts({
           owner: owner.publicKey,
@@ -194,9 +197,10 @@ export class VertigoSDK {
    * @param {Object} params - The parameters object
    * @param {anchor.BN} params.amount - Amount of token A to buy
    * @param {anchor.BN} params.limit - Maximum amount of token B expected to receive
-   * @param {PublicKey} params.owner - Pool owner's public key
-   * @param {PublicKey} params.mintA - Address of the token mint for the A side
-   * @param {PublicKey} params.mintB - Address of the token mint for the B side
+   * @param {PublicKey} owner - Pool owner's public key
+   * @param {PublicKey} user - User's public key
+   * @param {PublicKey} mintA - Address of the token mint for the A side
+   * @param {PublicKey} mintB - Address of the token mint for the B side
    * @returns {Promise<{amountB: BN, feeA: BN}>} Quote containing expected token amount and fees
    * @throws {SDKError} If the quote fails or validation fails
    */
@@ -208,7 +212,7 @@ export class VertigoSDK {
     mintB,
   }: QuoteBuyRequest): Promise<SwapResponse> {
     try {
-      return this.amm.methods
+      return await this.amm.methods
         .quoteBuy(params)
         .accounts({
           owner,
@@ -232,9 +236,10 @@ export class VertigoSDK {
    * @param {Object} params - The parameters object
    * @param {anchor.BN} params.amount - Amount of token B to sell
    * @param {anchor.BN} params.limit - Minimum amount of token A expected to receive
-   * @param {PublicKey} params.owner - Pool owner's public key
-   * @param {PublicKey} params.mintA - Address of the token mint for the A side
-   * @param {PublicKey} params.mintB - Address of the token mint for the B side
+   * @param {PublicKey} owner - Pool owner's public key
+   * @param {PublicKey} user - User's public key
+   * @param {PublicKey} mintA - Address of the token mint for the A side
+   * @param {PublicKey} mintB - Address of the token mint for the B side
    * @returns {Promise<{amountA: BN, feeA: BN}>} Quote containing expected token A amount and fees
    * @throws {SDKError} If the quote fails or validation fails
    */
@@ -246,7 +251,7 @@ export class VertigoSDK {
     mintB,
   }: QuoteSellRequest): Promise<SwapResponse> {
     try {
-      return this.amm.methods
+      return await this.amm.methods
         .quoteSell(params)
         .accounts({
           owner,
@@ -292,8 +297,6 @@ export class VertigoSDK {
     tokenProgramB,
   }: BuyRequest) {
     try {
-      this.config.log("📡 Sending buy transaction...");
-
       // Derive receiving token account address if not provided
       const userTaB =
         providedUserTaB ||
@@ -389,8 +392,6 @@ export class VertigoSDK {
     tokenProgramB,
   }: SellRequest) {
     try {
-      this.config.log("📡 Sending sell transaction...");
-
       // Derive receiving token account address if not provided
       const userTaA =
         providedUserTaA ||

@@ -54,10 +54,10 @@ export POOL_ADDRESS=
 
 bun run ./2-buy-tokens.ts \
    --network devnet \
-   --path-to-owner ~/.config/solana/id.json \
+   --pool-owner $POOL_OWNER_ADDRESS \
    --path-to-user ~/.config/solana/id.json \
    --mint-b $MINT_B_ADDRESS \
-   --amount .1 \
+   --amount 1000000000 \
    --limit 0
 
 ```
@@ -67,7 +67,7 @@ bun run ./2-buy-tokens.ts \
 ```
 bun run ./3-sell-tokens.ts \
    --network devnet \
-   --path-to-owner ~/.config/solana/id.json \
+   --pool-owner $POOL_OWNER_ADDRESS \
    --path-to-user ~/.config/solana/id.json \
    --mint-b $MINT_B_ADDRESS \
    --amount 10000 \

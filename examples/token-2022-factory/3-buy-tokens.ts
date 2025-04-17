@@ -1,9 +1,4 @@
-import {
-  Connection,
-  Keypair,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-} from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import {
   createAssociatedTokenAccount,
@@ -57,7 +52,7 @@ const argv = yargs(hideBin(process.argv))
   })
   .option("amount", {
     type: "number",
-    description: "Amount of SOL to spend",
+    description: "Amount of mintA to spend",
     demandOption: true,
   })
   .option("limit", {
@@ -107,7 +102,7 @@ async function main() {
       wSolBalance = await connection
         .getTokenAccountBalance(userTaA)
         .then((balance) => {
-          return balance.value.uiAmount;
+          return new anchor.BN(balance.value.amount).toNumber();
         });
     } catch (error) {
       await createAssociatedTokenAccount(
@@ -137,15 +132,18 @@ async function main() {
       const difference = amount - wSolBalance;
       if (difference > 0) {
         console.log(`Wrapping ${difference} SOL to wSOL...`);
-        await wrapSol(
-          provider,
-          difference * LAMPORTS_PER_SOL,
-          user.publicKey,
-          user,
-          null
-        );
+        await wrapSol(provider, difference, user.publicKey, user, null);
+        await new Promise((resolve) => setTimeout(resolve, 2000)); // Wait 2 seconds
       }
     }
+  }
+
+  // check TaA balance
+  const taABalance = await connection.getTokenAccountBalance(userTaA);
+  if (new anchor.BN(taABalance.value.amount).toNumber() === 0) {
+    throw new Error(
+      `User TaA (${userTaA.toString()}) does not exist or has no balance. Please create a TaA for the user.`
+    );
   }
 
   const userTaB = getAssociatedTokenAddressSync(
@@ -174,7 +172,7 @@ async function main() {
     tokenProgramA: new PublicKey(argv["token-program-a"]),
     tokenProgramB: new PublicKey(argv["token-program-b"]),
     params: {
-      amount: new anchor.BN(LAMPORTS_PER_SOL).muln(argv.amount),
+      amount: new anchor.BN(argv.amount),
       limit: new anchor.BN(argv.limit),
     },
   });

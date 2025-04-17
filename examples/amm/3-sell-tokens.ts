@@ -18,10 +18,10 @@ const argv = yargs(hideBin(process.argv))
     description: "Solana network to use",
     default: "localnet",
   })
-  .option("path-to-owner", {
+  .option("pool-owner", {
     type: "string",
-    description: "Path to owner keypair file",
-    default: `${process.env.HOME}/.config/solana/id.json`,
+    description: "Pool owner address",
+    demandOption: true,
   })
   .option("path-to-user", {
     type: "string",
@@ -67,13 +67,8 @@ async function main() {
   // Load wallet from path
   const wallet = new anchor.Wallet(
     Keypair.fromSecretKey(
-      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-owner"], "utf-8")))
+      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
     )
-  );
-
-  // Load owner from path
-  const owner = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-owner"], "utf-8")))
   );
 
   // Load user from path
@@ -98,7 +93,7 @@ async function main() {
   );
 
   const signature = await vertigo.sell({
-    owner: owner.publicKey,
+    owner: new PublicKey(argv["pool-owner"]),
     user,
     mintA: new PublicKey(argv["mint-a"]),
     mintB: new PublicKey(argv["mint-b"]),

@@ -7,7 +7,13 @@ import { hideBin } from "yargs/helpers";
 // imports to load from local file
 import fs from "node:fs";
 import { getRpcUrl } from "../../src/utils";
-import { NATIVE_MINT, TOKEN_PROGRAM_ID } from "@solana/spl-token";
+import {
+  NATIVE_MINT,
+  TOKEN_PROGRAM_ID,
+  getAssociatedTokenAddressSync,
+} from "@solana/spl-token";
+import { DevBuyArgs } from "../../src";
+import { LaunchRequest } from "../../src/types/generated/token_2022_factory";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {
@@ -69,11 +75,6 @@ const argv = yargs(hideBin(process.argv))
     type: "number",
     description: "Limit for the dev buy order",
     optional: true,
-  })
-  .option("nonce", {
-    type: "number",
-    description: "Nonce for the factory PDA",
-    default: 0,
   })
   .parseSync();
 
@@ -166,12 +167,7 @@ if (
 async function main() {
   const vertigo = new VertigoSDK(connection, wallet);
 
-  console.log(`Owner: ${owner.publicKey.toBase58()}`);
-  console.log(`Mint B: ${mintB.publicKey.toBase58()}`);
-  console.log(`Mint B Authority: ${mintBAuthority.publicKey.toBase58()}`);
-  console.log(`Token Program A: ${argv["token-program-a"]}`);
-
-  const { signature, poolAddress } = await vertigo.SPLTokenFactory.launch({
+  const args: LaunchRequest & Partial<DevBuyArgs> = {
     payer: wallet.payer,
     owner,
     mintA: new PublicKey(argv["mint-a"]), // defaults to NATIVE_MINT if not provided
@@ -179,7 +175,25 @@ async function main() {
     mintBAuthority,
     tokenProgramA: new PublicKey(argv["token-program-a"]), // defaults to SPL Token Program
     params: launchCfg,
-  });
+  };
+
+  const shouldDoDevBuy = !!(argv["dev-buy-amount"] && argv["dev-buy-limit"]);
+
+  if (shouldDoDevBuy) {
+    args.amount = new anchor.BN(argv["dev-buy-amount"]);
+    args.limit = new anchor.BN(argv["dev-buy-limit"]);
+    args.dev = Keypair.fromSecretKey(
+      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
+    );
+    args.devTaA = getAssociatedTokenAddressSync(
+      args.mintA,
+      args.owner.publicKey,
+      false,
+      new PublicKey(argv["token-program-a"])
+    );
+  }
+
+  const { signature, poolAddress } = await vertigo.SPLTokenFactory.launch(args);
 
   console.log(`Signature: ${signature}`);
   console.log(`Pool address: ${poolAddress}`);

@@ -81,7 +81,12 @@ const argv = yargs(hideBin(process.argv))
   })
   .option("devBuyAmount", {
     type: "number",
-    description: "Amount of SOL to spend in the dev buy",
+    description: "Amount of Mint A to spend in the dev buy",
+    optional: true,
+  })
+  .option("devBuyLimit", {
+    type: "number",
+    description: "Limit for the dev buy order",
     optional: true,
   })
   .option("path-to-pool-params", {
@@ -156,14 +161,13 @@ async function main() {
     tokenWalletB: new PublicKey(argv["token-wallet-address"]),
     mintA: new PublicKey(argv["mint-a"]),
     mintB: new PublicKey(argv["mint-b"]),
-    tokenProgramA: argv["token-program-a"],
-    tokenProgramB: argv["token-program-b"],
+    tokenProgramA: new PublicKey(argv["token-program-a"]),
+    tokenProgramB: new PublicKey(argv["token-program-b"]),
   };
 
   if (argv.dev && argv.devTaA && argv.devTaB && argv.devBuyAmount) {
-    launchArgs.devBuyAmount = new anchor.BN(LAMPORTS_PER_SOL).muln(
-      argv.devBuyAmount
-    );
+    launchArgs.amount = new anchor.BN(argv.devBuyAmount);
+    launchArgs.limit = new anchor.BN(argv.devBuyAmount);
     launchArgs.devTaA = new PublicKey(argv.devTaA);
     launchArgs.dev = user;
   }
