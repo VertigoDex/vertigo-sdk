@@ -45,14 +45,10 @@ export class VertigoSDK {
     try {
       this.config = new VertigoConfig(connection, wallet, sdkConfig);
 
-      const ammIdl = require(this.config.ammProgramPath as string);
-
-      if (this.config.ammProgramIdOverride) {
-        ammIdl.address = this.config.ammProgramIdOverride;
-      }
-
+      const ammIdl = require("../target/idl/amm.json");
       this.amm = new Program(ammIdl, this.config.provider) as Program<Amm>;
       this.programId = this.amm.programId;
+
       this.Token2022Factory = new Token2022Factory(this.config, this.amm);
       this.SPLTokenFactory = new SplTokenFactory(this.config, this.amm);
     } catch (error) {

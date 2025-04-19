@@ -25,11 +25,7 @@ export class SplTokenFactory {
   constructor(config: VertigoConfig, amm: Program<Amm>) {
     this.config = config;
 
-    const splTokenFactoryIdl = require(config.splTokenProgramPath as string);
-
-    if (config.splTokenProgramIdOverride) {
-      splTokenFactoryIdl.address = config.splTokenProgramIdOverride;
-    }
+    const splTokenFactoryIdl = require("../target/idl/spl_token_factory.json");
 
     this.factory = new Program(splTokenFactoryIdl, config.provider);
     this.amm = amm;
