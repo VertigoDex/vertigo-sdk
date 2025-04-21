@@ -25,11 +25,7 @@ export class Token2022Factory {
 
     this.amm = amm;
 
-    const token2022FactoryIdl = require(config.token2022ProgramPath as string);
-
-    if (config.token2022ProgramIdOverride) {
-      token2022FactoryIdl.address = config.token2022ProgramIdOverride;
-    }
+    const token2022FactoryIdl = require("../target/idl/token_2022_factory.json");
 
     this.factory = new Program(token2022FactoryIdl, config.provider);
   }

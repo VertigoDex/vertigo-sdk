@@ -33,26 +33,6 @@ export class VertigoConfig {
     this.explorer = sdkConfig?.explorer || defaultConfig.explorer;
     this.cluster = getClusterFromEndpoint(connection.rpcEndpoint);
 
-    if (sdkConfig.ammProgramIdOverride) {
-      this.ammProgramIdOverride = sdkConfig.ammProgramIdOverride;
-    }
-    if (sdkConfig.token2022ProgramIdOverride) {
-      this.token2022ProgramIdOverride = sdkConfig.token2022ProgramIdOverride;
-    }
-    if (sdkConfig.splTokenProgramIdOverride) {
-      this.splTokenProgramIdOverride = sdkConfig.splTokenProgramIdOverride;
-    }
-
-    if (sdkConfig.ammProgramPath) {
-      this.ammProgramPath = sdkConfig.ammProgramPath;
-    }
-    if (sdkConfig.token2022ProgramPath) {
-      this.token2022ProgramPath = sdkConfig.token2022ProgramPath;
-    }
-    if (sdkConfig.splTokenProgramPath) {
-      this.splTokenProgramPath = sdkConfig.splTokenProgramPath;
-    }
-
     this.provider = this.createProvider();
 
     anchor.setProvider(this.provider);
