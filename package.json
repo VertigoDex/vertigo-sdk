@@ -1,6 +1,6 @@
 {
   "name": "@vertigo-amm/vertigo-sdk",
-  "version": "0.1.6",
+  "version": "0.1.9",
   "description": "SDK for interacting with the Vertigo AMM protocol",
   "bin": {
     "vertigo": "./dist/cli/index.js"

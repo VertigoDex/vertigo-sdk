@@ -4,7 +4,7 @@
   "feeParams": {
     "normalizationPeriod": 10,
     "decay": 1.0,
-    "royaltiesBps": 50
+    "royaltiesBps": 25
   },
   "tokenParams": {
     "decimals": 6,
