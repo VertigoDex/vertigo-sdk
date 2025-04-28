@@ -101,8 +101,9 @@ async function main() {
       Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-payer"], "utf-8")))
     )
   );
+  const provider = new anchor.AnchorProvider(connection, wallet);
 
-  const vertigo = new VertigoSDK(connection, wallet);
+  const vertigo = new VertigoSDK(provider);
 
   // Load owner from path
   const owner = Keypair.fromSecretKey(

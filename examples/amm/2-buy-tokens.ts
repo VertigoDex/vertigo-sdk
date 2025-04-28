@@ -87,7 +87,7 @@ async function main() {
   );
   const provider = new anchor.AnchorProvider(connection, wallet);
 
-  const vertigo = new VertigoSDK(connection, wallet);
+  const vertigo = new VertigoSDK(provider);
 
   const userTaA = await getAssociatedTokenAddressSync(
     NATIVE_MINT,

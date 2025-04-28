@@ -49,12 +49,11 @@ export class VertigoSDK {
   public programId: PublicKey;
 
   constructor(
-    connection: Connection,
-    wallet: anchor.Wallet,
+    provider: anchor.AnchorProvider,
     sdkConfig: SDKConfig = defaultConfig
   ) {
     try {
-      this.config = new VertigoConfig(connection, wallet, sdkConfig);
+      this.config = new VertigoConfig(provider, sdkConfig);
 
       const ammIdl = require("../target/idl/amm.json");
       this.amm = new Program(ammIdl, this.config.provider) as Program<Amm>;

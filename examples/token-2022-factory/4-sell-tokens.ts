@@ -77,7 +77,8 @@ async function main() {
     Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
   );
 
-  const vertigo = new VertigoSDK(connection, wallet);
+  const provider = new anchor.AnchorProvider(connection, wallet);
+  const vertigo = new VertigoSDK(provider);
 
   const userTaA = await getAssociatedTokenAddressSync(
     new PublicKey(argv["mint-a"]),

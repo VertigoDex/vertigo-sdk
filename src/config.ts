@@ -1,25 +1,19 @@
 import { SDKConfig } from "./types/sdk";
 import { getClusterFromEndpoint, getExplorerUrl } from "./utils/helpers";
-import { Connection } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { defaultConfig } from "./utils/config";
+import { Connection } from "@solana/web3.js";
+
 export class VertigoConfig {
+  public provider: anchor.AnchorProvider;
   public connection: Connection;
-  public wallet: anchor.Wallet;
+
   public logLevel: "verbose" | "tx" | "none";
   public explorer: "solscan" | "solanaExplorer";
   public cluster: string;
-  public provider: anchor.AnchorProvider;
-  public ammProgramIdOverride?: string;
-  public token2022ProgramIdOverride?: string;
-  public splTokenProgramIdOverride?: string;
-  public ammProgramPath: string;
-  public token2022ProgramPath: string;
-  public splTokenProgramPath: string;
 
   constructor(
-    connection: Connection,
-    wallet: anchor.Wallet,
+    provider: anchor.AnchorProvider,
     config: SDKConfig = defaultConfig
   ) {
     const sdkConfig = {
@@ -27,11 +21,12 @@ export class VertigoConfig {
       ...config,
     };
 
-    this.connection = connection;
-    this.wallet = wallet;
+    this.provider = provider;
+    this.connection = provider.connection;
+
     this.logLevel = sdkConfig?.logLevel || defaultConfig.logLevel;
     this.explorer = sdkConfig?.explorer || defaultConfig.explorer;
-    this.cluster = getClusterFromEndpoint(connection.rpcEndpoint);
+    this.cluster = getClusterFromEndpoint(provider.connection.rpcEndpoint);
 
     this.provider = this.createProvider();
 
@@ -39,9 +34,13 @@ export class VertigoConfig {
   }
 
   private createProvider() {
-    return new anchor.AnchorProvider(this.connection, this.wallet, {
-      commitment: "confirmed",
-    });
+    return new anchor.AnchorProvider(
+      this.provider.connection,
+      this.provider.wallet,
+      {
+        commitment: "confirmed",
+      }
+    );
   }
 
   public logTx(signature: string, operation: string) {
