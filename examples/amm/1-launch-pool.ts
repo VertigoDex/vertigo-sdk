@@ -1,10 +1,5 @@
 import { VertigoSDK } from "../../src/sdk";
-import {
-  Connection,
-  Keypair,
-  LAMPORTS_PER_SOL,
-  PublicKey,
-} from "@solana/web3.js";
+import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { NATIVE_MINT, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import fs from "node:fs";
