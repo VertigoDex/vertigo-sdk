@@ -53,7 +53,8 @@ async function main() {
     Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-claimer"], "utf-8")))
   );
 
-  const vertigo = new VertigoSDK(connection, wallet);
+  const provider = new anchor.AnchorProvider(connection, wallet);
+  const vertigo = new VertigoSDK(provider);
 
   let receiverTaA: PublicKey;
 

@@ -112,7 +112,8 @@ const factoryParams = {
 };
 
 async function main() {
-  const vertigo = new VertigoSDK(connection, wallet);
+  const provider = new anchor.AnchorProvider(connection, wallet);
+  const vertigo = new VertigoSDK(provider);
   console.log("Vertigo SPL Token Factory");
 
   const signature = await vertigo.Token2022Factory.initialize({

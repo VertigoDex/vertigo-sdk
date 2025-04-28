@@ -80,7 +80,8 @@ async function main() {
     );
   }
 
-  const vertigo = new VertigoSDK(connection, wallet);
+  const provider = new anchor.AnchorProvider(connection, wallet);
+  const vertigo = new VertigoSDK(provider);
 
   const signature = await vertigo.claimRoyalties({
     pool: new PublicKey(argv.pool),
