@@ -11,12 +11,14 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import {
   getRpcUrl,
-  loadLocalWallet,
-  loadOrGenerateKeypair,
-  parseJsonOrThrow,
   validateLaunchParams,
   getOrCreateAssociatedTokenAccount,
 } from "../../src/utils/helpers";
+import {
+  loadLocalWallet,
+  loadOrGenerateKeypair,
+  parseJsonOrThrow,
+} from "../utils";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {

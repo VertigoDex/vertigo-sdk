@@ -5,13 +5,10 @@ import { NATIVE_MINT, TOKEN_PROGRAM_ID } from "@solana/spl-token";
 import fs from "node:fs";
 import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
-import {
-  getRpcUrl,
-  parseJsonOrThrow,
-  validateLaunchParams,
-} from "../../src/utils/helpers";
+import { getRpcUrl, validateLaunchParams } from "../../src/utils/helpers";
 import { CreateRequest } from "../../src/types/generated/amm";
 import { DevBuyArgs } from "../../src";
+import { parseJsonOrThrow } from "../utils";
 
 const argv = yargs(hideBin(process.argv))
   .option("network", {

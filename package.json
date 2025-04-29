@@ -1,6 +1,6 @@
 {
   "name": "@vertigo-amm/vertigo-sdk",
-  "version": "0.1.9",
+  "version": "0.1.12",
   "description": "SDK for interacting with the Vertigo AMM protocol",
   "bin": {
     "vertigo": "./dist/cli/index.js"
@@ -33,6 +33,7 @@
     "@coral-xyz/anchor": "^0.30.1",
     "@coral-xyz/anchor-cli": "^0.30.1",
     "@solana/spl-token": "^0.4.12",
+    "@solana/wallet-adapter-base": "^0.9.26",
     "chalk": "^5.4.1",
     "commander": "^13.1.0",
     "inquirer": "^12.5.2",

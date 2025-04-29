@@ -6,18 +6,12 @@ export interface SDKConfig {
   logLevel?: "verbose" | "tx" | "none";
   /** Explorer to use for transaction links */
   explorer?: "solscan" | "solanaExplorer";
-  /** Path to the AMM program IDL */
-  ammProgramPath?: string;
-  /** Custom AMM program ID */
-  ammProgramIdOverride?: string;
-  /** Path to the Token2022 program IDL */
-  token2022ProgramPath?: string;
-  /** Custom Token2022 program ID */
-  token2022ProgramIdOverride?: string;
-  /** Path to the SPL Token program IDL */
-  splTokenProgramPath?: string;
-  /** Custom SPL Token program ID */
-  splTokenProgramIdOverride?: string;
+  /** AMM program ID */
+  ammProgramId: string;
+  /** Token2022 factory program ID */
+  token2022FactoryProgramId: string;
+  /** SPL Token factory program ID */
+  splTokenFactoryProgramId: string;
 }
 
 export interface DevBuyArgs {
