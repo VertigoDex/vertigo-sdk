@@ -2,7 +2,13 @@ import { SDKConfig } from "./types/sdk";
 import { getClusterFromEndpoint, getExplorerUrl } from "./utils/helpers";
 import * as anchor from "@coral-xyz/anchor";
 import { defaultConfig } from "./utils/config";
-import { Connection } from "@solana/web3.js";
+import { Connection, PublicKey } from "@solana/web3.js";
+import { AnchorProvider } from "@coral-xyz/anchor";
+import {
+  isWalletAdapter,
+  toAnchorProvider,
+  AdapterWithTx,
+} from "./utils/bridge";
 
 export class VertigoConfig {
   public provider: anchor.AnchorProvider;
@@ -12,8 +18,12 @@ export class VertigoConfig {
   public explorer: "solscan" | "solanaExplorer";
   public cluster: string;
 
+  public ammProgramId: PublicKey;
+  public splTokenFactoryProgramId: PublicKey;
+  public token2022FactoryProgramId: PublicKey;
+
   constructor(
-    provider: anchor.AnchorProvider,
+    provider: anchor.AnchorProvider | AdapterWithTx,
     config: SDKConfig = defaultConfig
   ) {
     const sdkConfig = {
@@ -21,25 +31,30 @@ export class VertigoConfig {
       ...config,
     };
 
-    this.provider = provider;
-    this.connection = provider.connection;
+    const _provider: AnchorProvider = isWalletAdapter(provider)
+      ? toAnchorProvider(
+          provider as AdapterWithTx,
+          new Connection(provider.url ?? "https://api.mainnet-beta.solana.com"),
+          {
+            commitment: "confirmed",
+          }
+        )
+      : provider;
+    this.provider = _provider;
+    this.connection = _provider.connection;
 
     this.logLevel = sdkConfig?.logLevel || defaultConfig.logLevel;
     this.explorer = sdkConfig?.explorer || defaultConfig.explorer;
-    this.cluster = getClusterFromEndpoint(provider.connection.rpcEndpoint);
-
-    this.provider = this.createProvider();
+    this.cluster = getClusterFromEndpoint(_provider.connection.rpcEndpoint);
 
     anchor.setProvider(this.provider);
-  }
 
-  private createProvider() {
-    return new anchor.AnchorProvider(
-      this.provider.connection,
-      this.provider.wallet,
-      {
-        commitment: "confirmed",
-      }
+    this.ammProgramId = new PublicKey(sdkConfig.ammProgramId);
+    this.splTokenFactoryProgramId = new PublicKey(
+      sdkConfig.splTokenFactoryProgramId
+    );
+    this.token2022FactoryProgramId = new PublicKey(
+      sdkConfig.token2022FactoryProgramId
     );
   }
 

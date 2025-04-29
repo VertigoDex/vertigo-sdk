@@ -15,9 +15,6 @@ import {
 import { SDKError, SDKErrorType } from "../types/error";
 import * as anchor from "@coral-xyz/anchor";
 import { SwapResponse } from "../types/generated/amm";
-import path from "node:path";
-import os from "node:os";
-import fs from "node:fs";
 
 /**
  * Get or create an associated token account
@@ -131,11 +128,11 @@ export async function confirmTransaction(
 
 export function parseQuote(hexQuote: Record<string, string>): SwapResponse {
   return {
-    newReservesA: new anchor.BN(hexQuote.newReservesA, 16).toString(), // 16 specifies hex base
-    newReservesB: new anchor.BN(hexQuote.newReservesB, 16).toString(),
-    amountA: new anchor.BN(hexQuote.amountA, 16).toString(),
-    amountB: new anchor.BN(hexQuote.amountB, 16).toString(),
-    feeA: new anchor.BN(hexQuote.feeA, 16).toString(),
+    newReservesA: new anchor.BN(hexQuote.newReservesA, 16), // 16 specifies hex base
+    newReservesB: new anchor.BN(hexQuote.newReservesB, 16),
+    amountA: new anchor.BN(hexQuote.amountA, 16),
+    amountB: new anchor.BN(hexQuote.amountB, 16),
+    feeA: new anchor.BN(hexQuote.feeA, 16),
   };
 }
 
@@ -173,97 +170,6 @@ export function getPoolPda(
   );
 }
 
-/**
- * Helper function to generate and save a keypair
- * @param filePath - Path to save the keypair. Can be absolute or relative
- * @returns The generated keypair
- */
-export function generateAndSaveKeypair(filePath: string): Keypair {
-  // Expand ~ to home directory if present
-  const expandedPath = filePath.replace(/^~/, process.env.HOME || "~");
-  // Handle both relative and absolute paths
-  const absolutePath = path.isAbsolute(expandedPath)
-    ? expandedPath
-    : path.resolve(process.cwd(), expandedPath);
-
-  // Create directory if it doesn't exist
-  const dir = path.dirname(absolutePath);
-  if (!fs.existsSync(dir)) {
-    fs.mkdirSync(dir, { recursive: true });
-  }
-
-  // Generate new keypair
-  const keypair = Keypair.generate();
-
-  // Save to file
-  fs.writeFileSync(
-    absolutePath,
-    JSON.stringify(Array.from(keypair.secretKey)),
-    { mode: 0o600 }
-  );
-
-  console.log(`Keypair saved to: ${absolutePath}`);
-  return keypair;
-}
-
-/**
- * Helper function to load or generate a keypair
- * @param filePath - Path to load the existing keypair from
- * @param newFilePath - Path to save a new keypair if filePath is undefined or doesn't exist. Can be absolute or relative
- * @returns The loaded or generated keypair
- */
-export function loadOrGenerateKeypair(
-  filePath?: string,
-  newFilePath?: string
-): Keypair {
-  try {
-    // If filePath is provided, try to load the keypair
-    if (filePath) {
-      // Expand ~ to home directory if present
-      const expandedPath = filePath.replace(/^~/, process.env.HOME || "~");
-      const absolutePath = path.resolve(expandedPath);
-
-      if (fs.existsSync(absolutePath)) {
-        const fileContent = fs.readFileSync(absolutePath, "utf-8");
-        try {
-          return Keypair.fromSecretKey(Buffer.from(JSON.parse(fileContent)));
-        } catch (parseError) {
-          throw new Error(
-            `Invalid keypair file format at ${absolutePath}: ${parseError.message}`
-          );
-        }
-      }
-    }
-
-    // If we get here, either filePath wasn't provided or the file didn't exist
-    // Generate new keypair using newFilePath
-    if (!newFilePath) {
-      throw new Error(
-        "Must provide either an existing keypair file path or a path to save a new keypair"
-      );
-    }
-
-    return generateAndSaveKeypair(newFilePath);
-  } catch (error) {
-    if (
-      error.message.includes("Invalid keypair") ||
-      error.message.includes("Must provide")
-    ) {
-      throw error; // Re-throw validation errors
-    }
-    throw new Error(`Error handling keypair: ${error.message}`);
-  }
-}
-
-export function loadLocalWallet() {
-  const pathToWallet = `${os.homedir()}/.config/solana/id.json`;
-  const walletKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(pathToWallet, "utf-8")))
-  );
-  const wallet = new anchor.Wallet(walletKeypair);
-  return wallet;
-}
-
 // Get RPC URL based on network
 export function getRpcUrl(network: string) {
   // Check if network is provided
@@ -291,32 +197,6 @@ export function getRpcUrl(network: string) {
           `Invalid network: ${network}. Must be a valid URL or one of: mainnet-beta, devnet, testnet, localnet`
         );
     }
-  }
-}
-
-/**
- * Read and parse a JSON file
- * @param filePath - Path to the JSON file
- * @returns Parsed JSON content
- */
-export function parseJsonOrThrow(filePath: string) {
-  // Resolve the file path
-  const resolvedPath = path.resolve(filePath);
-
-  // Check if file exists
-  if (!fs.existsSync(resolvedPath)) {
-    throw new Error(`File not found at: ${resolvedPath}`);
-  }
-
-  try {
-    // Read and parse the JSON file
-    const fileContent = fs.readFileSync(resolvedPath, "utf-8");
-    return JSON.parse(fileContent);
-  } catch (error) {
-    if (error instanceof SyntaxError) {
-      throw new Error(`Invalid JSON in file: ${error.message}`);
-    }
-    throw error;
   }
 }
 
