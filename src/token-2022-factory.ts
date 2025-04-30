@@ -35,8 +35,8 @@ export class Token2022Factory {
   /**
    * Builds the instruction for initializing a new token factory
    * @param {Object} params - The parameters object
-   * @param {Keypair} params.payer - Keypair that will pay for the transaction
-   * @param {Keypair} params.owner - Keypair that will own the factory
+   * @param {SignerLike} params.payer - Keypair that will pay for the transaction
+   * @param {SignerLike} params.owner - Keypair that will own the factory
    * @param {PublicKey} params.mintA - Public key of the token mint for the A side
    * @param {Object} params.params - Factory initialization parameters
    * @param {BN} params.params.shift - Bonding curve shift parameter
@@ -80,11 +80,11 @@ export class Token2022Factory {
   /**
    * Builds the instruction(s) for launching a new trading pool from an existing factory
    * @param {Object} args - The arguments object
-   * @param {Keypair} args.payer - Keypair that will pay for the transaction
-   * @param {Keypair} args.owner - Keypair of the factory owner
+   * @param {SignerLike} args.payer - Keypair that will pay for the transaction
+   * @param {SignerLike} args.owner - Keypair of the factory owner
    * @param {PublicKey} args.mintA - Keypair that will control the A side token mint
-   * @param {Keypair} args.mintB - Keypair that will control the B side token mint
-   * @param {Keypair} args.mintBAuthority - Keypair that will control the token mint
+   * @param {SignerLike} args.mintB - Keypair that will control the B side token mint
+   * @param {SignerLike} args.mintBAuthority - Keypair that will control the token mint
    * @param {PublicKey} args.tokenProgramA - Public key of the token program for the A side
    * @param {Object} args.params - Launch configuration parameters
    * @param {Object} args.params.tokenConfig - Token configuration parameters
@@ -97,7 +97,7 @@ export class Token2022Factory {
    * @param {number} args.params.nonce - Nonce for the launch
    * @param {anchor.BN} [args.amount] - Optional amount of Mint A to purchase
    * @param {anchor.BN} [args.limit] - Optional limit for the initial token purchase
-   * @param {Keypair} [args.dev] - Optional Keypair to receive initial dev tokens
+   * @param {SignerLike} [args.dev] - Optional Keypair to receive initial dev tokens
    * @param {PublicKey} [args.devTaA] - Optional token account of the receiver for the A side
    * @returns {Promise<{ launchInstructions: TransactionInstruction[], devBuyInstructions: TransactionInstruction[] | null, poolAddress: PublicKey }>} Object containing instructions and pool address
    */

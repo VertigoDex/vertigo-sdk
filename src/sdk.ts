@@ -15,6 +15,7 @@ import { SDKError, SDKErrorType } from "./types/error";
 import { confirmTransaction, getPoolPda } from "./utils/helpers";
 import { VertigoConfig } from "./config";
 import { defaultConfig } from "./utils/config";
+import { DevBuyArgs, SDKConfig } from "./types/sdk";
 import {
   createAssociatedTokenAccount,
   createAssociatedTokenAccountInstruction,
@@ -24,16 +25,16 @@ import {
   NATIVE_MINT,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
-import type {
+
+import {
+  BuyRequest,
+  ClaimRequest,
   CreateRequest,
   QuoteBuyRequest,
-  SwapResponse,
   QuoteSellRequest,
-  BuyRequest,
   SellRequest,
-  ClaimRequest,
+  SwapResponse,
 } from "./types/generated/amm";
-import type { SDKConfig, DevBuyArgs } from "./types";
 
 /**
  * Main SDK class for interacting with the Vertigo protocol
@@ -73,9 +74,9 @@ export class VertigoSDK {
    * Builds the instruction(s) for launching a new pool
    * @param {Object} params - The parameters object
    * @param {PoolConfig} params.poolParams - Pool configuration parameters
-   * @param {Keypair} params.payer - Keypair that will pay for the transaction
-   * @param {Keypair} params.owner - Keypair that will own the pool
-   * @param {Keypair} params.tokenWalletAuthority - Keypair with authority over the token wallet
+   * @param {SignerLike} params.payer - Keypair that will pay for the transaction
+   * @param {SignerLike} params.owner - Keypair that will own the pool
+   * @param {SignerLike} params.tokenWalletAuthority - Keypair with authority over the token wallet
    * @param {PublicKey} params.tokenWalletB - Public key of the token wallet for the B side
    * @param {PublicKey} params.mintA - Public key of the token mint for the A side
    * @param {PublicKey} params.mintB - Public key of the token mint for the B side
@@ -83,7 +84,7 @@ export class VertigoSDK {
    * @param {PublicKey} params.tokenProgramB - Token program for the B side
    * @param {anchor.BN} [params.amount] - Optional amount of SOL (in lamports) for initial token purchase
    * @param {anchor.BN} [params.limit] - Optional limit for the dev buy
-   * @param {Keypair} [params.dev] - Optional Keypair to receive initial dev tokens
+   * @param {SignerLike} [params.dev] - Optional Keypair to receive initial dev tokens
    * @param {PublicKey} [params.devTaA] - Optional token account for dev's A tokens
    * @returns {Promise<{createInstructions: TransactionInstruction[], devBuyInstructions: TransactionInstruction[] | null, poolAddress: PublicKey}>} Object containing instructions and pool address
    * @throws {SDKError} Will throw if there's an error building the instructions
@@ -358,7 +359,7 @@ export class VertigoSDK {
    * Builds the instruction(s) for buying tokens from a pool
    * @param {Object} params - The parameters object
    * @param {PublicKey} params.owner - Address of the pool owner
-   * @param {Keypair} params.user - Address of the user
+   * @param {SignerLike} params.user - Address of the user
    * @param {PublicKey} params.mintA - Address of the token mint for the A side
    * @param {PublicKey} params.mintB - Address of the token mint for the B side
    * @param {PublicKey} params.userTaA - Address of the user's token account for the A side
@@ -450,7 +451,7 @@ export class VertigoSDK {
    * @param {PublicKey} params.owner - Public key of the pool owner
    * @param {PublicKey} params.mintA - Address of the token mint for the A side
    * @param {PublicKey} params.mintB - Address of the token mint for the B side
-   * @param {Keypair} params.user - User's keypair
+   * @param {SignerLike} params.user - User's keypair
    * @param {PublicKey} [params.userTaA] - Optional address of the user's token account for the A side
    * @param {PublicKey} params.userTaB - Address of the user's token account for the B side
    * @param {PublicKey} params.tokenProgramA - Token program for the A side
@@ -722,7 +723,7 @@ export class VertigoSDK {
    * Claims royalties from a pool
    * @param {Object} opts - The parameters object
    * @param {PublicKey} opts.pool - The pool address
-   * @param {Keypair} opts.claimer - The claimer's keypair
+   * @param {SignerLike} opts.claimer - The claimer's keypair
    * @param {PublicKey} opts.mintA - The mint address for the A side
    * @param {PublicKey} opts.tokenProgramA - The token program for the A side
    * @param {PublicKey} opts.receiverTaA - The receiver's token account address for the A side

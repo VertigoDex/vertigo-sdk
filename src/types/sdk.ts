@@ -1,5 +1,9 @@
 import * as anchor from "@coral-xyz/anchor";
 import { Keypair, PublicKey } from "@solana/web3.js";
+import {
+  WalletAdapterProps,
+  SignerWalletAdapterProps,
+} from "node_modules/@solana/wallet-adapter-base/lib/types";
 
 export interface SDKConfig {
   /** Log level for SDK operations */
@@ -20,3 +24,8 @@ export interface DevBuyArgs {
   dev: Keypair;
   devTaA: PublicKey;
 }
+
+export type SignerLike =
+  | Keypair
+  | anchor.Wallet
+  | (WalletAdapterProps & SignerWalletAdapterProps);
