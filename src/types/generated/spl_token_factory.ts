@@ -1,8 +1,8 @@
 import { PublicKey } from '@solana/web3.js';
 
-import { Keypair } from '@solana/web3.js';
-
 import { BN } from '@coral-xyz/anchor';
+
+import { SignerLike } from '../../types/sdk';
 
 /** Type definition */
 export interface Factory {
@@ -68,9 +68,9 @@ export interface TokenParams {
 /** Request type for initialize instruction */
 export interface InitializeRequest {
   /** payer account - This account needs to sign the transaction */
-  payer: Keypair;
+  payer: SignerLike;
   /** owner account - This account needs to sign the transaction */
-  owner: Keypair;
+  owner: SignerLike;
   /** mint_a account */
   mintA: PublicKey;
 
@@ -83,13 +83,13 @@ export interface InitializeRequest {
 /** Request type for launch instruction */
 export interface LaunchRequest {
   /** payer account - This account needs to sign the transaction */
-  payer: Keypair;
+  payer: SignerLike;
   /** owner account - This account needs to sign the transaction */
-  owner: Keypair;
+  owner: SignerLike;
   /** mint_b_authority account - This account needs to sign the transaction */
-  mintBAuthority: Keypair;
+  mintBAuthority: SignerLike;
   /** mint_b account - This account needs to sign the transaction */
-  mintB: Keypair;
+  mintB: SignerLike;
   /** mint_a account */
   mintA: PublicKey;
   /** token_program_a account */

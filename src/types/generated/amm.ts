@@ -1,8 +1,8 @@
 import { PublicKey } from '@solana/web3.js';
 
-import { Keypair } from '@solana/web3.js';
-
 import { BN } from '@coral-xyz/anchor';
+
+import { SignerLike } from '../../types/sdk';
 
 /** Event type - emitted by the program */
 export interface BuyEvent {
@@ -85,7 +85,7 @@ export interface SwapResponse {
 /** Request type for buy instruction */
 export interface BuyRequest {
   /** user account - This account needs to sign the transaction */
-  user: Keypair;
+  user: SignerLike;
   /** owner account */
   owner: PublicKey;
   /** mint_a account */
@@ -110,7 +110,7 @@ export interface ClaimRequest {
   /** pool account */
   pool: PublicKey;
   /** claimer account - This account needs to sign the transaction */
-  claimer: Keypair;
+  claimer: SignerLike;
   /** mint_a account */
   mintA: PublicKey;
   /** receiver_ta_a account */
@@ -124,11 +124,11 @@ export interface ClaimRequest {
 /** Request type for create instruction */
 export interface CreateRequest {
   /** payer account - This account needs to sign the transaction */
-  payer: Keypair;
+  payer: SignerLike;
   /** owner account - This account needs to sign the transaction */
-  owner: Keypair;
+  owner: SignerLike;
   /** token_wallet_authority account - This account needs to sign the transaction */
-  tokenWalletAuthority: Keypair;
+  tokenWalletAuthority: SignerLike;
   /** mint_a account */
   mintA: PublicKey;
   /** mint_b account */
@@ -183,7 +183,7 @@ export interface QuoteSellRequest {
 /** Request type for sell instruction */
 export interface SellRequest {
   /** user account - This account needs to sign the transaction */
-  user: Keypair;
+  user: SignerLike;
   /** owner account */
   owner: PublicKey;
   /** mint_a account */
