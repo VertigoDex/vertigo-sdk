@@ -1,7 +1,7 @@
 # Vertigo
 
 <div align="center">
-  <img src="https://pbs.twimg.com/profile_banners/1892431273186209792/1744824271/1500x500" alt="Vertigo Logo" width="200"/>
+  <img src="https://pbs.twimg.com/profile_banners/1892431273186209792/1744824271/1500x500" alt="Vertigo Logo" width="100%"/>
   <h3>The New Meta for Fair Token Launches on Solana</h3>
 </div>
 
