@@ -52,6 +52,6 @@ Launch your token in three simple steps:
 
 ### Installation
 ```bash
-npm install @vertigo/sdk
+npm install @vertigo-amm/vertigo-sdk
 # or
-yarn add @vertigo/sdk
+yarn add @vertigo-amm/vertigo-sdk
