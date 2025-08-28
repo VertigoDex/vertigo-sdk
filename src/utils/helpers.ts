@@ -184,7 +184,7 @@ export function getRpcUrl(network: string) {
   } catch {
     // If not a URL, check against known networks
     switch (network) {
-      case "mainnet-beta":
+      case "mainnet":
         return "https://api.mainnet-beta.solana.com";
       case "devnet":
         return "https://api.devnet.solana.com";
@@ -194,7 +194,7 @@ export function getRpcUrl(network: string) {
         return "http://127.0.0.1:8899";
       default:
         throw new Error(
-          `Invalid network: ${network}. Must be a valid URL or one of: mainnet-beta, devnet, testnet, localnet`
+          `Invalid network: ${network}. Must be a valid URL or one of: mainnet, devnet, testnet, localnet`
         );
     }
   }

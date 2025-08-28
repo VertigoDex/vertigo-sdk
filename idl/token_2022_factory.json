@@ -1,0 +1,17 @@
+{
+  "version": "0.1.0",
+  "name": "token_2022_factory",
+  "instructions": [],
+  "accounts": [
+    {
+      "name": "Token2022Factory",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    }
+  ],
+  "metadata": {
+    "address": "4444444444444444444444444444444444444444444"
+  }
+}
