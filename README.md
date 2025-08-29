@@ -1,57 +1,319 @@
-# Vertigo
+# Vertigo SDK v2.0
 
 <div align="center">
-  <img src="https://pbs.twimg.com/profile_banners/1892431273186209792/1744824271/1500x500" alt="Vertigo Logo" width="100%"/>
-  <h3>The New Meta for Fair Token Launches on Solana</h3>
+  <h3>🚀 Official TypeScript SDK for the Vertigo AMM Protocol on Solana</h3>
+  <p>Build powerful DeFi applications with Vertigo's innovative AMM design</p>
+  
+  [![npm version](https://img.shields.io/npm/v/@vertigo/sdk)](https://www.npmjs.com/package/@vertigo/sdk)
+  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+  [![Documentation](https://img.shields.io/badge/docs-vertigo.so-green)](https://docs.vertigo.so)
 </div>
 
-## Overview
+## ✨ Features
 
-Vertigo revolutionizes token launches on Solana with a focus on fairness, simplicity, and transparency. Our innovative AMM design eliminates common launch problems like sniping and liquidity requirements, while providing a seamless experience for both creators and traders.
+- **🎯 Simple & Intuitive API** - Get started in minutes with our high-level client
+- **🔧 Modular Architecture** - Use only what you need with tree-shakeable exports
+- **⚡ High Performance** - Optimized for speed with smart caching and batching
+- **🔐 Type Safety** - Full TypeScript support with comprehensive type definitions
+- **📊 Real-time Data** - Built-in API client for market data and analytics
+- **🛠️ Developer Tools** - Rich utilities for common blockchain operations
+- **📱 Wallet Integration** - Works seamlessly with all major Solana wallets
+- **🔄 Auto-retry Logic** - Robust error handling and automatic retries
 
-📚 **[Read the full documentation](https://vertigo.gitbook.io/vertigo-docs)** to learn more about Vertigo's features and capabilities.
+## 📦 Installation
 
-## Key Features
-
-### 🛡️ Advanced Snipe Protection
-- Innovative fee mechanism that penalizes early snipers
-- Creates a fair playing field for human traders
-- Automatic fee decay system post-launch
-- Turns sniping attempts into a Dutch auction mechanism
-
-### 💧 Zero Initial Liquidity Required
-- Launch at any market cap without locking SOL or USDC
-- Single-sided token deposits
-- No liquidity burn requirements
-- Innovative price discovery mechanism
-
-### 🚀 Simple Launch Process
-Launch your token in three simple steps:
-1. Set your desired initial market cap
-2. Configure your fee structure
-3. Set your launch time
-
-### 🔒 Built-in Safety Features
-- Permanent liquidity locking
-- Transparent fee structures
-- Visible dev transactions
-- Immutable pool parameters after creation
-
-### 💰 Customizable Economics
-- Configurable initial market cap
-- Flexible fee structures
-- Permanent royalty system
-- Dynamic pool behavior with static implementation
-
-## Getting Started
-
-### Prerequisites
-- Solana CLI tools
-- Node.js 16+
-- Yarn or npm
-
-### Installation
 ```bash
-npm install @vertigo-amm/vertigo-sdk
+yarn add @vertigo/sdk
 # or
-yarn add @vertigo-amm/vertigo-sdk
+npm install @vertigo/sdk
+# or
+bun install @vertigo/sdk
+```
+
+## 🚀 Quick Start
+
+### Basic Usage (Read-Only)
+
+```typescript
+import { Vertigo } from "@vertigo/sdk";
+import { Connection } from "@solana/web3.js";
+
+// Initialize SDK without wallet (read-only)
+const vertigo = await Vertigo.load({
+  connection: new Connection("https://api.mainnet-beta.solana.com"),
+  network: "mainnet"
+});
+
+// Find pools for a token pair
+const pools = await vertigo.pools.findPoolsByMints(SOL_MINT, USDC_MINT);
+
+// Get swap quote
+const quote = await vertigo.swap.getQuote({
+  inputMint: SOL_MINT,
+  outputMint: USDC_MINT,
+  amount: 1_000_000_000, // 1 SOL
+  slippageBps: 50
+});
+```
+
+### With Wallet (Full Features)
+
+```typescript
+import { Vertigo } from "@vertigo/sdk";
+import { Connection, Keypair } from "@solana/web3.js";
+import * as anchor from "@coral-xyz/anchor";
+
+// Initialize with wallet
+const wallet = new anchor.Wallet(keypair);
+const vertigo = await Vertigo.load({
+  connection: new Connection("https://api.mainnet-beta.solana.com"),
+  wallet,
+  network: "mainnet"
+});
+
+// Execute a swap
+const result = await vertigo.swap.swap({
+  inputMint: SOL_MINT,
+  outputMint: USDC_MINT,
+  amount: 1_000_000_000,
+  options: {
+    slippageBps: 100,
+    priorityFee: "auto"
+  }
+});
+
+console.log(`Swap successful: ${result.signature}`);
+```
+
+## 📚 Core Modules
+
+### 🏊 Pool Client
+
+Manage liquidity pools and fetch pool data:
+
+```typescript
+// Create a new pool
+const { poolAddress } = await vertigo.pools.createPool({
+  mintA: SOL_MINT,
+  mintB: TOKEN_MINT,
+  initialMarketCap: 10_000_000_000,
+  royaltiesBps: 250
+});
+
+// Get pool information
+const pool = await vertigo.pools.getPool(poolAddress);
+
+// Find pools by tokens
+const pools = await vertigo.pools.findPoolsByMints(mintA, mintB);
+
+// Get pool statistics
+const stats = await vertigo.pools.getPoolStats(poolAddress);
+```
+
+### 💱 Swap Client
+
+Execute token swaps with advanced features:
+
+```typescript
+// Get swap quote
+const quote = await vertigo.swap.getQuote({
+  inputMint: SOL_MINT,
+  outputMint: USDC_MINT,
+  amount: 1_000_000_000,
+  slippageBps: 50
+});
+
+// Simulate before executing
+const simulation = await vertigo.swap.simulateSwap({...});
+
+// Execute swap
+const result = await vertigo.swap.swap({
+  inputMint: SOL_MINT,
+  outputMint: USDC_MINT,
+  amount: 1_000_000_000,
+  options: {
+    slippageBps: 100,
+    wrapSol: true,
+    priorityFee: "auto"
+  }
+});
+```
+
+### 🏭 Factory Client
+
+Launch tokens and create pools:
+
+```typescript
+// Launch a new token
+const { mintAddress } = await vertigo.factory.launchToken({
+  metadata: {
+    name: "My Token",
+    symbol: "MTK",
+    decimals: 9
+  },
+  supply: 1_000_000_000_000_000
+});
+
+// Launch token with pool
+const result = await vertigo.factory.launchTokenWithPool({
+  metadata: { name: "My Token", symbol: "MTK" },
+  supply: 1_000_000_000_000_000,
+  initialMarketCap: 50_000_000_000,
+  royaltiesBps: 250
+});
+```
+
+### 📊 API Client
+
+Access market data and analytics:
+
+```typescript
+// Get pool statistics
+const stats = await vertigo.api.getPoolStats(poolAddress);
+
+// Get trending pools
+const trending = await vertigo.api.getTrendingPools("24h", 10);
+
+// Get token information
+const tokenInfo = await vertigo.api.getTokenInfo(mintAddress);
+
+// Subscribe to real-time updates
+const unsubscribe = vertigo.api.subscribeToPool(poolAddress, {
+  onSwap: (data) => console.log("Swap:", data),
+  onPriceUpdate: (data) => console.log("Price:", data)
+});
+```
+
+## 🛠️ Utility Functions
+
+The SDK includes rich utilities for common operations:
+
+```typescript
+import { 
+  formatTokenAmount,
+  parseTokenAmount,
+  getOrCreateATA,
+  estimatePriorityFee,
+  retry,
+  getExplorerUrl
+} from "@vertigo/sdk";
+
+// Format token amounts
+const formatted = formatTokenAmount(amount, decimals, 4);
+
+// Parse user input
+const amount = parseTokenAmount("1.5", 9);
+
+// Get or create token accounts
+const { address, instruction } = await getOrCreateATA(connection, mint, owner);
+
+// Estimate network fees
+const fee = await estimatePriorityFee(connection, 75);
+
+// Retry with exponential backoff
+const result = await retry(() => fetchData(), { maxRetries: 3 });
+
+// Get explorer links
+const url = getExplorerUrl(signature, "mainnet", "solscan");
+```
+
+## ⚙️ Advanced Configuration
+
+```typescript
+const vertigo = await Vertigo.load({
+  connection,
+  wallet,
+  network: "mainnet",
+  
+  // Custom program addresses
+  programs: {
+    amm: customAmmAddress,
+    factory: customFactoryAddress
+  },
+  
+  // API configuration
+  apiUrl: "https://api.vertigo.so",
+  
+  // Caching settings
+  cache: {
+    enabled: true,
+    ttl: 60000 // 1 minute
+  },
+  
+  // Transaction settings
+  priority: {
+    autoFee: true,
+    baseFee: 1000,
+    maxFee: 1000000
+  }
+});
+```
+
+## 🎯 Examples
+
+Check out our comprehensive examples:
+
+- [Quick Start Guide](./examples/quick-start/)
+- [Pool Creation](./examples/pool-creation/)
+- [Trading Examples](./examples/trading/)
+- [Advanced Usage](./examples/advanced/)
+- [Trading Bots](./examples/bots/)
+- [UI Integration](./examples/ui-integration/)
+
+## 🔄 Migration from v1
+
+If you're upgrading from SDK v1:
+
+```typescript
+// Old (v1)
+import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
+const sdk = new VertigoSDK(provider);
+
+// New (v2)
+import { Vertigo } from "@vertigo/sdk";
+const vertigo = await Vertigo.load({ connection, wallet });
+
+// The old SDK is still available for backwards compatibility
+import { VertigoSDK } from "@vertigo/sdk";
+```
+
+## 🔗 Network Support
+
+| Network | Status | RPC Endpoint |
+|---------|--------|-------------|
+| Mainnet | ✅ Supported | https://api.mainnet-beta.solana.com |
+| Devnet | ✅ Supported | https://api.devnet.solana.com |
+| Testnet | ✅ Supported | https://api.testnet.solana.com |
+| Localnet | ✅ Supported | http://localhost:8899 |
+
+## 📖 Documentation
+
+- [Full Documentation](https://docs.vertigo.so)
+- [API Reference](https://api.vertigo.so/docs)
+- [Integration Guide](https://docs.vertigo.so/integration)
+- [GitHub Repository](https://github.com/vertigo-protocol/vertigo-sdk)
+
+## 🤝 Contributing
+
+We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
+
+## 🐛 Support
+
+- **Discord**: [Join our community](https://discord.gg/vertigo)
+- **GitHub Issues**: [Report bugs](https://github.com/vertigo-protocol/vertigo-sdk/issues)
+- **Email**: sdk@vertigo.so
+
+## 📄 License
+
+MIT License - see [LICENSE](LICENSE) for details.
+
+---
+
+<div align="center">
+  <p>Built with ❤️ by the Vertigo Protocol team</p>
+  <p>
+    <a href="https://vertigo.so">Website</a> •
+    <a href="https://twitter.com/vertigoprotocol">Twitter</a> •
+    <a href="https://discord.gg/vertigo">Discord</a>
+  </p>
+</div>

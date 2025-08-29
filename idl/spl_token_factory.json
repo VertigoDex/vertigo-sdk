@@ -1,0 +1,17 @@
+{
+  "version": "0.1.0",
+  "name": "spl_token_factory",
+  "instructions": [],
+  "accounts": [
+    {
+      "name": "SplTokenFactory",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    }
+  ],
+  "metadata": {
+    "address": "3333333333333333333333333333333333333333333"
+  }
+}

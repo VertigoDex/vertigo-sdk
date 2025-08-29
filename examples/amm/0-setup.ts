@@ -25,7 +25,7 @@ const argv = yargs(hideBin(process.argv))
     type: "string",
     description: "Solana network to use",
     default: "localnet",
-    choices: ["mainnet-beta", "devnet", "testnet", "localnet"],
+    choices: ["mainnet", "devnet", "testnet", "localnet"],
   })
   .option("path-to-owner", {
     type: "string",
