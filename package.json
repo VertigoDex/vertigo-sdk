@@ -72,6 +72,12 @@
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
+    "test:integration": "vitest run tests/integration/*.integration.test.ts",
+    "test:devnet": "tsx tests/integration/test-runner.ts test",
+    "test:devnet:verbose": "tsx tests/integration/test-runner.ts test --verbose",
+    "test:devnet:export": "tsx tests/integration/test-runner.ts test --export test-results.json",
+    "test:devnet:category": "tsx tests/integration/test-runner.ts test --category",
+    "test:devnet:help": "tsx tests/integration/test-runner.ts --help",
     "lint": "prettier --check \"src/**/*.{js,ts}\"",
     "lint:fix": "prettier --write \"src/**/*.{js,ts}\"",
     "typecheck": "tsc --noEmit",
@@ -95,6 +101,7 @@
     "@types/bn.js": "^5.1.0",
     "@types/node": "^22.14.1",
     "@types/yargs": "^17.0.33",
+    "@vitest/coverage-v8": "^1.0.0",
     "@vitest/ui": "^1.0.0",
     "copyfiles": "^2.4.1",
     "dotenv": "^16.4.7",
@@ -102,7 +109,6 @@
     "typescript": "~4.9.5",
     "vite": "^5.0.0",
     "vitest": "^1.0.0",
-    "yargs": "^17.7.2",
-    "@vitest/coverage-v8": "^1.0.0"
+    "yargs": "^17.7.2"
   }
 }

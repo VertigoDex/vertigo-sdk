@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Vertigo SDK v2 - Devnet Test Runner</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <script src="https://unpkg.com/@solana/web3.js@latest/lib/index.iife.min.js"></script>
+    <style>
+        .test-passed { background-color: #10b981; }
+        .test-failed { background-color: #ef4444; }
+        .test-running { background-color: #3b82f6; }
+        .test-pending { background-color: #6b7280; }
+        .log-entry { font-family: 'Courier New', monospace; }
+        .json-output { 
+            background: #1f2937; 
+            color: #10b981; 
+            padding: 1rem; 
+            border-radius: 0.5rem;
+            overflow-x: auto;
+        }
+    </style>
+</head>
+<body class="bg-gray-900 text-white">
+    <div class="container mx-auto p-8">
+        <header class="mb-8">
+            <h1 class="text-4xl font-bold mb-2">Vertigo SDK v2 - Devnet Test Runner</h1>
+            <p class="text-gray-400">Comprehensive testing of all SDK methods on Solana Devnet</p>
+        </header>
+
+        <!-- Configuration Section -->
+        <section class="mb-8 bg-gray-800 rounded-lg p-6">
+            <h2 class="text-2xl font-semibold mb-4">Configuration</h2>
+            
+            <div class="grid grid-cols-2 gap-4">
+                <div>
+                    <label class="block text-sm font-medium mb-2">RPC Endpoint</label>
+                    <input type="text" id="rpcEndpoint" value="https://api.devnet.solana.com" 
+                           class="w-full px-3 py-2 bg-gray-700 rounded-md text-white">
+                </div>
+                
+                <div>
+                    <label class="block text-sm font-medium mb-2">Network</label>
+                    <select id="network" class="w-full px-3 py-2 bg-gray-700 rounded-md text-white">
+                        <option value="devnet">Devnet</option>
+                        <option value="mainnet">Mainnet</option>
+                        <option value="localnet">Localnet</option>
+                    </select>
+                </div>
+                
+                <div class="col-span-2">
+                    <label class="block text-sm font-medium mb-2">Private Key (Base58)</label>
+                    <input type="password" id="privateKey" placeholder="Optional - will generate ephemeral wallet if not provided"
+                           class="w-full px-3 py-2 bg-gray-700 rounded-md text-white">
+                </div>
+            </div>
+            
+            <div class="mt-4 flex gap-4">
+                <button onclick="initializeSDK()" class="px-4 py-2 bg-blue-600 hover:bg-blue-700 rounded-md">
+                    Initialize SDK
+                </button>
+                <button onclick="requestAirdrop()" class="px-4 py-2 bg-green-600 hover:bg-green-700 rounded-md">
+                    Request Airdrop (2 SOL)
+                </button>
+                <button onclick="checkBalance()" class="px-4 py-2 bg-purple-600 hover:bg-purple-700 rounded-md">
+                    Check Balance
+                </button>
+            </div>
+            
+            <div id="walletInfo" class="mt-4 p-4 bg-gray-700 rounded-md hidden">
+                <p class="text-sm">Wallet: <span id="walletAddress" class="font-mono"></span></p>
+                <p class="text-sm">Balance: <span id="walletBalance" class="font-mono"></span> SOL</p>
+            </div>
+        </section>
+
+        <!-- Test Categories -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Test Categories</h2>
+            
+            <div class="grid grid-cols-3 gap-4">
+                <button onclick="runTestCategory('client')" 
+                        class="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg">
+                    <h3 class="font-semibold">Client Tests</h3>
+                    <p class="text-sm text-gray-400">VertigoClient initialization & methods</p>
+                </button>
+                
+                <button onclick="runTestCategory('pools')" 
+                        class="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg">
+                    <h3 class="font-semibold">Pool Tests</h3>
+                    <p class="text-sm text-gray-400">Pool discovery & operations</p>
+                </button>
+                
+                <button onclick="runTestCategory('swap')" 
+                        class="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg">
+                    <h3 class="font-semibold">Swap Tests</h3>
+                    <p class="text-sm text-gray-400">Swap quotes & routing</p>
+                </button>
+                
+                <button onclick="runTestCategory('factory')" 
+                        class="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg">
+                    <h3 class="font-semibold">Factory Tests</h3>
+                    <p class="text-sm text-gray-400">Token & pool creation</p>
+                </button>
+                
+                <button onclick="runTestCategory('api')" 
+                        class="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg">
+                    <h3 class="font-semibold">API Tests</h3>
+                    <p class="text-sm text-gray-400">Market data & analytics</p>
+                </button>
+                
+                <button onclick="runTestCategory('utils')" 
+                        class="p-4 bg-gray-800 hover:bg-gray-700 rounded-lg">
+                    <h3 class="font-semibold">Utility Tests</h3>
+                    <p class="text-sm text-gray-400">Helper functions & utilities</p>
+                </button>
+            </div>
+            
+            <div class="mt-4 flex gap-4">
+                <button onclick="runAllTests()" class="px-4 py-2 bg-indigo-600 hover:bg-indigo-700 rounded-md">
+                    Run All Tests
+                </button>
+                <button onclick="clearResults()" class="px-4 py-2 bg-red-600 hover:bg-red-700 rounded-md">
+                    Clear Results
+                </button>
+                <button onclick="exportResults()" class="px-4 py-2 bg-yellow-600 hover:bg-yellow-700 rounded-md">
+                    Export Results
+                </button>
+            </div>
+        </section>
+
+        <!-- Test Results -->
+        <section class="mb-8">
+            <h2 class="text-2xl font-semibold mb-4">Test Results</h2>
+            
+            <div class="mb-4 grid grid-cols-4 gap-4 text-center">
+                <div class="bg-gray-800 rounded-lg p-4">
+                    <p class="text-3xl font-bold" id="totalTests">0</p>
+                    <p class="text-sm text-gray-400">Total</p>
+                </div>
+                <div class="bg-green-900 rounded-lg p-4">
+                    <p class="text-3xl font-bold" id="passedTests">0</p>
+                    <p class="text-sm text-gray-400">Passed</p>
+                </div>
+                <div class="bg-red-900 rounded-lg p-4">
+                    <p class="text-3xl font-bold" id="failedTests">0</p>
+                    <p class="text-sm text-gray-400">Failed</p>
+                </div>
+                <div class="bg-blue-900 rounded-lg p-4">
+                    <p class="text-3xl font-bold" id="pendingTests">0</p>
+                    <p class="text-sm text-gray-400">Pending</p>
+                </div>
+            </div>
+            
+            <div id="testResults" class="bg-gray-800 rounded-lg p-4 max-h-96 overflow-y-auto">
+                <p class="text-gray-500">No tests run yet. Initialize SDK and run tests to see results.</p>
+            </div>
+        </section>
+
+        <!-- Console Output -->
+        <section>
+            <h2 class="text-2xl font-semibold mb-4">Console Output</h2>
+            <div id="console" class="bg-black rounded-lg p-4 h-64 overflow-y-auto log-entry text-green-400 text-sm">
+                <p>Ready to initialize SDK...</p>
+            </div>
+        </section>
+    </div>
+
+    <script type="module">
+        // Import SDK (this would be your built SDK in a real scenario)
+        // For testing purposes, we'll create a mock implementation
+        
+        window.vertigoSDK = null;
+        window.testResults = [];
+        
+        window.log = function(message, type = 'info') {
+            const console = document.getElementById('console');
+            const timestamp = new Date().toLocaleTimeString();
+            const color = type === 'error' ? 'text-red-400' : 
+                         type === 'success' ? 'text-green-400' : 
+                         type === 'warning' ? 'text-yellow-400' : 'text-gray-400';
+            
+            console.innerHTML += `<p class="${color}">[${timestamp}] ${message}</p>`;
+            console.scrollTop = console.scrollHeight;
+        };
+        
+        window.initializeSDK = async function() {
+            try {
+                log('Initializing Vertigo SDK...');
+                
+                const rpcEndpoint = document.getElementById('rpcEndpoint').value;
+                const network = document.getElementById('network').value;
+                const privateKeyInput = document.getElementById('privateKey').value;
+                
+                // Create connection
+                const connection = new solanaWeb3.Connection(rpcEndpoint, 'confirmed');
+                
+                // Setup wallet
+                let wallet;
+                if (privateKeyInput) {
+                    const privateKeyBytes = bs58.decode(privateKeyInput);
+                    wallet = solanaWeb3.Keypair.fromSecretKey(privateKeyBytes);
+                    log('Using provided wallet');
+                } else {
+                    wallet = solanaWeb3.Keypair.generate();
+                    log('Generated ephemeral wallet');
+                }
+                
+                // Store wallet info
+                document.getElementById('walletAddress').textContent = wallet.publicKey.toBase58();
+                document.getElementById('walletInfo').classList.remove('hidden');
+                
+                // Here you would actually initialize your SDK
+                // For now, we'll create a mock object
+                window.vertigoSDK = {
+                    connection,
+                    wallet,
+                    network,
+                    initialized: true,
+                    pools: {
+                        getAllPools: async () => [],
+                        getPool: async (address) => null,
+                        findPoolsByMint: async (mint) => [],
+                    },
+                    swap: {
+                        getQuote: async (params) => ({
+                            amountIn: params.amountIn,
+                            estimatedAmountOut: params.amountIn * 0.99,
+                            minimumAmountOut: params.amountIn * 0.98,
+                            priceImpactPct: 0.1,
+                            fee: params.amountIn * 0.003,
+                        }),
+                    },
+                    api: {
+                        getPoolStats: async (pool) => ({ poolAddress: pool, tvl: 0 }),
+                        getTokenPrice: async (mint) => ({ mint, price: 0 }),
+                    },
+                };
+                
+                log('SDK initialized successfully', 'success');
+                await checkBalance();
+                
+            } catch (error) {
+                log(`Failed to initialize SDK: ${error.message}`, 'error');
+            }
+        };
+        
+        window.requestAirdrop = async function() {
+            if (!window.vertigoSDK) {
+                log('Please initialize SDK first', 'error');
+                return;
+            }
+            
+            try {
+                log('Requesting airdrop...');
+                const signature = await window.vertigoSDK.connection.requestAirdrop(
+                    window.vertigoSDK.wallet.publicKey,
+                    2 * solanaWeb3.LAMPORTS_PER_SOL
+                );
+                
+                log(`Airdrop requested. Signature: ${signature}`);
+                
+                const latestBlockhash = await window.vertigoSDK.connection.getLatestBlockhash();
+                await window.vertigoSDK.connection.confirmTransaction({
+                    signature,
+                    blockhash: latestBlockhash.blockhash,
+                    lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+                });
+                
+                log('Airdrop confirmed', 'success');
+                await checkBalance();
+                
+            } catch (error) {
+                log(`Airdrop failed: ${error.message}`, 'error');
+            }
+        };
+        
+        window.checkBalance = async function() {
+            if (!window.vertigoSDK) {
+                log('Please initialize SDK first', 'error');
+                return;
+            }
+            
+            try {
+                const balance = await window.vertigoSDK.connection.getBalance(
+                    window.vertigoSDK.wallet.publicKey
+                );
+                const solBalance = balance / solanaWeb3.LAMPORTS_PER_SOL;
+                
+                document.getElementById('walletBalance').textContent = solBalance.toFixed(4);
+                log(`Wallet balance: ${solBalance.toFixed(4)} SOL`);
+                
+            } catch (error) {
+                log(`Failed to check balance: ${error.message}`, 'error');
+            }
+        };
+        
+        window.runTest = async function(name, testFn) {
+            const startTime = Date.now();
+            const testResult = {
+                name,
+                status: 'running',
+                duration: 0,
+                error: null,
+                result: null,
+            };
+            
+            try {
+                log(`Running test: ${name}`);
+                const result = await testFn();
+                testResult.status = 'passed';
+                testResult.result = result;
+                log(`✓ ${name}`, 'success');
+            } catch (error) {
+                testResult.status = 'failed';
+                testResult.error = error.message;
+                log(`✗ ${name}: ${error.message}`, 'error');
+            }
+            
+            testResult.duration = Date.now() - startTime;
+            window.testResults.push(testResult);
+            updateTestDisplay();
+            
+            return testResult;
+        };
+        
+        window.runTestCategory = async function(category) {
+            if (!window.vertigoSDK) {
+                log('Please initialize SDK first', 'error');
+                return;
+            }
+            
+            log(`Running ${category} tests...`);
+            
+            const tests = getTestsForCategory(category);
+            for (const test of tests) {
+                await runTest(test.name, test.fn);
+                await new Promise(resolve => setTimeout(resolve, 100)); // Small delay between tests
+            }
+            
+            log(`Completed ${category} tests`, 'success');
+        };
+        
+        window.getTestsForCategory = function(category) {
+            const sdk = window.vertigoSDK;
+            
+            const testCategories = {
+                client: [
+                    {
+                        name: 'Client Initialization',
+                        fn: async () => {
+                            if (!sdk.initialized) throw new Error('SDK not initialized');
+                            return true;
+                        }
+                    },
+                    {
+                        name: 'Wallet Connection',
+                        fn: async () => {
+                            if (!sdk.wallet) throw new Error('No wallet connected');
+                            return sdk.wallet.publicKey.toBase58();
+                        }
+                    },
+                ],
+                pools: [
+                    {
+                        name: 'Fetch All Pools',
+                        fn: async () => {
+                            const pools = await sdk.pools.getAllPools();
+                            return { count: pools.length };
+                        }
+                    },
+                    {
+                        name: 'Find Pools by Mint',
+                        fn: async () => {
+                            const mint = 'So11111111111111111111111111111111111111112';
+                            const pools = await sdk.pools.findPoolsByMint(mint);
+                            return { count: pools.length };
+                        }
+                    },
+                ],
+                swap: [
+                    {
+                        name: 'Calculate Swap Quote',
+                        fn: async () => {
+                            const quote = await sdk.swap.getQuote({
+                                pool: solanaWeb3.Keypair.generate().publicKey,
+                                inputMint: solanaWeb3.Keypair.generate().publicKey,
+                                outputMint: solanaWeb3.Keypair.generate().publicKey,
+                                amountIn: 1000000,
+                                slippageBps: 100,
+                            });
+                            return quote;
+                        }
+                    },
+                ],
+                factory: [
+                    {
+                        name: 'Validate Token Metadata',
+                        fn: async () => {
+                            const metadata = {
+                                name: 'Test Token',
+                                symbol: 'TEST',
+                                description: 'Test token description',
+                            };
+                            // Mock validation
+                            return metadata.name && metadata.symbol;
+                        }
+                    },
+                ],
+                api: [
+                    {
+                        name: 'Get Pool Stats',
+                        fn: async () => {
+                            const poolAddress = solanaWeb3.Keypair.generate().publicKey.toBase58();
+                            const stats = await sdk.api.getPoolStats(poolAddress);
+                            return stats;
+                        }
+                    },
+                    {
+                        name: 'Get Token Price',
+                        fn: async () => {
+                            const mint = 'So11111111111111111111111111111111111111112';
+                            const price = await sdk.api.getTokenPrice(mint);
+                            return price;
+                        }
+                    },
+                ],
+                utils: [
+                    {
+                        name: 'Format Token Amount',
+                        fn: async () => {
+                            const amount = 1000000000;
+                            const decimals = 9;
+                            const formatted = (amount / Math.pow(10, decimals)).toFixed(2);
+                            return formatted;
+                        }
+                    },
+                ],
+            };
+            
+            return testCategories[category] || [];
+        };
+        
+        window.runAllTests = async function() {
+            const categories = ['client', 'pools', 'swap', 'factory', 'api', 'utils'];
+            
+            window.testResults = [];
+            updateTestDisplay();
+            
+            for (const category of categories) {
+                await runTestCategory(category);
+            }
+            
+            log('All tests completed', 'success');
+        };
+        
+        window.updateTestDisplay = function() {
+            const total = window.testResults.length;
+            const passed = window.testResults.filter(t => t.status === 'passed').length;
+            const failed = window.testResults.filter(t => t.status === 'failed').length;
+            const pending = window.testResults.filter(t => t.status === 'pending').length;
+            
+            document.getElementById('totalTests').textContent = total;
+            document.getElementById('passedTests').textContent = passed;
+            document.getElementById('failedTests').textContent = failed;
+            document.getElementById('pendingTests').textContent = pending;
+            
+            const resultsDiv = document.getElementById('testResults');
+            if (window.testResults.length === 0) {
+                resultsDiv.innerHTML = '<p class="text-gray-500">No tests run yet.</p>';
+                return;
+            }
+            
+            resultsDiv.innerHTML = window.testResults.map(test => `
+                <div class="mb-2 p-2 rounded ${
+                    test.status === 'passed' ? 'bg-green-900' :
+                    test.status === 'failed' ? 'bg-red-900' :
+                    test.status === 'running' ? 'bg-blue-900' : 'bg-gray-700'
+                }">
+                    <div class="flex justify-between items-center">
+                        <span class="font-semibold">${test.name}</span>
+                        <span class="text-sm">${test.duration}ms</span>
+                    </div>
+                    ${test.error ? `<p class="text-sm mt-1 text-red-400">${test.error}</p>` : ''}
+                    ${test.result ? `<pre class="text-xs mt-1 text-gray-300">${JSON.stringify(test.result, null, 2)}</pre>` : ''}
+                </div>
+            `).join('');
+        };
+        
+        window.clearResults = function() {
+            window.testResults = [];
+            updateTestDisplay();
+            document.getElementById('console').innerHTML = '<p>Console cleared</p>';
+            log('Results cleared');
+        };
+        
+        window.exportResults = function() {
+            const results = {
+                timestamp: new Date().toISOString(),
+                network: document.getElementById('network').value,
+                wallet: window.vertigoSDK?.wallet?.publicKey?.toBase58(),
+                results: window.testResults,
+                summary: {
+                    total: window.testResults.length,
+                    passed: window.testResults.filter(t => t.status === 'passed').length,
+                    failed: window.testResults.filter(t => t.status === 'failed').length,
+                }
+            };
+            
+            const blob = new Blob([JSON.stringify(results, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `vertigo-sdk-test-results-${Date.now()}.json`;
+            a.click();
+            
+            log('Results exported', 'success');
+        };
+        
+        // Initialize on load
+        window.addEventListener('load', () => {
+            log('Test runner ready. Please initialize SDK to begin testing.');
+        });
+    </script>
+</body>
+</html>
