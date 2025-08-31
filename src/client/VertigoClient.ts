@@ -10,13 +10,10 @@ import {
 } from "../core/constants";
 import { PoolClient } from "./PoolClient";
 import { SwapClient } from "./SwapClient";
-import { FactoryClient } from "./FactoryClient";
 import { RelayClient } from "./RelayClient";
 import { VertigoAPI } from "../api/VertigoAPI";
 import type { Amm } from "../../../target/types/amm";
 import type { PoolAuthority } from "../../../target/types/pool_authority";
-import type { SplTokenFactory } from "../../../target/types/spl_token_factory";
-import type { Token2022Factory } from "../../../target/types/token_2022_factory";
 import type { PermissionedRelay } from "../../../target/types/permissioned_relay";
 
 export class VertigoClient {
@@ -28,14 +25,11 @@ export class VertigoClient {
   // Programs
   public readonly ammProgram: anchor.Program<Amm>;
   public readonly poolAuthorityProgram?: anchor.Program<PoolAuthority>;
-  public readonly splTokenFactoryProgram?: anchor.Program<SplTokenFactory>;
-  public readonly token2022FactoryProgram?: anchor.Program<Token2022Factory>;
   public readonly permissionedRelayProgram?: anchor.Program<PermissionedRelay>;
   
   // Client modules
   public readonly pools: PoolClient;
   public readonly swap: SwapClient;
-  public readonly factory: FactoryClient;
   public readonly relay: RelayClient;
   public readonly api: VertigoAPI;
   
@@ -65,26 +59,16 @@ export class VertigoClient {
     );
     
     // Initialize programs
-    this.ammProgram = this.initializeProgram<Amm>("amm", config.programs.amm);
+    const ammProgram = this.initializeProgram<Amm>("amm", config.programs.amm);
+    if (!ammProgram) {
+      throw new Error("Failed to initialize AMM program - required for SDK operation");
+    }
+    this.ammProgram = ammProgram;
     
     if (config.programs.poolAuthority) {
       this.poolAuthorityProgram = this.initializeProgram<PoolAuthority>(
         "pool_authority",
         config.programs.poolAuthority
-      );
-    }
-    
-    if (config.programs.splTokenFactory) {
-      this.splTokenFactoryProgram = this.initializeProgram<SplTokenFactory>(
-        "spl_token_factory",
-        config.programs.splTokenFactory
-      );
-    }
-    
-    if (config.programs.token2022Factory) {
-      this.token2022FactoryProgram = this.initializeProgram<Token2022Factory>(
-        "token_2022_factory",
-        config.programs.token2022Factory
       );
     }
     
@@ -98,7 +82,6 @@ export class VertigoClient {
     // Initialize client modules
     this.pools = new PoolClient(this);
     this.swap = new SwapClient(this);
-    this.factory = new FactoryClient(this);
     this.relay = new RelayClient(this);
     
     // Initialize API client
@@ -108,9 +91,40 @@ export class VertigoClient {
     }
   }
 
-  private initializeProgram<T>(idlName: string, programId?: PublicKey): anchor.Program<T> {
-    const idl = require(`../../../target/idl/${idlName}.json`);
-    return new anchor.Program(idl, programId, this.provider) as anchor.Program<T>;
+  private initializeProgram<T>(idlName: string, programId?: PublicKey): anchor.Program<T> | undefined {
+    try {
+      const idl = require(`../../target/idl/${idlName}.json`);
+      // Use program ID from parameter, or from IDL metadata, or throw error
+      const finalProgramId = programId || (idl.metadata?.address ? new PublicKey(idl.metadata.address) : undefined);
+      if (!finalProgramId) {
+        console.warn(`No program ID found for ${idlName}, skipping initialization`);
+        return undefined;
+      }
+      
+      // Check if IDL has valid account definitions - but allow empty for workaround
+      // if (!idl.accounts || idl.accounts.length === 0) {
+      //   console.warn(`${idlName} has no account definitions, skipping initialization`);
+      //   return undefined;
+      // }
+      
+      // Work around an Anchor issue with account size calculation
+      // Create a copy of the IDL and remove accounts to prevent Anchor from creating account clients
+      // We'll handle account encoding/decoding manually when needed
+      const modifiedIdl = JSON.parse(JSON.stringify(idl));
+      
+      // Store original accounts for later use if needed
+      (this as any)[`${idlName}OriginalAccounts`] = idl.accounts;
+      
+      // Remove accounts from IDL to prevent Anchor errors
+      modifiedIdl.accounts = [];
+      
+      console.log(`Initializing ${idlName} (removed ${idl.accounts?.length || 0} accounts to work around Anchor issue)`);
+      
+      return new anchor.Program(modifiedIdl, finalProgramId, this.provider) as anchor.Program<T>;
+    } catch (error) {
+      console.warn(`Failed to initialize ${idlName}:`, error);
+      return undefined;
+    }
   }
 
   /**
@@ -133,8 +147,6 @@ export class VertigoClient {
       programs: {
         amm: config.programs?.amm || VERTIGO_PROGRAMS[network].AMM,
         poolAuthority: config.programs?.poolAuthority || VERTIGO_PROGRAMS[network].POOL_AUTHORITY,
-        splTokenFactory: config.programs?.splTokenFactory || VERTIGO_PROGRAMS[network].SPL_TOKEN_FACTORY,
-        token2022Factory: config.programs?.token2022Factory || VERTIGO_PROGRAMS[network].TOKEN_2022_FACTORY,
         permissionedRelay: config.programs?.permissionedRelay || VERTIGO_PROGRAMS[network].PERMISSIONED_RELAY,
       },
       cache: {

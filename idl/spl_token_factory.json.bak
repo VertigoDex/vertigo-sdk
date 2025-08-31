@@ -1,10 +1,10 @@
 {
   "version": "0.1.0",
-  "name": "permissioned_relay",
+  "name": "spl_token_factory",
   "instructions": [],
   "accounts": [
     {
-      "name": "PermissionedRelay",
+      "name": "SplTokenFactory",
       "type": {
         "kind": "struct",
         "fields": []
@@ -12,6 +12,6 @@
     }
   ],
   "metadata": {
-    "address": "FREEXMQuGxqrmT8gKJt82zfJjZACBiR8MNuQCbGSHyzF"
+    "address": "3333333333333333333333333333333333333333333"
   }
 }

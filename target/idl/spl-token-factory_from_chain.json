@@ -1,7 +1,7 @@
 {
-  "address": "FAcTgvrF2jAiPnWEZGLCV3PTQJrypa8GXLFowBv8T4Vs",
+  "address": "FactRtzKDU69a88rVZbnTofJFSVSDtzEHQG36NigvJjS",
   "metadata": {
-    "name": "token_2022_factory",
+    "name": "spl_token_factory",
     "version": "0.1.0",
     "spec": "0.1.0",
     "description": "Created with Anchor"
@@ -117,23 +117,17 @@
         },
         {
           "name": "owner",
-          "docs": [
-            "The user who pays for creation and owns the owner signature."
-          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "amm",
-          "docs": [
-            "The Vertigo program."
-          ],
           "address": "vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"
         },
         {
           "name": "factory",
           "docs": [
-            "The factory state account."
+            "Box the Factory account as it might contain substantial data"
           ],
           "pda": {
             "seeds": [
@@ -166,19 +160,121 @@
         },
         {
           "name": "mint_b_authority",
-          "docs": [
-            "The authority allowed to mint tokens from `mint`."
-          ],
           "writable": true,
           "signer": true
         },
         {
           "name": "mint_b",
+          "docs": [
+            "Box the Mint account as it contains extension data"
+          ],
           "writable": true,
           "signer": true
         },
         {
-          "name": "mint_a"
+          "name": "metadata_b",
+          "writable": true,
+          "pda": {
+            "seeds": [
+              {
+                "kind": "const",
+                "value": [
+                  109,
+                  101,
+                  116,
+                  97,
+                  100,
+                  97,
+                  116,
+                  97
+                ]
+              },
+              {
+                "kind": "const",
+                "value": [
+                  11,
+                  112,
+                  101,
+                  177,
+                  227,
+                  209,
+                  124,
+                  69,
+                  56,
+                  157,
+                  82,
+                  127,
+                  107,
+                  4,
+                  195,
+                  205,
+                  88,
+                  184,
+                  108,
+                  115,
+                  26,
+                  160,
+                  253,
+                  181,
+                  73,
+                  182,
+                  209,
+                  188,
+                  3,
+                  248,
+                  41,
+                  70
+                ]
+              },
+              {
+                "kind": "account",
+                "path": "mint_b"
+              }
+            ],
+            "program": {
+              "kind": "const",
+              "value": [
+                11,
+                112,
+                101,
+                177,
+                227,
+                209,
+                124,
+                69,
+                56,
+                157,
+                82,
+                127,
+                107,
+                4,
+                195,
+                205,
+                88,
+                184,
+                108,
+                115,
+                26,
+                160,
+                253,
+                181,
+                73,
+                182,
+                209,
+                188,
+                3,
+                248,
+                41,
+                70
+              ]
+            }
+          }
+        },
+        {
+          "name": "mint_a",
+          "docs": [
+            "Box the Mint account as it contains extension data"
+          ]
         },
         {
           "name": "pool",
@@ -355,7 +451,7 @@
         {
           "name": "token_wallet_b",
           "docs": [
-            "Token wallet where the initial token reserves come from"
+            "Box the TokenAccount as it contains substantial data"
           ],
           "writable": true,
           "pda": {
@@ -417,7 +513,7 @@
         },
         {
           "name": "token_program_b",
-          "address": "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+          "address": "TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"
         },
         {
           "name": "associated_token_program",
@@ -426,6 +522,10 @@
         {
           "name": "system_program",
           "address": "11111111111111111111111111111111"
+        },
+        {
+          "name": "metadata_program",
+          "address": "metaqbxxUerdq28cj1RbAWkYQm3ybzjb6a8bt518x1s"
         },
         {
           "name": "rent",
@@ -456,7 +556,48 @@
         249,
         216,
         202
-      ]
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "shift",
+            "type": "u128"
+          },
+          {
+            "name": "initial_token_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "fee_params",
+            "type": {
+              "defined": {
+                "name": "FeeParams"
+              }
+            }
+          },
+          {
+            "name": "token_params",
+            "type": {
+              "defined": {
+                "name": "TokenParams"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mint_a",
+            "type": "pubkey"
+          }
+        ]
+      }
     }
   ],
   "events": [

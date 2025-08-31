@@ -1,10 +1,10 @@
 {
   "version": "0.1.0",
-  "name": "permissioned_relay",
+  "name": "pool_authority",
   "instructions": [],
   "accounts": [
     {
-      "name": "PermissionedRelay",
+      "name": "PoolAuthority",
       "type": {
         "kind": "struct",
         "fields": []
@@ -12,6 +12,6 @@
     }
   ],
   "metadata": {
-    "address": "FREEXMQuGxqrmT8gKJt82zfJjZACBiR8MNuQCbGSHyzF"
+    "address": "2222222222222222222222222222222222222222222"
   }
 }

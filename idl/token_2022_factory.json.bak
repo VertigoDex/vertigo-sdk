@@ -1,10 +1,10 @@
 {
   "version": "0.1.0",
-  "name": "permissioned_relay",
+  "name": "token_2022_factory",
   "instructions": [],
   "accounts": [
     {
-      "name": "PermissionedRelay",
+      "name": "Token2022Factory",
       "type": {
         "kind": "struct",
         "fields": []
@@ -12,6 +12,6 @@
     }
   ],
   "metadata": {
-    "address": "FREEXMQuGxqrmT8gKJt82zfJjZACBiR8MNuQCbGSHyzF"
+    "address": "4444444444444444444444444444444444444444444"
   }
 }

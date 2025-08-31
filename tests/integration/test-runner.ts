@@ -7,10 +7,11 @@ import { SwapClient } from '../../src/client/SwapClient';
 import { FactoryClient } from '../../src/client/FactoryClient';
 import { RelayClient } from '../../src/client/RelayClient';
 import { VertigoAPI } from '../../src/api/VertigoAPI';
-import * as chalk from 'chalk';
+import chalk from 'chalk';
 import { Command } from 'commander';
 import * as dotenv from 'dotenv';
 import BN from 'bn.js';
+import bs58 from 'bs58';
 import * as fs from 'fs';
 import * as path from 'path';
 

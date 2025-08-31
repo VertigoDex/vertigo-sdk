@@ -18,8 +18,6 @@ export type VertigoConfig = {
   programs?: {
     amm?: PublicKey;
     poolAuthority?: PublicKey;
-    splTokenFactory?: PublicKey;
-    token2022Factory?: PublicKey;
     permissionedRelay?: PublicKey;
   };
   cache?: {

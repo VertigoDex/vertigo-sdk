@@ -611,7 +611,60 @@
         177,
         109,
         188
-      ]
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "enabled",
+            "type": "bool"
+          },
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_a",
+            "type": "pubkey"
+          },
+          {
+            "name": "mint_b",
+            "type": "pubkey"
+          },
+          {
+            "name": "token_a_reserves",
+            "type": "u128"
+          },
+          {
+            "name": "token_b_reserves",
+            "type": "u128"
+          },
+          {
+            "name": "shift",
+            "type": "u128"
+          },
+          {
+            "name": "royalties",
+            "type": "u64"
+          },
+          {
+            "name": "vertigo_fees",
+            "type": "u64"
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "fee_params",
+            "type": {
+              "defined": {
+                "name": "FeeParams"
+              }
+            }
+          }
+        ]
+      }
     }
   ],
   "events": [
