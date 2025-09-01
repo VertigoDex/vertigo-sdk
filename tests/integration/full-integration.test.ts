@@ -42,6 +42,9 @@ import {
 
 dotenv.config();
 
+// Helper function to wait
+const wait = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
+
 // Vertigo Program Addresses on Devnet
 const PROGRAMS = {
   AMM: new PublicKey('vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ'),
@@ -1069,25 +1072,110 @@ async function main() {
     // Setup connection
     const connection = new Connection('https://api.devnet.solana.com', 'confirmed');
     
-    // Setup wallet
-    if (!process.env.DEVNET_PRIVATE_KEY) {
-      throw new Error('DEVNET_PRIVATE_KEY not found in .env file');
+    let wallet: Keypair;
+    let needsAirdrop = true;
+    
+    // Check if user wants to use existing wallet
+    if (process.env.DEVNET_PRIVATE_KEY && process.env.USE_EXISTING_WALLET === 'true') {
+      console.log(chalk.cyan('\n🔑 Using existing wallet from environment...'));
+      const privateKeyBytes = bs58.decode(process.env.DEVNET_PRIVATE_KEY);
+      wallet = Keypair.fromSecretKey(privateKeyBytes);
+      
+      const balance = await connection.getBalance(wallet.publicKey);
+      if (balance >= LAMPORTS_PER_SOL) {
+        needsAirdrop = false;
+        console.log(chalk.gray(`Balance: ${balance / LAMPORTS_PER_SOL} SOL`));
+      }
+    } else {
+      // Generate a random keypair for testing
+      console.log(chalk.cyan('\n🔑 Generating test wallet...'));
+      wallet = Keypair.generate();
+      console.log(chalk.gray(`Private key (for debugging): ${bs58.encode(wallet.secretKey)}`));
+      console.log(chalk.gray('Note: This is a temporary test wallet, do not send real funds to it!'));
     }
     
-    const privateKeyBytes = bs58.decode(process.env.DEVNET_PRIVATE_KEY);
-    const wallet = Keypair.fromSecretKey(privateKeyBytes);
     const nodeWallet = new NodeWallet(wallet);
-    
     console.log(chalk.gray(`Wallet: ${wallet.publicKey.toBase58()}`));
     
-    const balance = await connection.getBalance(wallet.publicKey);
-    console.log(chalk.gray(`Balance: ${balance / LAMPORTS_PER_SOL} SOL`));
-    
-    if (balance === 0) {
-      console.log(chalk.yellow('\n⚠️  Warning: Wallet has 0 SOL'));
-      console.log(chalk.gray('Request an airdrop to run transaction tests:'));
-      console.log(chalk.gray(`solana airdrop 5 ${wallet.publicKey.toBase58()} --url devnet`));
+    // Request airdrop if needed
+    if (needsAirdrop) {
+      console.log(chalk.yellow('\n💰 Requesting airdrop...'));
+      let airdropSuccess = false;
+      const maxRetries = 3;
+      
+      for (let i = 0; i < maxRetries && !airdropSuccess; i++) {
+      try {
+        if (i > 0) {
+          console.log(chalk.gray(`Retry ${i}/${maxRetries}...`));
+          await wait(2000); // Wait 2 seconds between retries
+        }
+        
+        const airdropSignature = await connection.requestAirdrop(
+          wallet.publicKey,
+          2 * LAMPORTS_PER_SOL // Request 2 SOL
+        );
+        
+        console.log(chalk.gray(`Airdrop signature: ${airdropSignature}`));
+        
+        // Wait for airdrop confirmation
+        const latestBlockhash = await connection.getLatestBlockhash();
+        await connection.confirmTransaction({
+          signature: airdropSignature,
+          blockhash: latestBlockhash.blockhash,
+          lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
+        });
+        
+        // Wait a bit for the airdrop to be processed
+        await wait(1000);
+        
+        // Check balance
+        const balance = await connection.getBalance(wallet.publicKey);
+        if (balance > 0) {
+          console.log(chalk.green('✅ Airdrop successful!'));
+          console.log(chalk.gray(`Balance: ${balance / LAMPORTS_PER_SOL} SOL`));
+          airdropSuccess = true;
+        }
+      } catch (airdropError: any) {
+        if (i === maxRetries - 1) {
+          console.log(chalk.yellow(`⚠️  Airdrop failed after ${maxRetries} attempts`));
+        }
+      }
     }
+    
+    if (!airdropSuccess) {
+      console.log(chalk.yellow('⚠️  Airdrop failed, trying alternative approach...'));
+      
+      // Try using environment wallet as fallback
+      if (process.env.DEVNET_PRIVATE_KEY) {
+        console.log(chalk.gray('Using environment wallet as fallback...'));
+        const privateKeyBytes = bs58.decode(process.env.DEVNET_PRIVATE_KEY);
+        const envWallet = Keypair.fromSecretKey(privateKeyBytes);
+        const envBalance = await connection.getBalance(envWallet.publicKey);
+        
+        if (envBalance > LAMPORTS_PER_SOL) {
+          // Transfer some SOL from env wallet to test wallet
+          console.log(chalk.gray('Transferring SOL from environment wallet...'));
+          const transferTx = new Transaction().add(
+            SystemProgram.transfer({
+              fromPubkey: envWallet.publicKey,
+              toPubkey: wallet.publicKey,
+              lamports: LAMPORTS_PER_SOL,
+            })
+          );
+          
+          await sendAndConfirmTransaction(connection, transferTx, [envWallet]);
+          console.log(chalk.green('✅ Transfer successful!'));
+        }
+      }
+      
+      // Final balance check
+      const finalBalance = await connection.getBalance(wallet.publicKey);
+      if (finalBalance === 0) {
+        throw new Error('Unable to fund test wallet. Please try again later or use a funded wallet.');
+      }
+      console.log(chalk.gray(`Final balance: ${finalBalance / LAMPORTS_PER_SOL} SOL`));
+    }
+    } // Close the needsAirdrop if block
     
     // Setup provider
     const provider = new anchor.AnchorProvider(connection, nodeWallet, {
