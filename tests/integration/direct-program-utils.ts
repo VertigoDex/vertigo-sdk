@@ -24,6 +24,13 @@ export class DirectProgramClient {
   }
 
   /**
+   * Check if IDL is configured
+   */
+  hasIdl(): boolean {
+    return this.idl !== null;
+  }
+
+  /**
    * Set IDL for instruction encoding
    */
   setIdl(idl: Idl) {

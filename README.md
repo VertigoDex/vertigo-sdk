@@ -103,6 +103,9 @@ const { poolAddress } = await vertigo.pools.createPool({
 // Get pool information
 const pool = await vertigo.pools.getPool(poolAddress);
 
+// Get all pools
+const pools = await vertigo.pools.getPools();
+
 // Find pools by tokens
 const pools = await vertigo.pools.findPoolsByMints(mintA, mintB);
 
@@ -123,8 +126,12 @@ const quote = await vertigo.swap.getQuote({
   slippageBps: 50
 });
 
-// Simulate before executing
-const simulation = await vertigo.swap.simulateSwap({...});
+// Simulate swap to check for errors
+const simulation = await vertigo.swap.simulateSwap({
+  inputMint: SOL_MINT,
+  outputMint: USDC_MINT,
+  amount: 1_000_000_000
+});
 
 // Execute swap
 const result = await vertigo.swap.swap({
@@ -139,28 +146,21 @@ const result = await vertigo.swap.swap({
 });
 ```
 
-### 🏭 Factory Client
+### 🏗️ Pool Authority Client
 
-Launch tokens and create pools:
+Advanced pool management for authorized users:
 
 ```typescript
-// Launch a new token
-const { mintAddress } = await vertigo.factory.launchToken({
-  metadata: {
-    name: "My Token",
-    symbol: "MTK",
-    decimals: 9
-  },
-  supply: 1_000_000_000_000_000
+import { PoolAuthority } from "@vertigo/sdk";
+
+// Initialize Pool Authority client
+const poolAuth = await PoolAuthority.load({ 
+  connection, 
+  wallet 
 });
 
-// Launch token with pool
-const result = await vertigo.factory.launchTokenWithPool({
-  metadata: { name: "My Token", symbol: "MTK" },
-  supply: 1_000_000_000_000_000,
-  initialMarketCap: 50_000_000_000,
-  royaltiesBps: 250
-});
+// Create pools with authority permissions
+// Note: Token factory features are under development
 ```
 
 ### 📊 API Client
@@ -177,10 +177,9 @@ const trending = await vertigo.api.getTrendingPools("24h", 10);
 // Get token information
 const tokenInfo = await vertigo.api.getTokenInfo(mintAddress);
 
-// Subscribe to real-time updates
+// Subscribe to pool updates
 const unsubscribe = vertigo.api.subscribeToPool(poolAddress, {
-  onSwap: (data) => console.log("Swap:", data),
-  onPriceUpdate: (data) => console.log("Price:", data)
+  onUpdate: (data) => console.log("Pool update:", data)
 });
 ```
 
@@ -251,14 +250,31 @@ const vertigo = await Vertigo.load({
 
 ## 🎯 Examples
 
-Check out our comprehensive examples:
+Check out our test files for usage examples:
 
-- [Quick Start Guide](./examples/quick-start/)
-- [Pool Creation](./examples/pool-creation/)
-- [Trading Examples](./examples/trading/)
-- [Advanced Usage](./examples/advanced/)
-- [Trading Bots](./examples/bots/)
-- [UI Integration](./examples/ui-integration/)
+- [Integration Tests](./tests/integration/)
+- [Unit Tests](./tests/unit/)
+- [Full Integration Test](./tests/integration/full-integration.test.ts)
+
+## 🧪 Running Tests
+
+```bash
+# Run all tests
+npm test
+
+# Run tests in watch mode
+npm run test:watch
+
+# Run integration tests
+npm run test:integration
+
+# Run full devnet integration test
+npm run test:full
+
+# Run devnet tests with various options
+npm run test:devnet
+npm run test:devnet:verbose
+```
 
 ## 🔄 Migration from v1
 

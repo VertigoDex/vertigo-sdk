@@ -108,7 +108,7 @@
     "copyfiles": "^2.4.1",
     "dotenv": "^16.4.7",
     "prettier": "^2.6.2",
-    "typescript": "~4.9.5",
+    "typescript": "^5.7.2",
     "vite": "^5.0.0",
     "vitest": "^1.0.0",
     "yargs": "^17.7.2"

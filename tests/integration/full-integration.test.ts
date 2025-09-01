@@ -438,7 +438,7 @@ class IntegrationTestSuite {
       // Build pool creation instruction
       console.log(chalk.gray('\nBuilding pool creation transaction...'));
       
-      if (!this.context.ammClient.idl) {
+      if (!this.context.ammClient.hasIdl()) {
         console.log(chalk.yellow('⚠️  Cannot create pool without IDL'));
         console.log(chalk.gray('   Pool creation would require:'));
         console.log(chalk.gray('   - Initial liquidity for both tokens'));
@@ -619,7 +619,7 @@ class IntegrationTestSuite {
         if (poolAccount) {
           console.log(chalk.green('✅ Pool verified on-chain!'));
           
-          if (this.context.ammClient.idl) {
+          if (this.context.ammClient.hasIdl()) {
             try {
               // First derive vault addresses
               const [vaultA] = PDADeriver.deriveVault(
