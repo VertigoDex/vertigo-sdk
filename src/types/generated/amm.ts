@@ -1,8 +1,8 @@
-import { PublicKey } from '@solana/web3.js';
+import { PublicKey } from "@solana/web3.js";
 
-import { BN } from '@coral-xyz/anchor';
+import { BN } from "@coral-xyz/anchor";
 
-import { SignerLike } from '../../types/sdk';
+import { SignerLike } from "../../types/sdk";
 
 /** Event type - emitted by the program */
 export interface BuyEvent {
@@ -80,8 +80,6 @@ export interface SwapResponse {
   feeA: BN;
 }
 
-
-
 /** Request type for buy instruction */
 export interface BuyRequest {
   /** user account - This account needs to sign the transaction */
@@ -102,7 +100,7 @@ export interface BuyRequest {
   tokenProgramB: PublicKey;
 
   /** Instruction parameters */
-  params: SwapParams
+  params: SwapParams;
 }
 
 /** Request type for claim instruction */
@@ -118,8 +116,6 @@ export interface ClaimRequest {
   /** token_program_a account */
   tokenProgramA: PublicKey;
 }
-
-
 
 /** Request type for create instruction */
 export interface CreateRequest {
@@ -141,10 +137,8 @@ export interface CreateRequest {
   tokenProgramB: PublicKey;
 
   /** Instruction parameters */
-  params: CreateParams
+  params: CreateParams;
 }
-
-
 
 /** Request type for quote_buy instruction */
 export interface QuoteBuyRequest {
@@ -158,10 +152,8 @@ export interface QuoteBuyRequest {
   mintB: PublicKey;
 
   /** Instruction parameters */
-  params: SwapParams
+  params: SwapParams;
 }
-
-
 
 /** Request type for quote_sell instruction */
 export interface QuoteSellRequest {
@@ -175,10 +167,8 @@ export interface QuoteSellRequest {
   mintB: PublicKey;
 
   /** Instruction parameters */
-  params: SwapParams
+  params: SwapParams;
 }
-
-
 
 /** Request type for sell instruction */
 export interface SellRequest {
@@ -200,5 +190,5 @@ export interface SellRequest {
   tokenProgramB: PublicKey;
 
   /** Instruction parameters */
-  params: SwapParams
+  params: SwapParams;
 }

@@ -1,0 +1,17 @@
+{
+  "version": "0.1.0",
+  "name": "pool_authority",
+  "instructions": [],
+  "accounts": [
+    {
+      "name": "PoolAuthority",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    }
+  ],
+  "metadata": {
+    "address": "2222222222222222222222222222222222222222222"
+  }
+}

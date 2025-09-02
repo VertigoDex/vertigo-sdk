@@ -30,7 +30,6 @@
           "docs": [
             "The user who pays for creation and owns the owner signature."
           ],
-          "writable": true,
           "signer": true
         },
         {
@@ -117,10 +116,6 @@
         },
         {
           "name": "owner",
-          "docs": [
-            "The user who pays for creation and owns the owner signature."
-          ],
-          "writable": true,
           "signer": true
         },
         {
@@ -456,7 +451,48 @@
         249,
         216,
         202
-      ]
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "shift",
+            "type": "u128"
+          },
+          {
+            "name": "initial_token_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "fee_params",
+            "type": {
+              "defined": {
+                "name": "FeeParams"
+              }
+            }
+          },
+          {
+            "name": "token_params",
+            "type": {
+              "defined": {
+                "name": "TokenParams"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mint_a",
+            "type": "pubkey"
+          }
+        ]
+      }
     }
   ],
   "events": [

@@ -26,11 +26,10 @@
           "signer": true
         },
         {
-          "name": "owner",
+          "name": "factory_owner",
           "docs": [
             "The user who pays for creation and owns the owner signature."
           ],
-          "writable": true,
           "signer": true
         },
         {
@@ -57,7 +56,7 @@
               },
               {
                 "kind": "account",
-                "path": "owner"
+                "path": "factory_owner"
               },
               {
                 "kind": "account",
@@ -116,8 +115,11 @@
           "signer": true
         },
         {
-          "name": "owner",
-          "writable": true,
+          "name": "factory_owner",
+          "signer": true
+        },
+        {
+          "name": "pool_owner",
           "signer": true
         },
         {
@@ -145,7 +147,7 @@
               },
               {
                 "kind": "account",
-                "path": "owner"
+                "path": "factory_owner"
               },
               {
                 "kind": "account",
@@ -292,7 +294,7 @@
               },
               {
                 "kind": "account",
-                "path": "owner"
+                "path": "pool_owner"
               },
               {
                 "kind": "account",
@@ -556,7 +558,48 @@
         249,
         216,
         202
-      ]
+      ],
+      "type": {
+        "kind": "struct",
+        "fields": [
+          {
+            "name": "owner",
+            "type": "pubkey"
+          },
+          {
+            "name": "shift",
+            "type": "u128"
+          },
+          {
+            "name": "initial_token_reserves",
+            "type": "u64"
+          },
+          {
+            "name": "fee_params",
+            "type": {
+              "defined": {
+                "name": "FeeParams"
+              }
+            }
+          },
+          {
+            "name": "token_params",
+            "type": {
+              "defined": {
+                "name": "TokenParams"
+              }
+            }
+          },
+          {
+            "name": "bump",
+            "type": "u8"
+          },
+          {
+            "name": "mint_a",
+            "type": "pubkey"
+          }
+        ]
+      }
     }
   ],
   "events": [
@@ -792,12 +835,6 @@
             "type": "u64"
           },
           {
-            "name": "privileged_swapper",
-            "type": {
-              "option": "pubkey"
-            }
-          },
-          {
             "name": "nonce",
             "type": "u8"
           }
@@ -832,10 +869,6 @@
           {
             "name": "decimals",
             "type": "u8"
-          },
-          {
-            "name": "mutable",
-            "type": "bool"
           }
         ]
       }

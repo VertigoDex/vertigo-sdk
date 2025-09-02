@@ -1,0 +1,17 @@
+{
+  "version": "0.1.0",
+  "name": "permissioned_relay",
+  "instructions": [],
+  "accounts": [
+    {
+      "name": "PermissionedRelay",
+      "type": {
+        "kind": "struct",
+        "fields": []
+      }
+    }
+  ],
+  "metadata": {
+    "address": "FREEXMQuGxqrmT8gKJt82zfJjZACBiR8MNuQCbGSHyzF"
+  }
+}

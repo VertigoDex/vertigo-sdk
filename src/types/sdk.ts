@@ -12,17 +12,6 @@ export interface SDKConfig {
   explorer?: "solscan" | "solanaExplorer";
   /** AMM program ID */
   ammProgramId: string;
-  /** Token2022 factory program ID */
-  token2022FactoryProgramId: string;
-  /** SPL Token factory program ID */
-  splTokenFactoryProgramId: string;
-}
-
-export interface DevBuyArgs {
-  amount: anchor.BN;
-  limit: anchor.BN;
-  dev: Keypair;
-  devTaA: PublicKey;
 }
 
 export type SignerLike =
