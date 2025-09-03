@@ -85,7 +85,7 @@ async function main() {
   // Load or generate token wallet authority
   const tokenWalletAuthority = loadOrGenerateKeypair(
     argv["path-to-token-wallet-authority"],
-    "./token-wallet-authority.json"
+    "./token-wallet-authority.json",
   );
 
   // Load or generate mint
@@ -94,7 +94,7 @@ async function main() {
   // Load or generate mint authority
   const mintAuthority = loadOrGenerateKeypair(
     argv["path-to-mint-authority"],
-    "./mint-authority.json"
+    "./mint-authority.json",
   );
 
   // Transfer from local wallet to token wallet authority
@@ -105,9 +105,9 @@ async function main() {
         fromPubkey: wallet.payer.publicKey,
         toPubkey: tokenWalletAuthority.publicKey,
         lamports: LAMPORTS_PER_SOL,
-      })
+      }),
     ),
-    [wallet.payer]
+    [wallet.payer],
   );
 
   // Create mint used for the custom token
@@ -119,7 +119,7 @@ async function main() {
     argv.decimals, // number of decimal places
     mint, // token wallet
     null, // no freeze authority
-    argv["token-program-b"]
+    argv["token-program-b"],
   );
   console.log("Mint address: ", mint.publicKey.toBase58());
 
@@ -129,7 +129,7 @@ async function main() {
     wallet.payer,
     mint.publicKey,
     tokenWalletAuthority.publicKey,
-    argv["token-program-b"]
+    argv["token-program-b"],
   );
 
   console.log(`Token wallet address: ${tokenWallet}`);
@@ -143,7 +143,7 @@ async function main() {
     initialTokenBReserves: new anchor.BN(rawPoolParams.initialTokenBReserves),
     feeParams: {
       normalizationPeriod: new anchor.BN(
-        rawPoolParams.feeParams.normalizationPeriod
+        rawPoolParams.feeParams.normalizationPeriod,
       ),
       decay: rawPoolParams.feeParams.decay,
       royaltiesBps: rawPoolParams.feeParams.royaltiesBps,
@@ -172,7 +172,7 @@ async function main() {
     tokensToMint,
     [mintAuthority],
     null,
-    argv["token-program-b"]
+    argv["token-program-b"],
   );
 
   // Create the dev custom token account
@@ -182,7 +182,7 @@ async function main() {
     mint.publicKey,
     user.publicKey,
     null,
-    argv["token-program-b"]
+    argv["token-program-b"],
   );
 }
 

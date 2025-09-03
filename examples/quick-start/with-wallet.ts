@@ -1,6 +1,6 @@
 /**
  * Vertigo SDK - Using with a Wallet
- * 
+ *
  * This example shows how to connect a wallet and execute swaps
  */
 
@@ -16,9 +16,9 @@ async function main() {
   // 1. Load wallet from file (or use wallet adapter in browser)
   const walletPath = path.join(os.homedir(), ".config/solana/id.json");
   const walletKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8"))),
   );
-  
+
   const wallet = new anchor.Wallet(walletKeypair);
 
   // 2. Initialize SDK with wallet
@@ -31,11 +31,16 @@ async function main() {
     },
   });
 
-  console.log("✅ Vertigo SDK initialized with wallet:", wallet.publicKey.toBase58());
+  console.log(
+    "✅ Vertigo SDK initialized with wallet:",
+    wallet.publicKey.toBase58(),
+  );
 
   // 3. Execute a swap
-  const USDC_DEVNET = new PublicKey("4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU");
-  
+  const USDC_DEVNET = new PublicKey(
+    "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+  );
+
   try {
     // First, simulate the swap
     const simulation = await vertigo.swap.simulateSwap({
@@ -50,8 +55,10 @@ async function main() {
     });
 
     if (simulation.success) {
-      console.log(`Simulation successful! Expected output: ${simulation.outputAmount?.toString()}`);
-      
+      console.log(
+        `Simulation successful! Expected output: ${simulation.outputAmount?.toString()}`,
+      );
+
       // Execute the actual swap
       const result = await vertigo.swap.swap({
         inputMint: NATIVE_MINT,

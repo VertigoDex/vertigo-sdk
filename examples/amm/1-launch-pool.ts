@@ -95,8 +95,8 @@ async function main() {
   // Load wallet from path
   const wallet = new anchor.Wallet(
     Keypair.fromSecretKey(
-      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-payer"], "utf-8")))
-    )
+      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-payer"], "utf-8"))),
+    ),
   );
   const provider = new anchor.AnchorProvider(connection, wallet);
 
@@ -104,21 +104,21 @@ async function main() {
 
   // Load owner from path
   const owner = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-owner"], "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-owner"], "utf-8"))),
   );
 
   // Load user from path
   const user = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8"))),
   );
 
   // Load token wallet authority from path
   const tokenWalletAuthority = Keypair.fromSecretKey(
     Buffer.from(
       JSON.parse(
-        fs.readFileSync(argv["path-to-token-wallet-authority"], "utf-8")
-      )
-    )
+        fs.readFileSync(argv["path-to-token-wallet-authority"], "utf-8"),
+      ),
+    ),
   );
 
   // Read and parse pool params
@@ -130,7 +130,7 @@ async function main() {
     initialTokenBReserves: new anchor.BN(rawPoolParams.initialTokenBReserves),
     feeParams: {
       normalizationPeriod: new anchor.BN(
-        rawPoolParams.feeParams.normalizationPeriod
+        rawPoolParams.feeParams.normalizationPeriod,
       ),
       decay: rawPoolParams.feeParams.decay,
       royaltiesBps: rawPoolParams.feeParams.royaltiesBps,

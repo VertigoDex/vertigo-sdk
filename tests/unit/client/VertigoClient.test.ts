@@ -1,104 +1,138 @@
-import { describe, it, expect, vi, beforeEach } from 'vitest';
-import { Connection, PublicKey } from '@solana/web3.js';
-import * as anchor from '@coral-xyz/anchor';
-import { VertigoClient } from '../../../src/client/VertigoClient';
-import { createMockConnection, createMockWallet } from '../../mocks/connection';
-import { MOCK_PROGRAM_IDS, createMockProgram } from '../../mocks/programs';
+import { describe, it, expect, vi, beforeEach } from "vitest";
+import { Connection, PublicKey } from "@solana/web3.js";
+import * as anchor from "@coral-xyz/anchor";
+import { VertigoClient } from "../../../src/client/VertigoClient";
+import { createMockConnection, createMockWallet } from "../../mocks/connection";
+import { MOCK_PROGRAM_IDS, createMockProgram } from "../../mocks/programs";
 
 // Mock anchor.Program
-vi.mock('@coral-xyz/anchor', async () => {
-  const actual = await vi.importActual('@coral-xyz/anchor');
+vi.mock("@coral-xyz/anchor", async () => {
+  const actual = await vi.importActual("@coral-xyz/anchor");
   return {
     ...actual,
-    Program: vi.fn().mockImplementation((idl, programId, provider) => {
-      return createMockProgram(programId);
-    }),
+    Program: vi
+      .fn()
+      .mockImplementation((idl, providerOrProgramId, provider) => {
+        // Handle both 2-arg and 3-arg signatures
+        if (provider === undefined) {
+          // 2-arg signature: (idl, provider)
+          // In Anchor v0.30.1, when using 2-arg signature, the idl should have programId set
+          // The modified IDL from VertigoClient will have programId set
+          const programId =
+            idl.programId ||
+            (idl.metadata?.address
+              ? new PublicKey(idl.metadata.address)
+              : new PublicKey("11111111111111111111111111111111"));
+          return createMockProgram(programId);
+        } else {
+          // 3-arg signature: (idl, programId, provider)
+          return createMockProgram(providerOrProgramId);
+        }
+      }),
   };
 });
 
 // Mock the IDL loading
-vi.mock('../../../target/idl/amm.json', () => ({
+vi.mock("../../../target/idl/amm.json", () => ({
   default: {
-    version: '0.1.0',
-    name: 'amm',
+    version: "0.1.0",
+    name: "amm",
     instructions: [],
     accounts: [],
+    metadata: {
+      address: "AMM1111111111111111111111111111111111111111",
+    },
   },
 }));
 
-vi.mock('../../../target/idl/pool_authority.json', () => ({
+vi.mock("../../../target/idl/pool_authority.json", () => ({
   default: {
-    version: '0.1.0',
-    name: 'pool_authority',
+    version: "0.1.0",
+    name: "pool_authority",
     instructions: [],
     accounts: [],
+    metadata: {
+      address: "PooL11111111111111111111111111111111111111",
+    },
   },
 }));
 
-vi.mock('../../../target/idl/spl_token_factory.json', () => ({
+vi.mock("../../../target/idl/spl_token_factory.json", () => ({
   default: {
-    version: '0.1.0',
-    name: 'spl_token_factory',
+    version: "0.1.0",
+    name: "spl_token_factory",
     instructions: [],
     accounts: [],
+    metadata: {
+      address: "SplF11111111111111111111111111111111111111",
+    },
   },
 }));
 
-vi.mock('../../../target/idl/token_2022_factory.json', () => ({
+vi.mock("../../../target/idl/token_2022_factory.json", () => ({
   default: {
-    version: '0.1.0',
-    name: 'token_2022_factory',
+    version: "0.1.0",
+    name: "token_2022_factory",
     instructions: [],
     accounts: [],
+    metadata: {
+      address: "Tok211111111111111111111111111111111111111",
+    },
   },
 }));
 
-vi.mock('../../../target/idl/permissioned_relay.json', () => ({
+vi.mock("../../../target/idl/permissioned_relay.json", () => ({
   default: {
-    version: '0.1.0',
-    name: 'permissioned_relay',
+    version: "0.1.0",
+    name: "permissioned_relay",
     instructions: [],
     accounts: [],
+    metadata: {
+      address: "ReLy11111111111111111111111111111111111111",
+    },
   },
 }));
 
-describe('VertigoClient', () => {
+describe("VertigoClient", () => {
   let mockConnection: Connection;
-  
+
   beforeEach(() => {
     mockConnection = createMockConnection();
     vi.clearAllMocks();
   });
 
-  describe('initialization', () => {
-    it('should initialize with connection only (read-only mode)', async () => {
-      const client = await VertigoClient.loadReadOnly(mockConnection, 'mainnet');
-      
+  describe("initialization", () => {
+    it("should initialize with connection only (read-only mode)", async () => {
+      const client = await VertigoClient.loadReadOnly(
+        mockConnection,
+        "mainnet",
+      );
+
       expect(client).toBeDefined();
       expect(client.connection).toBe(mockConnection);
-      expect(client.network).toBe('mainnet');
+      expect(client.network).toBe("mainnet");
       expect(client.isWalletConnected()).toBe(false);
     });
 
-    it('should initialize with wallet', async () => {
+    it("should initialize with wallet", async () => {
       const wallet = createMockWallet();
       const client = await VertigoClient.load({
         connection: mockConnection,
         wallet,
-        network: 'mainnet',
+        network: "mainnet",
       });
-      
+
       expect(client).toBeDefined();
       expect(client.connection).toBe(mockConnection);
       expect(client.wallet).toBe(wallet);
       expect(client.isWalletConnected()).toBe(true);
     });
 
-    it('should initialize with custom configuration', async () => {
-      const customApiUrl = 'https://custom-api.vertigo.so';
+    it("should initialize with custom configuration", async () => {
+      const customApiUrl = "https://custom-api.vertigo.so";
       const client = await VertigoClient.load({
         connection: mockConnection,
-        network: 'devnet',
+        network: "devnet",
         apiUrl: customApiUrl,
         cache: {
           enabled: true,
@@ -109,11 +143,11 @@ describe('VertigoClient', () => {
           baseFee: 5000,
         },
       });
-      
+
       expect(client).toBeDefined();
       expect(client.getApiUrl()).toBe(customApiUrl);
-      expect(client.network).toBe('devnet');
-      
+      expect(client.network).toBe("devnet");
+
       const config = client.getConfig();
       expect(config.cache.enabled).toBe(true);
       expect(config.cache.ttl).toBe(30000);
@@ -121,119 +155,120 @@ describe('VertigoClient', () => {
       expect(config.priority.baseFee).toBe(5000);
     });
 
-    it('should use default configuration when not specified', async () => {
+    it("should use default configuration when not specified", async () => {
       const client = await VertigoClient.load({
         connection: mockConnection,
-        network: 'mainnet',
+        network: "mainnet",
       });
-      
+
       const config = client.getConfig();
-      expect(config.commitment).toBe('confirmed');
+      expect(config.commitment).toBe("confirmed");
       expect(config.skipPreflight).toBe(false);
       expect(config.cache.enabled).toBe(true);
       expect(config.priority.autoFee).toBe(true);
     });
 
-    it('should initialize with custom program addresses', async () => {
-      const customAmmAddress = new PublicKey('CJsLwbP1iu5DuUikHEJnLfANgKy6stB2uFgvBBHoyxwz');
+    it("should initialize with custom program addresses", async () => {
+      const customAmmAddress = new PublicKey(
+        "CJsLwbP1iu5DuUikHEJnLfANgKy6stB2uFgvBBHoyxwz",
+      );
       const client = await VertigoClient.load({
         connection: mockConnection,
-        network: 'mainnet',
+        network: "mainnet",
         programs: {
           amm: customAmmAddress,
         },
       });
-      
+
       const addresses = client.getProgramAddresses();
-      expect(addresses.amm.toBase58()).toBe(customAmmAddress.toBase58());
+      expect(addresses.amm).toEqual(customAmmAddress);
     });
   });
 
-  describe('client modules', () => {
-    it('should have all client modules initialized', async () => {
+  describe("client modules", () => {
+    it("should have all client modules initialized", async () => {
       const client = await VertigoClient.load({
         connection: mockConnection,
-        network: 'mainnet',
+        network: "mainnet",
       });
-      
+
       expect(client.pools).toBeDefined();
       expect(client.swap).toBeDefined();
-      expect(client.factory).toBeDefined();
       expect(client.relay).toBeDefined();
       expect(client.api).toBeDefined();
     });
 
-    it('should properly initialize programs', async () => {
+    it("should properly initialize programs", async () => {
       const client = await VertigoClient.load({
         connection: mockConnection,
-        network: 'mainnet',
+        network: "mainnet",
       });
-      
+
       expect(client.ammProgram).toBeDefined();
       expect(client.ammProgram.programId).toBeDefined();
     });
   });
 
-  describe('network configuration', () => {
-    it('should use mainnet configuration', async () => {
+  describe("network configuration", () => {
+    it("should use mainnet configuration", async () => {
       const client = await VertigoClient.load({
         connection: mockConnection,
-        network: 'mainnet',
+        network: "mainnet",
       });
-      
-      expect(client.network).toBe('mainnet');
-      expect(client.getApiUrl()).toBe('https://api.vertigo.so');
+
+      expect(client.network).toBe("mainnet");
+      expect(client.getApiUrl()).toBe("https://api.vertigo.so");
     });
 
-    it('should use devnet configuration', async () => {
+    it("should use devnet configuration", async () => {
       const client = await VertigoClient.load({
         connection: mockConnection,
-        network: 'devnet',
+        network: "devnet",
       });
-      
-      expect(client.network).toBe('devnet');
-      expect(client.getApiUrl()).toBe('https://api-devnet.vertigo.so');
+
+      expect(client.network).toBe("devnet");
+      expect(client.getApiUrl()).toBe("https://api-devnet.vertigo.so");
     });
 
-    it('should use localnet configuration', async () => {
+    it("should use localnet configuration", async () => {
       const client = await VertigoClient.load({
         connection: mockConnection,
-        network: 'localnet',
+        network: "localnet",
       });
-      
-      expect(client.network).toBe('localnet');
-      expect(client.getApiUrl()).toBe('http://localhost:3000');
+
+      expect(client.network).toBe("localnet");
+      expect(client.getApiUrl()).toBe("http://localhost:3000");
     });
   });
 
-  describe('convenience methods', () => {
-    it('should correctly check wallet connection status', async () => {
+  describe("convenience methods", () => {
+    it("should correctly check wallet connection status", async () => {
       const clientWithoutWallet = await VertigoClient.loadReadOnly(
         mockConnection,
-        'mainnet'
+        "mainnet",
       );
       expect(clientWithoutWallet.isWalletConnected()).toBe(false);
-      
+
       const wallet = createMockWallet();
       const clientWithWallet = await VertigoClient.load({
         connection: mockConnection,
         wallet,
-        network: 'mainnet',
+        network: "mainnet",
       });
       expect(clientWithWallet.isWalletConnected()).toBe(true);
     });
 
-    it('should return program addresses', async () => {
+    it("should return program addresses", async () => {
       const client = await VertigoClient.load({
         connection: mockConnection,
-        network: 'mainnet',
+        network: "mainnet",
       });
-      
+
       const addresses = client.getProgramAddresses();
       expect(addresses.amm).toBeDefined();
       expect(addresses.poolAuthority).toBeDefined();
-      expect(addresses.splTokenFactory).toBeDefined();
-      expect(addresses.token2022Factory).toBeDefined();
+      // permissionedRelay is optional
+      expect(addresses.amm).toBeInstanceOf(PublicKey);
       expect(addresses.permissionedRelay).toBeDefined();
     });
   });

@@ -37,7 +37,7 @@ export type Amm = {
               {
                 kind: "account";
                 path: "mintB";
-              }
+              },
             ];
           };
         },
@@ -77,7 +77,7 @@ export type Amm = {
               {
                 kind: "account";
                 path: "mintA";
-              }
+              },
             ];
           };
         },
@@ -93,7 +93,7 @@ export type Amm = {
               {
                 kind: "account";
                 path: "mintB";
-              }
+              },
             ];
           };
         },
@@ -110,7 +110,7 @@ export type Amm = {
         {
           name: "program";
           address: "EH1g1zPWuqNwvhnJ5vpS8RQHm2WdTTjDpFcVAKSqfQF8";
-        }
+        },
       ];
       args: [
         {
@@ -120,7 +120,7 @@ export type Amm = {
               name: "swapParams";
             };
           };
-        }
+        },
       ];
     },
     {
@@ -156,7 +156,7 @@ export type Amm = {
               {
                 kind: "account";
                 path: "mintA";
-              }
+              },
             ];
           };
         },
@@ -167,7 +167,7 @@ export type Amm = {
         },
         {
           name: "tokenProgramA";
-        }
+        },
       ];
       args: [];
     },
@@ -219,7 +219,7 @@ export type Amm = {
               {
                 kind: "account";
                 path: "mintB";
-              }
+              },
             ];
           };
         },
@@ -235,7 +235,7 @@ export type Amm = {
               {
                 kind: "account";
                 path: "mintA";
-              }
+              },
             ];
           };
         },
@@ -251,7 +251,7 @@ export type Amm = {
               {
                 kind: "account";
                 path: "mintB";
-              }
+              },
             ];
           };
         },
@@ -269,7 +269,7 @@ export type Amm = {
         {
           name: "rent";
           address: "SysvarRent111111111111111111111111111111111";
-        }
+        },
       ];
       args: [
         {
@@ -279,7 +279,7 @@ export type Amm = {
               name: "createParams";
             };
           };
-        }
+        },
       ];
     },
     {
@@ -305,7 +305,7 @@ export type Amm = {
               {
                 kind: "account";
                 path: "mintB";
-              }
+              },
             ];
           };
         },
@@ -324,7 +324,7 @@ export type Amm = {
         {
           name: "program";
           address: "EH1g1zPWuqNwvhnJ5vpS8RQHm2WdTTjDpFcVAKSqfQF8";
-        }
+        },
       ];
       args: [
         {
@@ -334,7 +334,7 @@ export type Amm = {
               name: "swapParams";
             };
           };
-        }
+        },
       ];
       returns: {
         defined: {
@@ -365,7 +365,7 @@ export type Amm = {
               {
                 kind: "account";
                 path: "mintB";
-              }
+              },
             ];
           };
         },
@@ -384,7 +384,7 @@ export type Amm = {
         {
           name: "program";
           address: "EH1g1zPWuqNwvhnJ5vpS8RQHm2WdTTjDpFcVAKSqfQF8";
-        }
+        },
       ];
       args: [
         {
@@ -394,7 +394,7 @@ export type Amm = {
               name: "swapParams";
             };
           };
-        }
+        },
       ];
       returns: {
         defined: {
@@ -426,7 +426,7 @@ export type Amm = {
               {
                 kind: "account";
                 path: "mintB";
-              }
+              },
             ];
           };
         },
@@ -466,7 +466,7 @@ export type Amm = {
               {
                 kind: "account";
                 path: "mintA";
-              }
+              },
             ];
           };
         },
@@ -482,7 +482,7 @@ export type Amm = {
               {
                 kind: "account";
                 path: "mintB";
-              }
+              },
             ];
           };
         },
@@ -499,7 +499,7 @@ export type Amm = {
         {
           name: "program";
           address: "EH1g1zPWuqNwvhnJ5vpS8RQHm2WdTTjDpFcVAKSqfQF8";
-        }
+        },
       ];
       args: [
         {
@@ -509,15 +509,15 @@ export type Amm = {
               name: "swapParams";
             };
           };
-        }
+        },
       ];
-    }
+    },
   ];
   accounts: [
     {
       name: "pool";
       discriminator: [241, 154, 109, 4, 17, 177, 109, 188];
-    }
+    },
   ];
   events: [
     {
@@ -531,7 +531,7 @@ export type Amm = {
     {
       name: "sellEvent";
       discriminator: [62, 47, 55, 10, 165, 3, 220, 42];
-    }
+    },
   ];
   errors: [
     {
@@ -603,7 +603,7 @@ export type Amm = {
       code: 6013;
       name: "poolEmpty";
       msg: "Pool Empty";
-    }
+    },
   ];
   types: [
     {
@@ -618,7 +618,7 @@ export type Amm = {
           {
             name: "amountOut";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -642,7 +642,7 @@ export type Amm = {
                 name: "feeParams";
               };
             };
-          }
+          },
         ];
       };
     },
@@ -655,7 +655,7 @@ export type Amm = {
             name: "normalizationPeriod";
             docs: [
               "The normalization period in slots.",
-              "During this period, the fee will decay from 100% to the base fee."
+              "During this period, the fee will decay from 100% to the base fee.",
             ];
             type: "u64";
           },
@@ -663,7 +663,7 @@ export type Amm = {
             name: "decay";
             docs: [
               "Normalization period fee decay rate.",
-              "Higher values decay faster."
+              "Higher values decay faster.",
             ];
             type: "f64";
           },
@@ -683,7 +683,7 @@ export type Amm = {
             type: {
               option: "pubkey";
             };
-          }
+          },
         ];
       };
     },
@@ -739,7 +739,7 @@ export type Amm = {
                 name: "feeParams";
               };
             };
-          }
+          },
         ];
       };
     },
@@ -779,7 +779,7 @@ export type Amm = {
                 name: "feeParams";
               };
             };
-          }
+          },
         ];
       };
     },
@@ -795,7 +795,7 @@ export type Amm = {
           {
             name: "amountOut";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -811,7 +811,7 @@ export type Amm = {
           {
             name: "limit";
             type: "u64";
-          }
+          },
         ];
       };
     },
@@ -839,9 +839,9 @@ export type Amm = {
           {
             name: "feeA";
             type: "u64";
-          }
+          },
         ];
       };
-    }
+    },
   ];
 };

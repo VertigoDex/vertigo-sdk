@@ -2,10 +2,17 @@
 export { VertigoClient } from "./client/VertigoClient";
 export { PoolClient } from "./client/PoolClient";
 export { SwapClient } from "./client/SwapClient";
-export { RelayClient, type RelayConfig, type RelayPermission } from "./client/RelayClient";
+export {
+  RelayClient,
+  type RelayConfig,
+  type RelayPermission,
+} from "./client/RelayClient";
 
 // Separate Pool Authority client for advanced users
-export { PoolAuthorityClient, type PoolAuthorityConfig } from "./client/PoolAuthorityClient";
+export {
+  PoolAuthorityClient,
+  type PoolAuthorityConfig,
+} from "./client/PoolAuthorityClient";
 
 // Type exports
 export * from "./types";
@@ -38,7 +45,7 @@ export const Vertigo = {
 /**
  * Pool Authority client for advanced pool management
  * Import separately to avoid confusion for normal users
- * 
+ *
  * @example
  * import { PoolAuthority } from '@vertigo/sdk';
  * const poolAuth = await PoolAuthority.load({ connection, wallet });

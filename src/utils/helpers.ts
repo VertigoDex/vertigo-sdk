@@ -24,14 +24,14 @@ export async function getOrCreateAssociatedTokenAccount(
   payer: Keypair,
   mint: PublicKey,
   owner: PublicKey,
-  tokenProgramId: PublicKey = TOKEN_PROGRAM_ID
+  tokenProgramId: PublicKey = TOKEN_PROGRAM_ID,
 ): Promise<PublicKey> {
   try {
     const associatedToken = getAssociatedTokenAddressSync(
       mint,
       owner,
       false,
-      tokenProgramId
+      tokenProgramId,
     );
 
     // Check if account exists
@@ -44,8 +44,8 @@ export async function getOrCreateAssociatedTokenAccount(
           associatedToken,
           owner,
           mint,
-          tokenProgramId
-        )
+          tokenProgramId,
+        ),
       );
 
       const signature = await connection.sendTransaction(transaction, [payer]);
@@ -57,7 +57,7 @@ export async function getOrCreateAssociatedTokenAccount(
     throw new SDKError(
       "Failed to get or create associated token account",
       SDKErrorType.TransactionError,
-      error
+      error,
     );
   }
 }
@@ -85,7 +85,7 @@ export function getClusterFromEndpoint(endpoint: string): string {
 export function getExplorerUrl(
   signature: string,
   cluster: string,
-  explorer: "solscan" | "solanaExplorer" = "solanaExplorer"
+  explorer: "solscan" | "solanaExplorer" = "solanaExplorer",
 ): string {
   const clusterParam = cluster === "mainnet" ? "" : `?cluster=${cluster}`;
   const url =
@@ -104,24 +104,24 @@ export function getExplorerUrl(
 export async function confirmTransaction(
   connection: Connection,
   signature: string,
-  commitment: Commitment = "confirmed"
+  commitment: Commitment = "confirmed",
 ): Promise<void> {
   try {
-    const confirmation = await connection.confirmTransaction({
+    const confirmation = await connection.confirmTransaction(
       signature,
-      ...(commitment && { commitment }),
-    });
+      commitment,
+    );
     if (confirmation.value.err) {
       throw new SDKError(
         `Transaction failed: ${confirmation.value.err}`,
-        SDKErrorType.TransactionError
+        SDKErrorType.TransactionError,
       );
     }
   } catch (error) {
     throw new SDKError(
       "Failed to confirm transaction",
       SDKErrorType.NetworkError,
-      error
+      error,
     );
   }
 }
@@ -140,7 +140,7 @@ export function getFactoryPda(
   owner: PublicKey,
   mintA: PublicKey,
   nonce: number,
-  programId: PublicKey
+  programId: PublicKey,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [
@@ -149,7 +149,7 @@ export function getFactoryPda(
       mintA.toBuffer(),
       Uint8Array.from([nonce]),
     ],
-    programId
+    programId,
   );
 }
 
@@ -157,7 +157,7 @@ export function getPoolPda(
   owner: PublicKey,
   mintA: PublicKey,
   mintB: PublicKey,
-  programId: PublicKey
+  programId: PublicKey,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [
@@ -166,7 +166,7 @@ export function getPoolPda(
       mintA.toBuffer(),
       mintB.toBuffer(),
     ],
-    programId
+    programId,
   );
 }
 
@@ -194,7 +194,7 @@ export function getRpcUrl(network: string) {
         return "http://127.0.0.1:8899";
       default:
         throw new Error(
-          `Invalid network: ${network}. Must be a valid URL or one of: mainnet, devnet, testnet, localnet`
+          `Invalid network: ${network}. Must be a valid URL or one of: mainnet, devnet, testnet, localnet`,
         );
     }
   }
@@ -223,7 +223,7 @@ export function validateLaunchParams(params: LaunchParams): void {
   // Check required fields exist
   if (!params.shift || !params.initialTokenBReserves || !params.feeParams) {
     throw new Error(
-      "Missing required params: shift, initialTokenBReserves, or feeParams"
+      "Missing required params: shift, initialTokenBReserves, or feeParams",
     );
   }
 
@@ -236,7 +236,7 @@ export function validateLaunchParams(params: LaunchParams): void {
     feeParams.royaltiesBps === undefined
   ) {
     throw new Error(
-      "Missing required fee parameters: normalizationPeriod, decay, royaltiesBps"
+      "Missing required fee parameters: normalizationPeriod, decay, royaltiesBps",
     );
   }
 

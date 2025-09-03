@@ -9,16 +9,7 @@
   "instructions": [
     {
       "name": "buy",
-      "discriminator": [
-        102,
-        6,
-        61,
-        18,
-        1,
-        218,
-        235,
-        234
-      ],
+      "discriminator": [102, 6, 61, 18, 1, 218, 235, 234],
       "accounts": [
         {
           "name": "pool",
@@ -27,12 +18,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
+                "value": [112, 111, 111, 108]
               },
               {
                 "kind": "account",
@@ -64,16 +50,12 @@
         },
         {
           "name": "user_ta_a",
-          "docs": [
-            "Can be any token account owned by the user for this mint"
-          ],
+          "docs": ["Can be any token account owned by the user for this mint"],
           "writable": true
         },
         {
           "name": "user_ta_b",
-          "docs": [
-            "Can be any token account owned by the user for this mint"
-          ],
+          "docs": ["Can be any token account owned by the user for this mint"],
           "writable": true
         },
         {
@@ -136,16 +118,7 @@
     },
     {
       "name": "claim",
-      "discriminator": [
-        62,
-        198,
-        214,
-        193,
-        213,
-        159,
-        108,
-        210
-      ],
+      "discriminator": [62, 198, 214, 193, 213, 159, 108, 210],
       "accounts": [
         {
           "name": "pool",
@@ -161,9 +134,7 @@
         },
         {
           "name": "mint_a",
-          "docs": [
-            "The token mint of the tokens used in the pool."
-          ]
+          "docs": ["The token mint of the tokens used in the pool."]
         },
         {
           "name": "vault_a",
@@ -183,9 +154,7 @@
         },
         {
           "name": "receiver_ta_a",
-          "docs": [
-            "Can be any token account owned by the user for this mint"
-          ],
+          "docs": ["Can be any token account owned by the user for this mint"],
           "writable": true
         },
         {
@@ -196,16 +165,7 @@
     },
     {
       "name": "create",
-      "discriminator": [
-        24,
-        30,
-        200,
-        40,
-        5,
-        28,
-        7,
-        119
-      ],
+      "discriminator": [24, 30, 200, 40, 5, 28, 7, 119],
       "accounts": [
         {
           "name": "payer",
@@ -228,9 +188,7 @@
         },
         {
           "name": "token_wallet_b",
-          "docs": [
-            "Token wallet that funds the pool with token B."
-          ],
+          "docs": ["Token wallet that funds the pool with token B."],
           "writable": true
         },
         {
@@ -240,12 +198,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
+                "value": [112, 111, 111, 108]
               },
               {
                 "kind": "account",
@@ -296,9 +249,7 @@
         },
         {
           "name": "token_program_a",
-          "docs": [
-            "Required programs and sysvars"
-          ]
+          "docs": ["Required programs and sysvars"]
         },
         {
           "name": "token_program_b"
@@ -325,16 +276,7 @@
     },
     {
       "name": "quote_buy",
-      "discriminator": [
-        83,
-        9,
-        231,
-        110,
-        146,
-        31,
-        40,
-        12
-      ],
+      "discriminator": [83, 9, 231, 110, 146, 31, 40, 12],
       "accounts": [
         {
           "name": "pool",
@@ -342,12 +284,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
+                "value": [112, 111, 111, 108]
               },
               {
                 "kind": "account",
@@ -399,16 +336,7 @@
     },
     {
       "name": "quote_sell",
-      "discriminator": [
-        5,
-        178,
-        49,
-        206,
-        140,
-        231,
-        131,
-        145
-      ],
+      "discriminator": [5, 178, 49, 206, 140, 231, 131, 145],
       "accounts": [
         {
           "name": "pool",
@@ -416,12 +344,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
+                "value": [112, 111, 111, 108]
               },
               {
                 "kind": "account",
@@ -473,16 +396,7 @@
     },
     {
       "name": "sell",
-      "discriminator": [
-        51,
-        230,
-        133,
-        164,
-        1,
-        127,
-        131,
-        173
-      ],
+      "discriminator": [51, 230, 133, 164, 1, 127, 131, 173],
       "accounts": [
         {
           "name": "pool",
@@ -491,12 +405,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
+                "value": [112, 111, 111, 108]
               },
               {
                 "kind": "account",
@@ -528,16 +437,12 @@
         },
         {
           "name": "user_ta_a",
-          "docs": [
-            "Can be any token account owned by the user for this mint"
-          ],
+          "docs": ["Can be any token account owned by the user for this mint"],
           "writable": true
         },
         {
           "name": "user_ta_b",
-          "docs": [
-            "Can be any token account owned by the user for this mint"
-          ],
+          "docs": ["Can be any token account owned by the user for this mint"],
           "writable": true
         },
         {
@@ -602,16 +507,7 @@
   "accounts": [
     {
       "name": "Pool",
-      "discriminator": [
-        241,
-        154,
-        109,
-        4,
-        17,
-        177,
-        109,
-        188
-      ],
+      "discriminator": [241, 154, 109, 4, 17, 177, 109, 188],
       "type": {
         "kind": "struct",
         "fields": [
@@ -670,42 +566,15 @@
   "events": [
     {
       "name": "BuyEvent",
-      "discriminator": [
-        103,
-        244,
-        82,
-        31,
-        44,
-        245,
-        119,
-        119
-      ]
+      "discriminator": [103, 244, 82, 31, 44, 245, 119, 119]
     },
     {
       "name": "PoolCreated",
-      "discriminator": [
-        202,
-        44,
-        41,
-        88,
-        104,
-        220,
-        157,
-        82
-      ]
+      "discriminator": [202, 44, 41, 88, 104, 220, 157, 82]
     },
     {
       "name": "SellEvent",
-      "discriminator": [
-        62,
-        47,
-        55,
-        10,
-        165,
-        3,
-        220,
-        42
-      ]
+      "discriminator": [62, 47, 55, 10, 165, 3, 220, 42]
     }
   ],
   "errors": [
@@ -864,23 +733,17 @@
           },
           {
             "name": "reference",
-            "docs": [
-              "Reference slot for the fee calculation."
-            ],
+            "docs": ["Reference slot for the fee calculation."],
             "type": "u64"
           },
           {
             "name": "royalties_bps",
-            "docs": [
-              "Royalties in basis points."
-            ],
+            "docs": ["Royalties in basis points."],
             "type": "u16"
           },
           {
             "name": "privileged_swapper",
-            "docs": [
-              "Number of fee exempt buys."
-            ],
+            "docs": ["Number of fee exempt buys."],
             "type": {
               "option": "pubkey"
             }

@@ -1,6 +1,6 @@
 /**
  * Vertigo SDK - Simple Swap Example
- * 
+ *
  * This example shows how to perform a simple token swap
  */
 
@@ -14,16 +14,18 @@ import path from "path";
 
 async function main() {
   // Configuration
-  const USDC_MAINNET = new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v");
+  const USDC_MAINNET = new PublicKey(
+    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
+  );
   const AMOUNT_TO_SWAP = 1_000_000_000; // 1 SOL
   const SLIPPAGE_BPS = 50; // 0.5%
 
   // Load wallet
   const walletPath = path.join(os.homedir(), ".config/solana/id.json");
   const walletKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8"))),
   );
-  
+
   const wallet = new anchor.Wallet(walletKeypair);
 
   // Initialize SDK
@@ -47,9 +49,15 @@ async function main() {
     });
 
     console.log("Quote received:");
-    console.log(`- Input: ${(quote.inputAmount.toNumber() / 1e9).toFixed(4)} SOL`);
-    console.log(`- Expected output: ${(quote.outputAmount.toNumber() / 1e6).toFixed(2)} USDC`);
-    console.log(`- Minimum received: ${(quote.minimumReceived.toNumber() / 1e6).toFixed(2)} USDC`);
+    console.log(
+      `- Input: ${(quote.inputAmount.toNumber() / 1e9).toFixed(4)} SOL`,
+    );
+    console.log(
+      `- Expected output: ${(quote.outputAmount.toNumber() / 1e6).toFixed(2)} USDC`,
+    );
+    console.log(
+      `- Minimum received: ${(quote.minimumReceived.toNumber() / 1e6).toFixed(2)} USDC`,
+    );
     console.log(`- Price Impact: ${quote.priceImpact.toFixed(4)}%`);
     console.log(`- Fee: ${(quote.fee.toNumber() / 1e9).toFixed(6)} SOL`);
 
@@ -89,9 +97,12 @@ async function main() {
 
     console.log("\n✅ Swap completed successfully!");
     console.log(`Transaction: https://solscan.io/tx/${result.signature}`);
-    console.log(`Input: ${(result.inputAmount.toNumber() / 1e9).toFixed(4)} SOL`);
-    console.log(`Output: ${(result.outputAmount.toNumber() / 1e6).toFixed(2)} USDC`);
-
+    console.log(
+      `Input: ${(result.inputAmount.toNumber() / 1e9).toFixed(4)} SOL`,
+    );
+    console.log(
+      `Output: ${(result.outputAmount.toNumber() / 1e6).toFixed(2)} USDC`,
+    );
   } catch (error) {
     console.error("❌ Swap failed:", error);
   }

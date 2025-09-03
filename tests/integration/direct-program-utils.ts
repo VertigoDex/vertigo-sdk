@@ -1,7 +1,13 @@
-import { Connection, PublicKey, TransactionInstruction, Transaction, Keypair } from '@solana/web3.js';
-import * as anchor from '@coral-xyz/anchor';
-import { BorshCoder } from '@coral-xyz/anchor';
-import type { Idl } from '@coral-xyz/anchor';
+import {
+  Connection,
+  PublicKey,
+  TransactionInstruction,
+  Transaction,
+  Keypair,
+} from "@solana/web3.js";
+import * as anchor from "@coral-xyz/anchor";
+import { BorshCoder } from "@coral-xyz/anchor";
+import type { Idl } from "@coral-xyz/anchor";
 
 /**
  * Direct program utilities to bypass Anchor Program class issues
@@ -48,14 +54,16 @@ export class DirectProgramClient {
       pubkey: PublicKey;
       isSigner: boolean;
       isWritable: boolean;
-    }>
+    }>,
   ): TransactionInstruction {
     if (!this.coder || !this.idl) {
-      throw new Error('IDL not set');
+      throw new Error("IDL not set");
     }
 
     // Find instruction in IDL
-    const instruction = this.idl.instructions?.find(ix => ix.name === instructionName);
+    const instruction = this.idl.instructions?.find(
+      (ix) => ix.name === instructionName,
+    );
     if (!instruction) {
       throw new Error(`Instruction ${instructionName} not found in IDL`);
     }
@@ -73,7 +81,10 @@ export class DirectProgramClient {
   /**
    * Fetch account data and decode
    */
-  async fetchAccount<T>(accountAddress: PublicKey, accountType: string): Promise<T | null> {
+  async fetchAccount<T>(
+    accountAddress: PublicKey,
+    accountType: string,
+  ): Promise<T | null> {
     try {
       const accountInfo = await this.connection.getAccountInfo(accountAddress);
       if (!accountInfo || !this.coder) {
@@ -114,16 +125,16 @@ export class PDADeriver {
     owner: PublicKey,
     mintA: PublicKey,
     mintB: PublicKey,
-    programId: PublicKey
+    programId: PublicKey,
   ): [PublicKey, number] {
     return PublicKey.findProgramAddressSync(
       [
-        Buffer.from('pool'),
+        Buffer.from("pool"),
         owner.toBuffer(),
         mintA.toBuffer(),
         mintB.toBuffer(),
       ],
-      programId
+      programId,
     );
   }
 
@@ -133,14 +144,11 @@ export class PDADeriver {
   static deriveVault(
     pool: PublicKey,
     mint: PublicKey,
-    programId: PublicKey
+    programId: PublicKey,
   ): [PublicKey, number] {
     return PublicKey.findProgramAddressSync(
-      [
-        pool.toBuffer(),
-        mint.toBuffer(),
-      ],
-      programId
+      [pool.toBuffer(), mint.toBuffer()],
+      programId,
     );
   }
 }
@@ -164,17 +172,17 @@ export class TransactionBuilder {
 
   async build(connection: Connection, payer: PublicKey): Promise<Transaction> {
     const transaction = new Transaction();
-    
+
     // Add recent blockhash
     const { blockhash } = await connection.getLatestBlockhash();
     transaction.recentBlockhash = blockhash;
     transaction.feePayer = payer;
-    
+
     // Add all instructions
     for (const instruction of this.instructions) {
       transaction.add(instruction);
     }
-    
+
     return transaction;
   }
 
@@ -196,10 +204,15 @@ export class AccountFinder {
   /**
    * Find all pools for a program
    */
-  async findPools(programId: PublicKey, limit: number = 10): Promise<Array<{
-    pubkey: PublicKey;
-    data: any;
-  }>> {
+  async findPools(
+    programId: PublicKey,
+    limit: number = 10,
+  ): Promise<
+    Array<{
+      pubkey: PublicKey;
+      data: any;
+    }>
+  > {
     try {
       const accounts = await this.connection.getProgramAccounts(programId, {
         filters: [
@@ -209,12 +222,12 @@ export class AccountFinder {
         ],
       });
 
-      return accounts.slice(0, limit).map(account => ({
+      return accounts.slice(0, limit).map((account) => ({
         pubkey: account.pubkey,
         data: account.account.data,
       }));
     } catch (error) {
-      console.error('Error finding pools:', error);
+      console.error("Error finding pools:", error);
       return [];
     }
   }
@@ -224,18 +237,21 @@ export class AccountFinder {
    */
   async findTokenAccounts(owner: PublicKey, mint?: PublicKey) {
     const filters: any[] = [];
-    
+
     if (mint) {
       filters.push({
         mint: mint.toBase58(),
       });
     }
 
-    const accounts = await this.connection.getParsedTokenAccountsByOwner(owner, {
-      programId: new PublicKey('TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA'),
-    });
+    const accounts = await this.connection.getParsedTokenAccountsByOwner(
+      owner,
+      {
+        programId: new PublicKey("TokenkegQfeZyiNwAJbNbGKPFXCWuBvf9Ss623VQ5DA"),
+      },
+    );
 
-    return accounts.value.map(account => ({
+    return accounts.value.map((account) => ({
       pubkey: account.pubkey,
       mint: new PublicKey(account.account.data.parsed.info.mint),
       amount: account.account.data.parsed.info.tokenAmount.amount,
@@ -254,7 +270,7 @@ export class InstructionBuilders {
   static transfer(
     from: PublicKey,
     to: PublicKey,
-    amount: number
+    amount: number,
   ): TransactionInstruction {
     const SystemProgram = anchor.web3.SystemProgram;
     return SystemProgram.transfer({
@@ -272,10 +288,10 @@ export class InstructionBuilders {
     payer: PublicKey,
     newAccount: Keypair,
     space: number,
-    programId: PublicKey
+    programId: PublicKey,
   ): Promise<TransactionInstruction> {
     const lamports = await connection.getMinimumBalanceForRentExemption(space);
-    
+
     return anchor.web3.SystemProgram.createAccount({
       fromPubkey: payer,
       newAccountPubkey: newAccount.publicKey,

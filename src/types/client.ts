@@ -1,12 +1,25 @@
-import { Connection, Keypair, PublicKey, Signer } from "@solana/web3.js";
+import {
+  Connection,
+  Keypair,
+  PublicKey,
+  Signer,
+  Transaction,
+  VersionedTransaction,
+} from "@solana/web3.js";
 import { Network } from "../core/constants";
 import * as anchor from "@coral-xyz/anchor";
 
-export type WalletLike = anchor.Wallet | {
-  publicKey: PublicKey;
-  signTransaction?: (tx: any) => Promise<any>;
-  signAllTransactions?: (txs: any[]) => Promise<any[]>;
-};
+export type WalletLike =
+  | anchor.Wallet
+  | {
+      publicKey: PublicKey;
+      signTransaction?: <T extends Transaction | VersionedTransaction>(
+        tx: T,
+      ) => Promise<T>;
+      signAllTransactions?: <T extends Transaction | VersionedTransaction>(
+        txs: T[],
+      ) => Promise<T[]>;
+    };
 
 export type VertigoConfig = {
   connection: Connection;

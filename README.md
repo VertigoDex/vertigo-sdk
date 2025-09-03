@@ -41,7 +41,7 @@ import { Connection } from "@solana/web3.js";
 // Initialize SDK without wallet (read-only)
 const vertigo = await Vertigo.load({
   connection: new Connection("https://api.mainnet-beta.solana.com"),
-  network: "mainnet"
+  network: "mainnet",
 });
 
 // Find pools for a token pair
@@ -52,7 +52,7 @@ const quote = await vertigo.swap.getQuote({
   inputMint: SOL_MINT,
   outputMint: USDC_MINT,
   amount: 1_000_000_000, // 1 SOL
-  slippageBps: 50
+  slippageBps: 50,
 });
 ```
 
@@ -68,7 +68,7 @@ const wallet = new anchor.Wallet(keypair);
 const vertigo = await Vertigo.load({
   connection: new Connection("https://api.mainnet-beta.solana.com"),
   wallet,
-  network: "mainnet"
+  network: "mainnet",
 });
 
 // Execute a swap
@@ -78,8 +78,8 @@ const result = await vertigo.swap.swap({
   amount: 1_000_000_000,
   options: {
     slippageBps: 100,
-    priorityFee: "auto"
-  }
+    priorityFee: "auto",
+  },
 });
 
 console.log(`Swap successful: ${result.signature}`);
@@ -97,7 +97,7 @@ const { poolAddress } = await vertigo.pools.createPool({
   mintA: SOL_MINT,
   mintB: TOKEN_MINT,
   initialMarketCap: 10_000_000_000,
-  royaltiesBps: 250
+  royaltiesBps: 250,
 });
 
 // Get pool information
@@ -123,14 +123,14 @@ const quote = await vertigo.swap.getQuote({
   inputMint: SOL_MINT,
   outputMint: USDC_MINT,
   amount: 1_000_000_000,
-  slippageBps: 50
+  slippageBps: 50,
 });
 
 // Simulate swap to check for errors
 const simulation = await vertigo.swap.simulateSwap({
   inputMint: SOL_MINT,
   outputMint: USDC_MINT,
-  amount: 1_000_000_000
+  amount: 1_000_000_000,
 });
 
 // Execute swap
@@ -141,8 +141,8 @@ const result = await vertigo.swap.swap({
   options: {
     slippageBps: 100,
     wrapSol: true,
-    priorityFee: "auto"
-  }
+    priorityFee: "auto",
+  },
 });
 ```
 
@@ -154,9 +154,9 @@ Advanced pool management for authorized users:
 import { PoolAuthority } from "@vertigo/sdk";
 
 // Initialize Pool Authority client
-const poolAuth = await PoolAuthority.load({ 
-  connection, 
-  wallet 
+const poolAuth = await PoolAuthority.load({
+  connection,
+  wallet,
 });
 
 // Create pools with authority permissions
@@ -179,7 +179,7 @@ const tokenInfo = await vertigo.api.getTokenInfo(mintAddress);
 
 // Subscribe to pool updates
 const unsubscribe = vertigo.api.subscribeToPool(poolAddress, {
-  onUpdate: (data) => console.log("Pool update:", data)
+  onUpdate: (data) => console.log("Pool update:", data),
 });
 ```
 
@@ -188,13 +188,13 @@ const unsubscribe = vertigo.api.subscribeToPool(poolAddress, {
 The SDK includes rich utilities for common operations:
 
 ```typescript
-import { 
+import {
   formatTokenAmount,
   parseTokenAmount,
   getOrCreateATA,
   estimatePriorityFee,
   retry,
-  getExplorerUrl
+  getExplorerUrl,
 } from "@vertigo/sdk";
 
 // Format token amounts
@@ -223,28 +223,28 @@ const vertigo = await Vertigo.load({
   connection,
   wallet,
   network: "mainnet",
-  
+
   // Custom program addresses
   programs: {
     amm: customAmmAddress,
-    factory: customFactoryAddress
+    factory: customFactoryAddress,
   },
-  
+
   // API configuration
   apiUrl: "https://api.vertigo.so",
-  
+
   // Caching settings
   cache: {
     enabled: true,
-    ttl: 60000 // 1 minute
+    ttl: 60000, // 1 minute
   },
-  
+
   // Transaction settings
   priority: {
     autoFee: true,
     baseFee: 1000,
-    maxFee: 1000000
-  }
+    maxFee: 1000000,
+  },
 });
 ```
 
@@ -295,12 +295,12 @@ import { VertigoSDK } from "@vertigo/sdk";
 
 ## 🔗 Network Support
 
-| Network | Status | RPC Endpoint |
-|---------|--------|-------------|
-| Mainnet | ✅ Supported | https://api.mainnet-beta.solana.com |
-| Devnet | ✅ Supported | https://api.devnet.solana.com |
-| Testnet | ✅ Supported | https://api.testnet.solana.com |
-| Localnet | ✅ Supported | http://localhost:8899 |
+| Network  | Status       | RPC Endpoint                        |
+| -------- | ------------ | ----------------------------------- |
+| Mainnet  | ✅ Supported | https://api.mainnet-beta.solana.com |
+| Devnet   | ✅ Supported | https://api.devnet.solana.com       |
+| Testnet  | ✅ Supported | https://api.testnet.solana.com      |
+| Localnet | ✅ Supported | http://localhost:8899               |
 
 ## 📖 Documentation
 

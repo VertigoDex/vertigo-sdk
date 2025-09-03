@@ -5,36 +5,48 @@ This directory contains comprehensive examples demonstrating how to use the Vert
 ## 📁 Directory Structure
 
 ### `/quick-start`
+
 Simple examples to get started quickly with the SDK
+
 - `getting-started.ts` - Basic SDK initialization and read operations
 - `with-wallet.ts` - Using the SDK with a wallet for transactions
 
 ### `/pool-creation`
+
 Examples for creating and managing liquidity pools
+
 - `launch-token-with-pool.ts` - Launch a new token and create a pool simultaneously
 - `create-pool.ts` - Create a pool for existing tokens
 - `manage-pool.ts` - Manage pool settings and claim fees
 
 ### `/trading`
+
 Trading and swapping examples
+
 - `simple-swap.ts` - Basic token swap example
 - `advanced-swap.ts` - Advanced swapping with custom settings
 - `batch-swaps.ts` - Execute multiple swaps efficiently
 
 ### `/advanced`
+
 Advanced usage patterns
+
 - `priority-fees.ts` - Managing priority fees for faster transactions
 - `relay-trading.ts` - Using permissioned relays
 - `pool-analytics.ts` - Fetching and analyzing pool data
 
 ### `/bots`
+
 Trading bot examples
+
 - `arbitrage-bot.ts` - Simple arbitrage bot
 - `market-maker.ts` - Market making bot
 - `sniper-bot.ts` - Pool launch sniper
 
 ### `/ui-integration`
+
 Frontend integration examples
+
 - `nextjs/` - Next.js integration
 - `react/` - React integration
 - `wallet-adapter/` - Solana wallet adapter integration
@@ -42,17 +54,20 @@ Frontend integration examples
 ## 🚀 Getting Started
 
 1. **Install dependencies:**
+
 ```bash
 yarn add @vertigo/sdk @solana/web3.js @coral-xyz/anchor
 ```
 
 2. **Set up your wallet:**
-Most examples expect a wallet at `~/.config/solana/id.json`. You can create one using:
+   Most examples expect a wallet at `~/.config/solana/id.json`. You can create one using:
+
 ```bash
 solana-keygen new
 ```
 
 3. **Run an example:**
+
 ```bash
 yarn tsx examples/quick-start/getting-started.ts
 ```
@@ -76,25 +91,31 @@ VERTIGO_API_URL=https://api.vertigo.so
 ## 🔑 Key Concepts
 
 ### Initialization
+
 The SDK can be initialized in three ways:
 
 1. **Read-only** (no wallet required):
+
 ```typescript
 const vertigo = await Vertigo.loadReadOnly(connection);
 ```
 
 2. **With wallet**:
+
 ```typescript
 const vertigo = await Vertigo.load({ connection, wallet });
 ```
 
 3. **Custom configuration**:
+
 ```typescript
 const vertigo = await Vertigo.loadWithConfig(customConfig);
 ```
 
 ### Error Handling
+
 Always wrap SDK calls in try-catch blocks:
+
 ```typescript
 try {
   const result = await vertigo.swap.swap({...});
@@ -104,7 +125,9 @@ try {
 ```
 
 ### Simulations
+
 Always simulate before executing:
+
 ```typescript
 const simulation = await vertigo.swap.simulateSwap({...});
 if (simulation.success) {

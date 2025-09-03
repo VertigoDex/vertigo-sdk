@@ -1,7 +1,13 @@
 import * as anchor from "@coral-xyz/anchor";
-import { PublicKey, Transaction, TransactionInstruction, SystemProgram, Keypair } from "@solana/web3.js";
+import {
+  PublicKey,
+  Transaction,
+  TransactionInstruction,
+  SystemProgram,
+  Keypair,
+} from "@solana/web3.js";
 import { VertigoClient } from "./VertigoClient";
-import { SwapQuote, SwapOptions } from "../types/client";
+import { SwapQuote, SwapOptions, PoolData } from "../types/client";
 import { DEFAULT_SLIPPAGE_BPS, MAX_SLIPPAGE_BPS } from "../core/constants";
 import {
   getAssociatedTokenAddressSync,
@@ -25,85 +31,138 @@ export class SwapClient {
     amount: number | anchor.BN;
     slippageBps?: number;
   }): Promise<SwapQuote> {
-    const amount = typeof params.amount === "number" 
-      ? new anchor.BN(params.amount) 
-      : params.amount;
-      
+    const amount =
+      typeof params.amount === "number"
+        ? new anchor.BN(params.amount)
+        : params.amount;
+
     const slippageBps = params.slippageBps ?? DEFAULT_SLIPPAGE_BPS;
-    
+
     if (slippageBps > MAX_SLIPPAGE_BPS) {
-      throw new Error(`Slippage too high: ${slippageBps} bps (max: ${MAX_SLIPPAGE_BPS})`);
+      throw new Error(
+        `Slippage too high: ${slippageBps} bps (max: ${MAX_SLIPPAGE_BPS})`,
+      );
     }
 
     // Find pool for the pair
-    const pools = await this.client.pools.findPoolsByMints(params.inputMint, params.outputMint);
-    
+    const pools = await this.client.pools.findPoolsByMints(
+      params.inputMint,
+      params.outputMint,
+    );
+
     if (pools.length === 0) {
       // Try reverse
-      const reversePools = await this.client.pools.findPoolsByMints(params.outputMint, params.inputMint);
+      const reversePools = await this.client.pools.findPoolsByMints(
+        params.outputMint,
+        params.inputMint,
+      );
       if (reversePools.length === 0) {
         throw new Error("No pool found for this pair");
       }
       // Use first pool (in production, would select best)
       const pool = reversePools[0];
-      return this.calculateQuote(pool, params.outputMint, params.inputMint, amount, slippageBps, true);
+      return this.calculateQuote(
+        pool,
+        params.outputMint,
+        params.inputMint,
+        amount,
+        slippageBps,
+        true,
+      );
     }
 
     // Use first pool (in production, would select best based on liquidity/fees)
     const pool = pools[0];
-    return this.calculateQuote(pool, params.inputMint, params.outputMint, amount, slippageBps, false);
+    return this.calculateQuote(
+      pool,
+      params.inputMint,
+      params.outputMint,
+      amount,
+      slippageBps,
+      false,
+    );
   }
 
   private async calculateQuote(
-    pool: any,
+    pool: PoolData,
     inputMint: PublicKey,
     outputMint: PublicKey,
     amount: anchor.BN,
     slippageBps: number,
-    isReverse: boolean
+    isReverse: boolean,
   ): Promise<SwapQuote> {
     // Determine which side is which
     const isAtoB = pool.mintA.equals(inputMint);
-    
+
     // Get quote from program
     const user = this.client.wallet?.publicKey || PublicKey.default;
-    
+
     try {
       let result;
-      
+
+      // Get proper quote from the pool
+      const [poolPda] = getPoolPda(
+        pool.owner,
+        pool.mintA,
+        pool.mintB,
+        this.client.ammProgram.programId,
+      );
+      const [vaultA] = PublicKey.findProgramAddressSync(
+        [poolPda.toBuffer(), pool.mintA.toBuffer()],
+        this.client.ammProgram.programId,
+      );
+      const [vaultB] = PublicKey.findProgramAddressSync(
+        [poolPda.toBuffer(), pool.mintB.toBuffer()],
+        this.client.ammProgram.programId,
+      );
+
+      const limit = amount.mul(new anchor.BN(2)); // Reasonable limit
+
       if (isAtoB) {
-        // Buying B with A (quote buy)
         result = await this.client.ammProgram.methods
-          .quoteBuy({ amount, limit: new anchor.BN(0) })
-          .accounts({
-            owner: pool.owner,
+          .quoteBuy({ amount, limit })
+          .accountsStrict({
+            pool: poolPda,
             user,
+            owner: pool.owner,
             mintA: pool.mintA,
             mintB: pool.mintB,
+            vaultA,
+            vaultB,
           })
           .view();
       } else {
-        // Selling B for A (quote sell)
         result = await this.client.ammProgram.methods
-          .quoteSell({ amount, limit: new anchor.BN(Number.MAX_SAFE_INTEGER) })
-          .accounts({
-            owner: pool.owner,
+          .quoteSell({ amount, limit })
+          .accountsStrict({
+            pool: poolPda,
             user,
+            owner: pool.owner,
             mintA: pool.mintA,
             mintB: pool.mintB,
+            vaultA,
+            vaultB,
           })
           .view();
       }
 
       const outputAmount = isAtoB ? result.amountB : result.amountA;
       const fee = result.feeA;
-      
+
       // Calculate minimum received with slippage
       const slippageMultiplier = 10000 - slippageBps;
-      const minimumReceived = outputAmount.mul(new anchor.BN(slippageMultiplier)).div(new anchor.BN(10000));
-      
+      const minimumReceived = outputAmount
+        .mul(new anchor.BN(slippageMultiplier))
+        .div(new anchor.BN(10000));
+
       // Calculate price impact (simplified)
-      const priceImpact = this.calculatePriceImpact(amount, outputAmount, pool.reserveA, pool.reserveB, isAtoB);
+      const priceImpact = this.calculatePriceImpact(
+        amount,
+        outputAmount,
+        pool.reserveA,
+        pool.reserveB,
+        isAtoB,
+      );
 
       return {
         inputMint,
@@ -113,12 +172,14 @@ export class SwapClient {
         fee,
         priceImpact,
         minimumReceived,
-        route: [{
-          pool: pool.address,
-          inputMint,
-          outputMint,
-          fee: pool.feeRate,
-        }],
+        route: [
+          {
+            pool: pool.address,
+            inputMint,
+            outputMint,
+            fee: pool.feeRate,
+          },
+        ],
       };
     } catch (error) {
       console.error("Failed to get quote:", error);
@@ -131,17 +192,22 @@ export class SwapClient {
     outputAmount: anchor.BN,
     reserveA: anchor.BN,
     reserveB: anchor.BN,
-    isAtoB: boolean
+    isAtoB: boolean,
   ): number {
     // Simplified price impact calculation
     const inputReserve = isAtoB ? reserveA : reserveB;
     const outputReserve = isAtoB ? reserveB : reserveA;
-    
+
     const spotPrice = outputReserve.mul(new anchor.BN(10000)).div(inputReserve);
-    const executionPrice = outputAmount.mul(new anchor.BN(10000)).div(inputAmount);
-    
-    const impact = spotPrice.sub(executionPrice).mul(new anchor.BN(10000)).div(spotPrice);
-    
+    const executionPrice = outputAmount
+      .mul(new anchor.BN(10000))
+      .div(inputAmount);
+
+    const impact = spotPrice
+      .sub(executionPrice)
+      .mul(new anchor.BN(10000))
+      .div(spotPrice);
+
     return Math.abs(impact.toNumber()) / 100; // Convert to percentage
   }
 
@@ -162,9 +228,10 @@ export class SwapClient {
       throw new Error("Wallet not connected");
     }
 
-    const amount = typeof params.amount === "number" 
-      ? new anchor.BN(params.amount) 
-      : params.amount;
+    const amount =
+      typeof params.amount === "number"
+        ? new anchor.BN(params.amount)
+        : params.amount;
 
     // Get quote first
     const quote = await this.getQuote({
@@ -176,11 +243,13 @@ export class SwapClient {
 
     // Build swap transaction
     const tx = await this.buildSwapTransaction(quote, params.options);
-    
+
     // Send transaction
     const signature = await this.client.provider.sendAndConfirm(tx, [], {
-      skipPreflight: params.options?.skipPreflight ?? this.client.getConfig().skipPreflight,
-      commitment: params.options?.commitment ?? this.client.getConfig().commitment,
+      skipPreflight:
+        params.options?.skipPreflight ?? this.client.getConfig().skipPreflight,
+      commitment:
+        params.options?.commitment ?? this.client.getConfig().commitment,
     });
 
     return {
@@ -195,7 +264,7 @@ export class SwapClient {
    */
   async buildSwapTransaction(
     quote: SwapQuote,
-    options?: SwapOptions
+    options?: SwapOptions,
   ): Promise<Transaction> {
     if (!this.client.isWalletConnected()) {
       throw new Error("Wallet not connected");
@@ -203,17 +272,18 @@ export class SwapClient {
 
     const user = this.client.wallet!.publicKey;
     const instructions: TransactionInstruction[] = [];
-    
+
     // Handle priority fee
     if (options?.priorityFee) {
-      const fee = options.priorityFee === "auto" 
-        ? await this.estimatePriorityFee()
-        : options.priorityFee;
-        
+      const fee =
+        options.priorityFee === "auto"
+          ? await this.estimatePriorityFee()
+          : options.priorityFee;
+
       instructions.push(
         anchor.web3.ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: fee,
-        })
+        }),
       );
     }
 
@@ -222,7 +292,7 @@ export class SwapClient {
       instructions.push(
         anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
           units: options.computeUnits,
-        })
+        }),
       );
     }
 
@@ -233,7 +303,7 @@ export class SwapClient {
       const wrapIxs = await this.createWrapSolInstructions(
         user,
         wrapAccount,
-        quote.inputAmount
+        quote.inputAmount,
       );
       instructions.push(...wrapIxs);
     }
@@ -243,14 +313,14 @@ export class SwapClient {
       quote.inputMint,
       user,
       false,
-      TOKEN_PROGRAM_ID
+      TOKEN_PROGRAM_ID,
     );
-    
+
     const outputTokenAccount = getAssociatedTokenAddressSync(
       quote.outputMint,
       user,
       false,
-      TOKEN_PROGRAM_ID
+      TOKEN_PROGRAM_ID,
     );
 
     // Create output token account if needed
@@ -260,8 +330,8 @@ export class SwapClient {
         outputTokenAccount,
         user,
         quote.outputMint,
-        TOKEN_PROGRAM_ID
-      )
+        TOKEN_PROGRAM_ID,
+      ),
     );
 
     // Get pool info
@@ -273,48 +343,48 @@ export class SwapClient {
     // Determine swap direction
     const isAtoB = pool.mintA.equals(quote.inputMint);
 
-    // Build swap instruction
-    if (isAtoB) {
-      // Buy operation
-      const swapIx = await this.client.ammProgram.methods
-        .buy({
-          amount: quote.inputAmount,
-          limit: quote.minimumReceived,
-        })
-        .accounts({
-          user,
-          owner: pool.owner,
-          mintA: pool.mintA,
-          mintB: pool.mintB,
-          userTokenAccountA: inputTokenAccount,
-          userTokenAccountB: outputTokenAccount,
-          tokenProgramA: TOKEN_PROGRAM_ID,
-          tokenProgramB: TOKEN_PROGRAM_ID,
-        })
-        .instruction();
-      
-      instructions.push(swapIx);
-    } else {
-      // Sell operation
-      const swapIx = await this.client.ammProgram.methods
-        .sell({
-          amount: quote.inputAmount,
-          limit: quote.minimumReceived,
-        })
-        .accounts({
-          user,
-          owner: pool.owner,
-          mintA: pool.mintA,
-          mintB: pool.mintB,
-          userTokenAccountA: outputTokenAccount,
-          userTokenAccountB: inputTokenAccount,
-          tokenProgramA: TOKEN_PROGRAM_ID,
-          tokenProgramB: TOKEN_PROGRAM_ID,
-        })
-        .instruction();
-      
-      instructions.push(swapIx);
-    }
+    // Build the actual swap instruction
+    const [poolPda] = getPoolPda(
+      pool.owner,
+      pool.mintA,
+      pool.mintB,
+      this.client.ammProgram.programId,
+    );
+    const [vaultA] = PublicKey.findProgramAddressSync(
+      [poolPda.toBuffer(), pool.mintA.toBuffer()],
+      this.client.ammProgram.programId,
+    );
+    const [vaultB] = PublicKey.findProgramAddressSync(
+      [poolPda.toBuffer(), pool.mintB.toBuffer()],
+      this.client.ammProgram.programId,
+    );
+
+    const userTaA = isAtoB ? inputTokenAccount : outputTokenAccount;
+    const userTaB = isAtoB ? outputTokenAccount : inputTokenAccount;
+
+    const swapIx = await this.client.ammProgram.methods[
+      isAtoB ? "buy" : "sell"
+    ]({
+      amount: quote.inputAmount,
+      limit: quote.minimumReceived,
+    })
+      .accountsStrict({
+        pool: poolPda,
+        user,
+        owner: pool.owner,
+        mintA: pool.mintA,
+        mintB: pool.mintB,
+        userTaA,
+        userTaB,
+        vaultA,
+        vaultB,
+        tokenProgramA: TOKEN_PROGRAM_ID,
+        tokenProgramB: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction();
+
+    instructions.push(swapIx);
 
     // Handle SOL unwrapping if needed
     if (options?.unwrapSol && quote.outputMint.equals(NATIVE_MINT)) {
@@ -324,8 +394,8 @@ export class SwapClient {
           user,
           user,
           [],
-          TOKEN_PROGRAM_ID
-        )
+          TOKEN_PROGRAM_ID,
+        ),
       );
     }
 
@@ -339,10 +409,10 @@ export class SwapClient {
   private async createWrapSolInstructions(
     user: PublicKey,
     wrapAccount: Keypair,
-    amount: anchor.BN
+    amount: anchor.BN,
   ): Promise<TransactionInstruction[]> {
     const instructions: TransactionInstruction[] = [];
-    
+
     // Create account
     instructions.push(
       SystemProgram.createAccount({
@@ -351,14 +421,14 @@ export class SwapClient {
         lamports: amount.toNumber(),
         space: 165,
         programId: TOKEN_PROGRAM_ID,
-      })
+      }),
     );
-    
+
     // Initialize account
     instructions.push(
-      createSyncNativeInstruction(wrapAccount.publicKey, TOKEN_PROGRAM_ID)
+      createSyncNativeInstruction(wrapAccount.publicKey, TOKEN_PROGRAM_ID),
     );
-    
+
     return instructions;
   }
 
@@ -393,10 +463,10 @@ export class SwapClient {
       });
 
       const tx = await this.buildSwapTransaction(quote, params.options);
-      
+
       // Simulate transaction
       const simulation = await this.client.connection.simulateTransaction(tx);
-      
+
       if (simulation.value.err) {
         return {
           success: false,
@@ -408,7 +478,7 @@ export class SwapClient {
         success: true,
         outputAmount: quote.outputAmount,
       };
-    } catch (error: any) {
+    } catch (error) {
       return {
         success: false,
         error: error.message || "Simulation failed",

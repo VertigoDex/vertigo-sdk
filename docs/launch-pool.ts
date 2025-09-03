@@ -31,7 +31,7 @@ async function main() {
   // wallet is loaded from local machine
   const pathToWallet = `${os.homedir()}/.config/solana/id.json`;
   const walletKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(pathToWallet, "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(pathToWallet, "utf-8"))),
   );
   const wallet = new anchor.Wallet(walletKeypair);
 
@@ -52,11 +52,11 @@ async function main() {
   await connection.requestAirdrop(user.publicKey, LAMPORTS_PER_SOL * 10);
   await connection.requestAirdrop(
     tokenWalletAuthority.publicKey,
-    LAMPORTS_PER_SOL * 10
+    LAMPORTS_PER_SOL * 10,
   );
   await connection.requestAirdrop(
     mintAuthority.publicKey,
-    LAMPORTS_PER_SOL * 10
+    LAMPORTS_PER_SOL * 10,
   );
 
   // mintA is the associated token for SOL, also known as "wrapped SOL"
@@ -71,7 +71,7 @@ async function main() {
     DECIMALS, // number of decimal places
     mint, // token wallet
     null, // no freeze authority
-    TOKEN_2022_PROGRAM_ID // this example uses the TOKEN_2022 program for the custom token
+    TOKEN_2022_PROGRAM_ID, // this example uses the TOKEN_2022 program for the custom token
   );
 
   // create the token wallet for the mint
@@ -81,7 +81,7 @@ async function main() {
     mint.publicKey,
     tokenWalletAuthority.publicKey,
     null,
-    TOKEN_2022_PROGRAM_ID
+    TOKEN_2022_PROGRAM_ID,
   );
 
   // mint tokens to the wallet wallet
@@ -94,7 +94,7 @@ async function main() {
     1_000_000_000, // amount of tokens to mint
     [mintAuthority], // mint authority
     null, // no decimals
-    TOKEN_2022_PROGRAM_ID // this example uses the TOKEN_2022 program for the custom token
+    TOKEN_2022_PROGRAM_ID, // this example uses the TOKEN_2022 program for the custom token
   );
 
   // create the dev SOL token account, you'll need to fund
@@ -104,7 +104,7 @@ async function main() {
     wallet.payer,
     NATIVE_MINT,
     user.publicKey,
-    false
+    false,
   );
 
   // creat the dev MintB token account
@@ -116,7 +116,7 @@ async function main() {
     false,
     undefined,
     undefined,
-    TOKEN_2022_PROGRAM_ID
+    TOKEN_2022_PROGRAM_ID,
   );
 
   const { signature, poolAddress } = await vertigo.launchPool({
