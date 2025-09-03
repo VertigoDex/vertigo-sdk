@@ -7,11 +7,13 @@ This guide will help you migrate from Vertigo SDK v1 (`@vertigo-amm/vertigo-sdk`
 ### Installation
 
 **v1:**
+
 ```bash
 yarn add @vertigo-amm/vertigo-sdk
 ```
 
 **v2:**
+
 ```bash
 yarn add @vertigo/sdk
 ```
@@ -19,12 +21,14 @@ yarn add @vertigo/sdk
 ### Import Changes
 
 **v1:**
+
 ```typescript
 import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
 import { SDKConfig } from "@vertigo-amm/vertigo-sdk";
 ```
 
 **v2:**
+
 ```typescript
 // New recommended approach
 import { Vertigo } from "@vertigo/sdk";
@@ -41,6 +45,7 @@ import { VertigoSDK } from "@vertigo/sdk";
 ### Basic Setup
 
 **v1:**
+
 ```typescript
 import * as anchor from "@coral-xyz/anchor";
 import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
@@ -48,11 +53,12 @@ import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
 const provider = new anchor.AnchorProvider(connection, wallet);
 const sdk = new VertigoSDK(provider, {
   logLevel: "verbose",
-  explorer: "solscan"
+  explorer: "solscan",
 });
 ```
 
 **v2:**
+
 ```typescript
 import { Vertigo } from "@vertigo/sdk";
 
@@ -60,7 +66,7 @@ import { Vertigo } from "@vertigo/sdk";
 const vertigo = await Vertigo.load({
   connection,
   wallet,
-  network: "mainnet"
+  network: "mainnet",
 });
 
 // With custom config
@@ -70,18 +76,19 @@ const vertigo = await Vertigo.load({
   network: "mainnet",
   priority: {
     autoFee: true,
-    baseFee: 1000
+    baseFee: 1000,
   },
   cache: {
     enabled: true,
-    ttl: 60000
-  }
+    ttl: 60000,
+  },
 });
 ```
 
 ### Read-Only Mode
 
 **v1:**
+
 ```typescript
 // Not well supported - required wallet even for reads
 const provider = new anchor.AnchorProvider(connection, dummyWallet);
@@ -89,6 +96,7 @@ const sdk = new VertigoSDK(provider);
 ```
 
 **v2:**
+
 ```typescript
 // Explicit read-only mode
 const vertigo = await Vertigo.loadReadOnly(connection, "mainnet");
@@ -99,11 +107,13 @@ const vertigo = await Vertigo.loadReadOnly(connection, "mainnet");
 ### Getting Pool Address
 
 **v1:**
+
 ```typescript
 const poolAddress = sdk.getPoolAddress(owner, mintA, mintB);
 ```
 
 **v2:**
+
 ```typescript
 const poolAddress = vertigo.pools.getPoolAddress(owner, mintA, mintB);
 ```
@@ -111,6 +121,7 @@ const poolAddress = vertigo.pools.getPoolAddress(owner, mintA, mintB);
 ### Creating a Pool
 
 **v1:**
+
 ```typescript
 const createRequest = {
   params: {
@@ -121,8 +132,8 @@ const createRequest = {
       decay: 0.99,
       royaltiesBps: 250,
       privilegedSwapper: undefined,
-      reference: new anchor.BN(Date.now() / 1000)
-    }
+      reference: new anchor.BN(Date.now() / 1000),
+    },
   },
   payer: wallet.payer,
   owner: ownerKeypair,
@@ -131,13 +142,14 @@ const createRequest = {
   mintA: NATIVE_MINT,
   mintB: tokenMint,
   tokenProgramA: TOKEN_PROGRAM_ID,
-  tokenProgramB: TOKEN_PROGRAM_ID
+  tokenProgramB: TOKEN_PROGRAM_ID,
 };
 
 const signature = await sdk.create(createRequest);
 ```
 
 **v2:**
+
 ```typescript
 // Simplified interface
 const { signature, poolAddress } = await vertigo.pools.createPool({
@@ -145,19 +157,21 @@ const { signature, poolAddress } = await vertigo.pools.createPool({
   mintB: tokenMint,
   initialMarketCap: 10_000_000_000,
   royaltiesBps: 250,
-  launchTime: new anchor.BN(Date.now() / 1000)
+  launchTime: new anchor.BN(Date.now() / 1000),
 });
 ```
 
 ### Getting Pool Data
 
 **v1:**
+
 ```typescript
 // Manual fetching required
 const poolAccount = await program.account.pool.fetch(poolAddress);
 ```
 
 **v2:**
+
 ```typescript
 // Built-in pool data fetching
 const pool = await vertigo.pools.getPool(poolAddress);
@@ -177,13 +191,14 @@ const stats = await vertigo.pools.getPoolStats(poolAddress);
 ### Getting Quotes
 
 **v1:**
+
 ```typescript
 const quoteBuyResult = await sdk.quoteBuy({
   params: { amount, limit },
   owner,
   user,
   mintA,
-  mintB
+  mintB,
 });
 
 const quoteSellResult = await sdk.quoteSell({
@@ -191,18 +206,19 @@ const quoteSellResult = await sdk.quoteSell({
   owner,
   user,
   mintA,
-  mintB
+  mintB,
 });
 ```
 
 **v2:**
+
 ```typescript
 // Unified quote interface
 const quote = await vertigo.swap.getQuote({
   inputMint: mintA,
   outputMint: mintB,
   amount: 1_000_000_000,
-  slippageBps: 50 // 0.5%
+  slippageBps: 50, // 0.5%
 });
 
 // Quote includes more information
@@ -215,6 +231,7 @@ console.log(quote.route);
 ### Executing Swaps
 
 **v1:**
+
 ```typescript
 // Buy
 const buySignature = await sdk.buy({
@@ -224,7 +241,7 @@ const buySignature = await sdk.buy({
   mintA,
   mintB,
   userTokenAccountA,
-  userTokenAccountB
+  userTokenAccountB,
 });
 
 // Sell
@@ -235,11 +252,12 @@ const sellSignature = await sdk.sell({
   mintA,
   mintB,
   userTokenAccountA,
-  userTokenAccountB
+  userTokenAccountB,
 });
 ```
 
 **v2:**
+
 ```typescript
 // Unified swap interface with automatic direction detection
 const result = await vertigo.swap.swap({
@@ -250,8 +268,8 @@ const result = await vertigo.swap.swap({
     slippageBps: 100, // 1%
     priorityFee: "auto", // Automatic priority fee
     wrapSol: true, // Auto-wrap SOL if needed
-    simulateFirst: true // Simulate before executing
-  }
+    simulateFirst: true, // Simulate before executing
+  },
 });
 
 console.log(result.signature);
@@ -262,18 +280,20 @@ console.log(result.outputAmount);
 ### Swap Simulation
 
 **v1:**
+
 ```typescript
 // Not available - manual simulation required
 ```
 
 **v2:**
+
 ```typescript
 // Built-in simulation
 const simulation = await vertigo.swap.simulateSwap({
   inputMint: mintA,
   outputMint: mintB,
   amount: 1_000_000_000,
-  options: { slippageBps: 100 }
+  options: { slippageBps: 100 },
 });
 
 if (simulation.success) {
@@ -287,11 +307,13 @@ if (simulation.success) {
 ## 🏭 Token Factory
 
 **v1:**
+
 ```typescript
 // Not available in SDK v1
 ```
 
 **v2:**
+
 ```typescript
 // Launch a token
 const { mintAddress } = await vertigo.factory.launchToken({
@@ -299,10 +321,10 @@ const { mintAddress } = await vertigo.factory.launchToken({
     name: "My Token",
     symbol: "MTK",
     decimals: 9,
-    uri: "https://..."
+    uri: "https://...",
   },
   supply: 1_000_000_000_000_000,
-  useToken2022: false
+  useToken2022: false,
 });
 
 // Launch token with pool
@@ -310,13 +332,14 @@ const result = await vertigo.factory.launchTokenWithPool({
   metadata: { name: "My Token", symbol: "MTK" },
   supply: 1_000_000_000_000_000,
   initialMarketCap: 50_000_000_000,
-  royaltiesBps: 250
+  royaltiesBps: 250,
 });
 ```
 
 ## 📊 API Integration
 
 **v1:**
+
 ```typescript
 // No API client - manual fetch required
 const response = await fetch("https://api.vertigo.so/pools");
@@ -324,6 +347,7 @@ const data = await response.json();
 ```
 
 **v2:**
+
 ```typescript
 // Built-in API client
 const stats = await vertigo.api.getPoolStats(poolAddress);
@@ -333,30 +357,35 @@ const tokenInfo = await vertigo.api.getTokenInfo(mintAddress);
 // Real-time subscriptions
 const unsubscribe = vertigo.api.subscribeToPool(poolAddress, {
   onSwap: (data) => console.log("Swap event:", data),
-  onPriceUpdate: (data) => console.log("Price update:", data)
+  onPriceUpdate: (data) => console.log("Price update:", data),
 });
 ```
 
 ## 🛠️ Utility Functions
 
 **v1:**
+
 ```typescript
-import { getPoolPda, validateLaunchParams } from "@vertigo-amm/vertigo-sdk/utils";
+import {
+  getPoolPda,
+  validateLaunchParams,
+} from "@vertigo-amm/vertigo-sdk/utils";
 
 const [pool] = getPoolPda(owner, mintA, mintB, programId);
 validateLaunchParams(params);
 ```
 
 **v2:**
+
 ```typescript
-import { 
+import {
   formatTokenAmount,
   parseTokenAmount,
   getOrCreateATA,
   estimatePriorityFee,
   retry,
   getExplorerUrl,
-  sendTransactionWithRetry
+  sendTransactionWithRetry,
 } from "@vertigo/sdk";
 
 // Rich utility functions
@@ -371,13 +400,14 @@ const signature = await sendTransactionWithRetry(
   connection,
   transaction,
   signers,
-  { maxRetries: 3 }
+  { maxRetries: 3 },
 );
 ```
 
 ## 🔧 Transaction Building
 
 **v1:**
+
 ```typescript
 const instructions = await sdk.createInstruction(request);
 const tx = new Transaction().add(...instructions);
@@ -385,11 +415,12 @@ const signature = await provider.sendAndConfirm(tx, signers);
 ```
 
 **v2:**
+
 ```typescript
 // Automatic transaction optimization
 const tx = await vertigo.swap.buildSwapTransaction(quote, {
   priorityFee: "auto",
-  computeUnits: 200000
+  computeUnits: 200000,
 });
 
 // Or use the high-level interface
@@ -397,13 +428,14 @@ const result = await vertigo.swap.swap({
   inputMint,
   outputMint,
   amount,
-  options: { priorityFee: "auto" }
+  options: { priorityFee: "auto" },
 });
 ```
 
 ## 🎯 Error Handling
 
 **v1:**
+
 ```typescript
 try {
   const signature = await sdk.buy(request);
@@ -414,6 +446,7 @@ try {
 ```
 
 **v2:**
+
 ```typescript
 try {
   const result = await vertigo.swap.swap({...});

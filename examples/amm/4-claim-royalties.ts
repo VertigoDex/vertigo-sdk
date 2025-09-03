@@ -45,12 +45,14 @@ async function main() {
 
   const wallet = new anchor.Wallet(
     Keypair.fromSecretKey(
-      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-claimer"], "utf-8")))
-    )
+      Buffer.from(
+        JSON.parse(fs.readFileSync(argv["path-to-claimer"], "utf-8")),
+      ),
+    ),
   );
 
   const owner = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-claimer"], "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-claimer"], "utf-8"))),
   );
 
   const provider = new anchor.AnchorProvider(connection, wallet);
@@ -65,7 +67,7 @@ async function main() {
       new PublicKey(argv["mint-a"]),
       owner.publicKey,
       false,
-      new PublicKey(argv["token-program-a"])
+      new PublicKey(argv["token-program-a"]),
     );
   }
 

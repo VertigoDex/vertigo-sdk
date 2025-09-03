@@ -28,18 +28,18 @@ export const getOrCreateATA = async (
   mint: PublicKey,
   owner: PublicKey,
   payer: PublicKey,
-  allowOwnerOffCurve: boolean = false
+  allowOwnerOffCurve: boolean = false,
 ): Promise<{
   address: PublicKey;
   instruction?: TransactionInstruction;
 }> => {
   const tokenProgram = await getTokenProgram(connection, mint);
-  
+
   const ata = getAssociatedTokenAddressSync(
     mint,
     owner,
     allowOwnerOffCurve,
-    tokenProgram
+    tokenProgram,
   );
 
   try {
@@ -52,9 +52,9 @@ export const getOrCreateATA = async (
       ata,
       owner,
       mint,
-      tokenProgram
+      tokenProgram,
     );
-    
+
     return {
       address: ata,
       instruction,
@@ -67,7 +67,7 @@ export const getOrCreateATA = async (
  */
 export const getTokenProgram = async (
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<PublicKey> => {
   try {
     // Try to get mint with Token-2022 first
@@ -86,7 +86,7 @@ export const createWrappedSolAccount = async (
   connection: Connection,
   owner: PublicKey,
   amount: number | anchor.BN,
-  keypair?: Keypair
+  keypair?: Keypair,
 ): Promise<{
   account: Keypair;
   instructions: TransactionInstruction[];
@@ -96,10 +96,11 @@ export const createWrappedSolAccount = async (
   const lamports = typeof amount === "number" ? amount : amount.toNumber();
 
   const instructions: TransactionInstruction[] = [];
-  
+
   // Create account
-  const rentExemptBalance = await connection.getMinimumBalanceForRentExemption(165);
-  
+  const rentExemptBalance =
+    await connection.getMinimumBalanceForRentExemption(165);
+
   instructions.push(
     SystemProgram.createAccount({
       fromPubkey: owner,
@@ -107,22 +108,22 @@ export const createWrappedSolAccount = async (
       lamports: rentExemptBalance + lamports,
       space: 165,
       programId: TOKEN_PROGRAM_ID,
-    })
+    }),
   );
-  
+
   // Initialize account
   instructions.push(
     createInitializeAccountInstruction(
       account.publicKey,
       NATIVE_MINT,
       owner,
-      TOKEN_PROGRAM_ID
-    )
+      TOKEN_PROGRAM_ID,
+    ),
   );
 
   // Sync native account
   instructions.push(
-    createSyncNativeInstruction(account.publicKey, TOKEN_PROGRAM_ID)
+    createSyncNativeInstruction(account.publicKey, TOKEN_PROGRAM_ID),
   );
 
   // Cleanup instructions
@@ -132,8 +133,8 @@ export const createWrappedSolAccount = async (
       owner,
       owner,
       [],
-      TOKEN_PROGRAM_ID
-    )
+      TOKEN_PROGRAM_ID,
+    ),
   ];
 
   return {
@@ -149,7 +150,7 @@ export const createWrappedSolAccount = async (
 export const getTokenBalance = async (
   connection: Connection,
   tokenAccount: PublicKey,
-  decimals?: number
+  decimals?: number,
 ): Promise<{
   raw: anchor.BN;
   ui: number;
@@ -158,7 +159,7 @@ export const getTokenBalance = async (
   try {
     const account = await getAccount(connection, tokenAccount);
     const tokenDecimals = decimals || 0;
-    
+
     return {
       raw: new anchor.BN(account.amount.toString()),
       ui: Number(account.amount) / Math.pow(10, tokenDecimals),
@@ -178,13 +179,13 @@ export const getTokenBalance = async (
  */
 export const getSolBalance = async (
   connection: Connection,
-  address: PublicKey
+  address: PublicKey,
 ): Promise<{
   raw: anchor.BN;
   ui: number;
 }> => {
   const balance = await connection.getBalance(address);
-  
+
   return {
     raw: new anchor.BN(balance),
     ui: balance / anchor.web3.LAMPORTS_PER_SOL,
@@ -196,7 +197,7 @@ export const getSolBalance = async (
  */
 export const getTokenMetadata = async (
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<{
   name?: string;
   symbol?: string;
@@ -206,7 +207,7 @@ export const getTokenMetadata = async (
 } | null> => {
   try {
     const mintInfo = await getMint(connection, mint);
-    
+
     // Basic mint info
     const metadata = {
       decimals: mintInfo.decimals,
@@ -214,7 +215,7 @@ export const getTokenMetadata = async (
     };
 
     // TODO: Fetch additional metadata from Metaplex or Token-2022 extensions
-    
+
     return metadata;
   } catch (error) {
     console.error("Failed to fetch token metadata:", error);
@@ -228,13 +229,15 @@ export const getTokenMetadata = async (
 export const calculateAmountWithSlippage = (
   amount: anchor.BN,
   slippageBps: number,
-  isMinimum: boolean = true
+  isMinimum: boolean = true,
 ): anchor.BN => {
-  const slippageMultiplier = isMinimum 
-    ? 10000 - slippageBps 
+  const slippageMultiplier = isMinimum
+    ? 10000 - slippageBps
     : 10000 + slippageBps;
-    
-  return amount.mul(new anchor.BN(slippageMultiplier)).div(new anchor.BN(10000));
+
+  return amount
+    .mul(new anchor.BN(slippageMultiplier))
+    .div(new anchor.BN(10000));
 };
 
 /**
@@ -243,18 +246,22 @@ export const calculateAmountWithSlippage = (
 export const formatTokenAmount = (
   amount: anchor.BN | number | string,
   decimals: number,
-  displayDecimals: number = 4
+  displayDecimals: number = 4,
 ): string => {
-  const value = typeof amount === "string" || typeof amount === "number"
-    ? new anchor.BN(amount.toString())
-    : amount;
+  const value =
+    typeof amount === "string" || typeof amount === "number"
+      ? new anchor.BN(amount.toString())
+      : amount;
 
   const divisor = new anchor.BN(10).pow(new anchor.BN(decimals));
   const quotient = value.div(divisor);
   const remainder = value.mod(divisor);
-  
-  const decimalPart = remainder.toString().padStart(decimals, "0").slice(0, displayDecimals);
-  
+
+  const decimalPart = remainder
+    .toString()
+    .padStart(decimals, "0")
+    .slice(0, displayDecimals);
+
   return `${quotient.toString()}.${decimalPart}`;
 };
 
@@ -263,17 +270,17 @@ export const formatTokenAmount = (
  */
 export const parseTokenAmount = (
   amount: string,
-  decimals: number
+  decimals: number,
 ): anchor.BN => {
   const parts = amount.split(".");
   const wholePart = parts[0] || "0";
   const decimalPart = (parts[1] || "").padEnd(decimals, "0").slice(0, decimals);
-  
+
   const wholeAmount = new anchor.BN(wholePart).mul(
-    new anchor.BN(10).pow(new anchor.BN(decimals))
+    new anchor.BN(10).pow(new anchor.BN(decimals)),
   );
   const decimalAmount = new anchor.BN(decimalPart);
-  
+
   return wholeAmount.add(decimalAmount);
 };
 
@@ -290,12 +297,14 @@ export const isNativeMint = (mint: PublicKey): boolean => {
 export const getAllTokenAccounts = async (
   connection: Connection,
   owner: PublicKey,
-  programId: PublicKey = TOKEN_PROGRAM_ID
-): Promise<Array<{
-  pubkey: PublicKey;
-  mint: PublicKey;
-  amount: anchor.BN;
-}>> => {
+  programId: PublicKey = TOKEN_PROGRAM_ID,
+): Promise<
+  Array<{
+    pubkey: PublicKey;
+    mint: PublicKey;
+    amount: anchor.BN;
+  }>
+> => {
   const accounts = await connection.getParsedTokenAccountsByOwner(owner, {
     programId,
   });

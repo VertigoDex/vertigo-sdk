@@ -9,16 +9,7 @@
   "instructions": [
     {
       "name": "initialize",
-      "discriminator": [
-        175,
-        175,
-        109,
-        31,
-        13,
-        152,
-        155,
-        237
-      ],
+      "discriminator": [175, 175, 109, 31, 13, 152, 155, 237],
       "accounts": [
         {
           "name": "payer",
@@ -45,15 +36,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  102,
-                  97,
-                  99,
-                  116,
-                  111,
-                  114,
-                  121
-                ]
+                "value": [102, 97, 99, 116, 111, 114, 121]
               },
               {
                 "kind": "account",
@@ -76,9 +59,7 @@
         },
         {
           "name": "system_program",
-          "docs": [
-            "Required programs and sysvars"
-          ],
+          "docs": ["Required programs and sysvars"],
           "address": "11111111111111111111111111111111"
         },
         {
@@ -99,16 +80,7 @@
     },
     {
       "name": "launch",
-      "discriminator": [
-        153,
-        241,
-        93,
-        225,
-        22,
-        69,
-        74,
-        61
-      ],
+      "discriminator": [153, 241, 93, 225, 22, 69, 74, 61],
       "accounts": [
         {
           "name": "payer",
@@ -125,29 +97,17 @@
         },
         {
           "name": "amm",
-          "docs": [
-            "The Vertigo program."
-          ],
+          "docs": ["The Vertigo program."],
           "address": "vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"
         },
         {
           "name": "factory",
-          "docs": [
-            "The factory state account."
-          ],
+          "docs": ["The factory state account."],
           "pda": {
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  102,
-                  97,
-                  99,
-                  116,
-                  111,
-                  114,
-                  121
-                ]
+                "value": [102, 97, 99, 116, 111, 114, 121]
               },
               {
                 "kind": "account",
@@ -166,9 +126,7 @@
         },
         {
           "name": "mint_b_authority",
-          "docs": [
-            "The authority allowed to mint tokens from `mint`."
-          ],
+          "docs": ["The authority allowed to mint tokens from `mint`."],
           "writable": true,
           "signer": true
         },
@@ -187,12 +145,7 @@
             "seeds": [
               {
                 "kind": "const",
-                "value": [
-                  112,
-                  111,
-                  111,
-                  108
-                ]
+                "value": [112, 111, 111, 108]
               },
               {
                 "kind": "account",
@@ -210,38 +163,9 @@
             "program": {
               "kind": "const",
               "value": [
-                13,
-                203,
-                179,
-                20,
-                172,
-                60,
-                167,
-                140,
-                165,
-                103,
-                213,
-                134,
-                29,
-                33,
-                40,
-                214,
-                192,
-                178,
-                98,
-                232,
-                190,
-                131,
-                38,
-                221,
-                171,
-                228,
-                122,
-                172,
-                65,
-                242,
-                162,
-                135
+                13, 203, 179, 20, 172, 60, 167, 140, 165, 103, 213, 134, 29, 33,
+                40, 214, 192, 178, 98, 232, 190, 131, 38, 221, 171, 228, 122,
+                172, 65, 242, 162, 135
               ]
             }
           }
@@ -263,38 +187,9 @@
             "program": {
               "kind": "const",
               "value": [
-                13,
-                203,
-                179,
-                20,
-                172,
-                60,
-                167,
-                140,
-                165,
-                103,
-                213,
-                134,
-                29,
-                33,
-                40,
-                214,
-                192,
-                178,
-                98,
-                232,
-                190,
-                131,
-                38,
-                221,
-                171,
-                228,
-                122,
-                172,
-                65,
-                242,
-                162,
-                135
+                13, 203, 179, 20, 172, 60, 167, 140, 165, 103, 213, 134, 29, 33,
+                40, 214, 192, 178, 98, 232, 190, 131, 38, 221, 171, 228, 122,
+                172, 65, 242, 162, 135
               ]
             }
           }
@@ -316,47 +211,16 @@
             "program": {
               "kind": "const",
               "value": [
-                13,
-                203,
-                179,
-                20,
-                172,
-                60,
-                167,
-                140,
-                165,
-                103,
-                213,
-                134,
-                29,
-                33,
-                40,
-                214,
-                192,
-                178,
-                98,
-                232,
-                190,
-                131,
-                38,
-                221,
-                171,
-                228,
-                122,
-                172,
-                65,
-                242,
-                162,
-                135
+                13, 203, 179, 20, 172, 60, 167, 140, 165, 103, 213, 134, 29, 33,
+                40, 214, 192, 178, 98, 232, 190, 131, 38, 221, 171, 228, 122,
+                172, 65, 242, 162, 135
               ]
             }
           }
         },
         {
           "name": "token_wallet_b",
-          "docs": [
-            "Token wallet where the initial token reserves come from"
-          ],
+          "docs": ["Token wallet where the initial token reserves come from"],
           "writable": true,
           "pda": {
             "seeds": [
@@ -376,38 +240,9 @@
             "program": {
               "kind": "const",
               "value": [
-                140,
-                151,
-                37,
-                143,
-                78,
-                36,
-                137,
-                241,
-                187,
-                61,
-                16,
-                41,
-                20,
-                142,
-                13,
-                131,
-                11,
-                90,
-                19,
-                153,
-                218,
-                255,
-                16,
-                132,
-                4,
-                142,
-                123,
-                216,
-                219,
-                233,
-                248,
-                89
+                140, 151, 37, 143, 78, 36, 137, 241, 187, 61, 16, 41, 20, 142,
+                13, 131, 11, 90, 19, 153, 218, 255, 16, 132, 4, 142, 123, 216,
+                219, 233, 248, 89
               ]
             }
           }
@@ -447,16 +282,7 @@
   "accounts": [
     {
       "name": "Factory",
-      "discriminator": [
-        159,
-        68,
-        192,
-        61,
-        48,
-        249,
-        216,
-        202
-      ],
+      "discriminator": [159, 68, 192, 61, 48, 249, 216, 202],
       "type": {
         "kind": "struct",
         "fields": [
@@ -503,16 +329,7 @@
   "events": [
     {
       "name": "FactoryInitialized",
-      "discriminator": [
-        20,
-        86,
-        103,
-        75,
-        20,
-        220,
-        162,
-        63
-      ]
+      "discriminator": [20, 86, 103, 75, 20, 220, 162, 63]
     }
   ],
   "errors": [
@@ -671,9 +488,7 @@
           },
           {
             "name": "royalties_bps",
-            "docs": [
-              "Royalties in basis points."
-            ],
+            "docs": ["Royalties in basis points."],
             "type": "u16"
           }
         ]

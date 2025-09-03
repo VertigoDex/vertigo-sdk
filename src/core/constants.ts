@@ -3,18 +3,30 @@ import { PublicKey } from "@solana/web3.js";
 export const VERTIGO_PROGRAMS = {
   mainnet: {
     AMM: new PublicKey("vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"),
-    POOL_AUTHORITY: new PublicKey("Vert8xR82wYZrftk7PLcYJNxSdhLCCAMy7zbCNNSS4d"),
-    PERMISSIONED_RELAY: new PublicKey("FREEXMQuGxqrmT8gKJt82zfJjZACBiR8MNuQCbGSHyzF"),
+    POOL_AUTHORITY: new PublicKey(
+      "Vert8xR82wYZrftk7PLcYJNxSdhLCCAMy7zbCNNSS4d",
+    ),
+    PERMISSIONED_RELAY: new PublicKey(
+      "FREEXMQuGxqrmT8gKJt82zfJjZACBiR8MNuQCbGSHyzF",
+    ),
   },
   devnet: {
     AMM: new PublicKey("vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"),
-    POOL_AUTHORITY: new PublicKey("Vert8xR82wYZrftk7PLcYJNxSdhLCCAMy7zbCNNSS4d"),
-    PERMISSIONED_RELAY: new PublicKey("FREEXMQuGxqrmT8gKJt82zfJjZACBiR8MNuQCbGSHyzF"),
+    POOL_AUTHORITY: new PublicKey(
+      "Vert8xR82wYZrftk7PLcYJNxSdhLCCAMy7zbCNNSS4d",
+    ),
+    PERMISSIONED_RELAY: new PublicKey(
+      "FREEXMQuGxqrmT8gKJt82zfJjZACBiR8MNuQCbGSHyzF",
+    ),
   },
   localnet: {
     AMM: new PublicKey("vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"),
-    POOL_AUTHORITY: new PublicKey("Vert8xR82wYZrftk7PLcYJNxSdhLCCAMy7zbCNNSS4d"),
-    PERMISSIONED_RELAY: new PublicKey("FREEXMQuGxqrmT8gKJt82zfJjZACBiR8MNuQCbGSHyzF"),
+    POOL_AUTHORITY: new PublicKey(
+      "Vert8xR82wYZrftk7PLcYJNxSdhLCCAMy7zbCNNSS4d",
+    ),
+    PERMISSIONED_RELAY: new PublicKey(
+      "FREEXMQuGxqrmT8gKJt82zfJjZACBiR8MNuQCbGSHyzF",
+    ),
   },
 };
 

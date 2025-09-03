@@ -5,6 +5,7 @@ export * from "./config";
 // Export new utilities
 export * from "./transaction";
 export * from "./token";
+export * from "./wallet-adapter";
 
 // Additional utility functions
 import { PublicKey } from "@solana/web3.js";
@@ -14,7 +15,7 @@ import * as anchor from "@coral-xyz/anchor";
  * Sleep for specified milliseconds
  */
 export const sleep = (ms: number): Promise<void> => {
-  return new Promise(resolve => setTimeout(resolve, ms));
+  return new Promise((resolve) => setTimeout(resolve, ms));
 };
 
 /**
@@ -27,7 +28,7 @@ export const retry = async <T>(
     initialDelay?: number;
     maxDelay?: number;
     backoffFactor?: number;
-  } = {}
+  } = {},
 ): Promise<T> => {
   const maxRetries = options.maxRetries ?? 3;
   const initialDelay = options.initialDelay ?? 1000;
@@ -40,9 +41,9 @@ export const retry = async <T>(
   for (let i = 0; i < maxRetries; i++) {
     try {
       return await fn();
-    } catch (error: any) {
-      lastError = error;
-      
+    } catch (error) {
+      lastError = error instanceof Error ? error : new Error(String(error));
+
       if (i < maxRetries - 1) {
         await sleep(Math.min(delay, maxDelay));
         delay *= backoffFactor;
@@ -58,11 +59,11 @@ export const retry = async <T>(
  */
 export const chunk = <T>(array: T[], size: number): T[][] => {
   const chunks: T[][] = [];
-  
+
   for (let i = 0; i < array.length; i += size) {
     chunks.push(array.slice(i, i + size));
   }
-  
+
   return chunks;
 };
 
@@ -71,11 +72,13 @@ export const chunk = <T>(array: T[], size: number): T[][] => {
  */
 export const bnToNumber = (bn: anchor.BN): number => {
   const max = Number.MAX_SAFE_INTEGER;
-  
+
   if (bn.gt(new anchor.BN(max))) {
-    throw new Error(`BN ${bn.toString()} is too large to convert to number safely`);
+    throw new Error(
+      `BN ${bn.toString()} is too large to convert to number safely`,
+    );
   }
-  
+
   return bn.toNumber();
 };
 
@@ -94,7 +97,10 @@ export const isValidAddress = (address: string): boolean => {
 /**
  * Shorten address for display
  */
-export const shortenAddress = (address: string | PublicKey, chars: number = 4): string => {
+export const shortenAddress = (
+  address: string | PublicKey,
+  chars: number = 4,
+): string => {
   const str = typeof address === "string" ? address : address.toBase58();
   return `${str.slice(0, chars)}...${str.slice(-chars)}`;
 };
@@ -105,10 +111,10 @@ export const shortenAddress = (address: string | PublicKey, chars: number = 4): 
 export const getExplorerUrl = (
   signature: string,
   network: "mainnet" | "devnet" | "testnet" = "mainnet",
-  explorer: "solscan" | "solanaExplorer" | "solanaBeach" = "solscan"
+  explorer: "solscan" | "solanaExplorer" | "solanaBeach" = "solscan",
 ): string => {
   const cluster = network === "mainnet" ? "" : `?cluster=${network}`;
-  
+
   switch (explorer) {
     case "solscan":
       return `https://solscan.io/tx/${signature}${cluster}`;
@@ -127,11 +133,11 @@ export const getExplorerUrl = (
 export const getAddressExplorerUrl = (
   address: string | PublicKey,
   network: "mainnet" | "devnet" | "testnet" = "mainnet",
-  explorer: "solscan" | "solanaExplorer" | "solanaBeach" = "solscan"
+  explorer: "solscan" | "solanaExplorer" | "solanaBeach" = "solscan",
 ): string => {
   const addr = typeof address === "string" ? address : address.toBase58();
   const cluster = network === "mainnet" ? "" : `?cluster=${network}`;
-  
+
   switch (explorer) {
     case "solscan":
       return `https://solscan.io/account/${addr}${cluster}`;
@@ -149,13 +155,13 @@ export const getAddressExplorerUrl = (
  */
 export const calculatePercentageChange = (
   oldValue: number | anchor.BN,
-  newValue: number | anchor.BN
+  newValue: number | anchor.BN,
 ): number => {
   const old = typeof oldValue === "number" ? oldValue : oldValue.toNumber();
   const current = typeof newValue === "number" ? newValue : newValue.toNumber();
-  
+
   if (old === 0) return current === 0 ? 0 : 100;
-  
+
   return ((current - old) / Math.abs(old)) * 100;
 };
 
@@ -164,14 +170,15 @@ export const calculatePercentageChange = (
  */
 export const formatNumber = (
   num: number | string | anchor.BN,
-  decimals: number = 2
+  decimals: number = 2,
 ): string => {
-  const value = typeof num === "number" 
-    ? num 
-    : typeof num === "string" 
-    ? parseFloat(num)
-    : num.toNumber();
-    
+  const value =
+    typeof num === "number"
+      ? num
+      : typeof num === "string"
+        ? parseFloat(num)
+        : num.toNumber();
+
   return value.toLocaleString("en-US", {
     minimumFractionDigits: decimals,
     maximumFractionDigits: decimals,
@@ -184,14 +191,15 @@ export const formatNumber = (
 export const formatCurrency = (
   amount: number | string | anchor.BN,
   currency: string = "USD",
-  locale: string = "en-US"
+  locale: string = "en-US",
 ): string => {
-  const value = typeof amount === "number" 
-    ? amount 
-    : typeof amount === "string" 
-    ? parseFloat(amount)
-    : amount.toNumber();
-    
+  const value =
+    typeof amount === "number"
+      ? amount
+      : typeof amount === "string"
+        ? parseFloat(amount)
+        : amount.toNumber();
+
   return new Intl.NumberFormat(locale, {
     style: "currency",
     currency,

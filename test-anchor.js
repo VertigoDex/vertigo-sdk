@@ -10,7 +10,11 @@ console.log("IDL loaded:", idl.name);
 console.log("IDL address:", idl.metadata?.address);
 
 try {
-  const program = new anchor.Program(idl, new PublicKey("vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"), provider);
+  const program = new anchor.Program(
+    idl,
+    new PublicKey("vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ"),
+    provider,
+  );
   console.log("Program created successfully\!");
   console.log("Program ID:", program.programId.toBase58());
 } catch (error) {

@@ -72,18 +72,18 @@ async function main() {
   // Load wallet from path
   const wallet = new anchor.Wallet(
     Keypair.fromSecretKey(
-      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
-    )
+      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8"))),
+    ),
   );
 
   // Load owner from path
   const owner = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8"))),
   );
 
   // Load user from path
   const user = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8"))),
   );
   const provider = new anchor.AnchorProvider(connection, wallet);
 
@@ -93,7 +93,7 @@ async function main() {
     NATIVE_MINT,
     user.publicKey,
     false,
-    new PublicKey(argv["token-program-a"])
+    new PublicKey(argv["token-program-a"]),
   );
 
   // Fund some wSol for the user if Mint A is SOL
@@ -114,7 +114,7 @@ async function main() {
         new PublicKey(argv["mint-a"]),
         user.publicKey,
         { commitment: "confirmed" },
-        new PublicKey(argv["token-program-a"])
+        new PublicKey(argv["token-program-a"]),
       );
     }
 
@@ -129,7 +129,7 @@ async function main() {
       // If not, Check if we have enough SOL to make up for the difference
       if (balance + wSolBalance < amount) {
         throw new Error(
-          `Not enough SOL in wallet. Balance: ${balance}, required: ${amount}`
+          `Not enough SOL in wallet. Balance: ${balance}, required: ${amount}`,
         );
       }
       const difference = amount - wSolBalance;
@@ -142,7 +142,7 @@ async function main() {
     // check taA balance
     const taABalance = await connection.getTokenAccountBalance(userTaA);
     console.log(
-      `User TA A balance: ${new anchor.BN(taABalance.value.amount).toNumber()}`
+      `User TA A balance: ${new anchor.BN(taABalance.value.amount).toNumber()}`,
     );
   }
 
@@ -150,7 +150,7 @@ async function main() {
     new PublicKey(argv["mint-b"]),
     user.publicKey,
     false,
-    new PublicKey(argv["token-program-b"])
+    new PublicKey(argv["token-program-b"]),
   );
 
   const signature = await vertigo.buy({

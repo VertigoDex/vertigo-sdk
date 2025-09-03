@@ -1,6 +1,6 @@
 /**
  * Vertigo SDK - Quick Start Guide
- * 
+ *
  * This example shows the simplest way to get started with the Vertigo SDK
  */
 
@@ -21,7 +21,7 @@ async function main() {
   // 2. Find pools for a token pair
   const pools = await vertigo.pools.findPoolsByMints(
     NATIVE_MINT, // SOL
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v") // USDC
+    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), // USDC
   );
 
   console.log(`Found ${pools.length} pools for SOL/USDC`);

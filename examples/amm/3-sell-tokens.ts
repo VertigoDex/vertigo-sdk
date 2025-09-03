@@ -67,13 +67,13 @@ async function main() {
   // Load wallet from path
   const wallet = new anchor.Wallet(
     Keypair.fromSecretKey(
-      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
-    )
+      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8"))),
+    ),
   );
 
   // Load user from path
   const user = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8"))),
   );
 
   const provider = new anchor.AnchorProvider(connection, wallet);
@@ -83,14 +83,14 @@ async function main() {
     new PublicKey(argv["mint-a"]),
     user.publicKey,
     false,
-    new PublicKey(argv["token-program-a"])
+    new PublicKey(argv["token-program-a"]),
   );
 
   const userTaB = await getAssociatedTokenAddressSync(
     new PublicKey(argv["mint-b"]),
     user.publicKey,
     false,
-    new PublicKey(argv["token-program-b"])
+    new PublicKey(argv["token-program-b"]),
   );
 
   const signature = await vertigo.sell({

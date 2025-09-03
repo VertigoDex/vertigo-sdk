@@ -47,10 +47,36 @@ export type MarketData = {
   topPools: PoolStats[];
 };
 
+export type SwapEvent = {
+  pool: string;
+  user: string;
+  inputMint: string;
+  outputMint: string;
+  inputAmount: string;
+  outputAmount: string;
+  timestamp: number;
+};
+
+export type LiquidityEvent = {
+  pool: string;
+  user: string;
+  type: "add" | "remove";
+  amountA: string;
+  amountB: string;
+  timestamp: number;
+};
+
+export type PriceUpdateEvent = {
+  pool: string;
+  priceA: number;
+  priceB: number;
+  timestamp: number;
+};
+
 export class VertigoAPI {
   private baseUrl: string;
   private network: Network;
-  private cache: Map<string, { data: any; timestamp: number }> = new Map();
+  private cache: Map<string, { data: unknown; timestamp: number }> = new Map();
   private cacheTtl: number = 60000; // 1 minute default
 
   constructor(network: Network = "mainnet", customUrl?: string) {
@@ -75,13 +101,16 @@ export class VertigoAPI {
   /**
    * Fetch with caching
    */
-  private async fetchWithCache<T>(endpoint: string, options?: RequestInit): Promise<T> {
+  private async fetchWithCache<T>(
+    endpoint: string,
+    options?: RequestInit,
+  ): Promise<T> {
     const cacheKey = `${endpoint}:${JSON.stringify(options?.body || {})}`;
-    
+
     // Check cache
     const cached = this.cache.get(cacheKey);
     if (cached && Date.now() - cached.timestamp < this.cacheTtl) {
-      return cached.data;
+      return cached.data as T;
     }
 
     // Fetch from API
@@ -99,29 +128,32 @@ export class VertigoAPI {
     }
 
     const data = await response.json();
-    
+
     // Update cache
     this.cache.set(cacheKey, { data, timestamp: Date.now() });
-    
-    return data;
+
+    return data as T;
   }
 
   /**
    * Get pool statistics
    */
   async getPoolStats(poolAddress: string | PublicKey): Promise<PoolStats> {
-    const address = typeof poolAddress === "string" ? poolAddress : poolAddress.toBase58();
+    const address =
+      typeof poolAddress === "string" ? poolAddress : poolAddress.toBase58();
     return this.fetchWithCache<PoolStats>(`/pools/${address}/stats`);
   }
 
   /**
    * Get multiple pool statistics
    */
-  async getMultiplePoolStats(poolAddresses: (string | PublicKey)[]): Promise<PoolStats[]> {
-    const addresses = poolAddresses.map(addr => 
-      typeof addr === "string" ? addr : addr.toBase58()
+  async getMultiplePoolStats(
+    poolAddresses: (string | PublicKey)[],
+  ): Promise<PoolStats[]> {
+    const addresses = poolAddresses.map((addr) =>
+      typeof addr === "string" ? addr : addr.toBase58(),
     );
-    
+
     return this.fetchWithCache<PoolStats[]>("/pools/stats", {
       method: "POST",
       body: JSON.stringify({ addresses }),
@@ -138,15 +170,21 @@ export class VertigoAPI {
       sortBy?: "tvl" | "volume24h" | "apy";
       limit?: number;
       offset?: number;
-    }
+    },
   ): Promise<PoolStats[]> {
     const params = new URLSearchParams();
-    
+
     if (mintA) {
-      params.append("mintA", typeof mintA === "string" ? mintA : mintA.toBase58());
+      params.append(
+        "mintA",
+        typeof mintA === "string" ? mintA : mintA.toBase58(),
+      );
     }
     if (mintB) {
-      params.append("mintB", typeof mintB === "string" ? mintB : mintB.toBase58());
+      params.append(
+        "mintB",
+        typeof mintB === "string" ? mintB : mintB.toBase58(),
+      );
     }
     if (options?.sortBy) {
       params.append("sortBy", options.sortBy);
@@ -172,18 +210,20 @@ export class VertigoAPI {
     userAddress?: string | PublicKey;
   }): Promise<SwapRoute> {
     const body = {
-      inputMint: typeof params.inputMint === "string" 
-        ? params.inputMint 
-        : params.inputMint.toBase58(),
-      outputMint: typeof params.outputMint === "string" 
-        ? params.outputMint 
-        : params.outputMint.toBase58(),
+      inputMint:
+        typeof params.inputMint === "string"
+          ? params.inputMint
+          : params.inputMint.toBase58(),
+      outputMint:
+        typeof params.outputMint === "string"
+          ? params.outputMint
+          : params.outputMint.toBase58(),
       amount: params.amount.toString(),
       slippageBps: params.slippageBps || 50,
-      userAddress: params.userAddress 
-        ? (typeof params.userAddress === "string" 
-          ? params.userAddress 
-          : params.userAddress.toBase58())
+      userAddress: params.userAddress
+        ? typeof params.userAddress === "string"
+          ? params.userAddress
+          : params.userAddress.toBase58()
         : undefined,
     };
 
@@ -204,11 +244,13 @@ export class VertigoAPI {
   /**
    * Get multiple token information
    */
-  async getMultipleTokenInfo(mints: (string | PublicKey)[]): Promise<TokenInfo[]> {
-    const addresses = mints.map(mint => 
-      typeof mint === "string" ? mint : mint.toBase58()
+  async getMultipleTokenInfo(
+    mints: (string | PublicKey)[],
+  ): Promise<TokenInfo[]> {
+    const addresses = mints.map((mint) =>
+      typeof mint === "string" ? mint : mint.toBase58(),
     );
-    
+
     return this.fetchWithCache<TokenInfo[]>("/tokens", {
       method: "POST",
       body: JSON.stringify({ mints: addresses }),
@@ -228,19 +270,24 @@ export class VertigoAPI {
   async getPriceHistory(
     poolAddress: string | PublicKey,
     interval: "5m" | "1h" | "4h" | "1d" | "1w" = "1h",
-    limit: number = 100
-  ): Promise<Array<{
-    timestamp: number;
-    price: number;
-    volume: number;
-  }>> {
-    const address = typeof poolAddress === "string" ? poolAddress : poolAddress.toBase58();
+    limit: number = 100,
+  ): Promise<
+    Array<{
+      timestamp: number;
+      price: number;
+      volume: number;
+    }>
+  > {
+    const address =
+      typeof poolAddress === "string" ? poolAddress : poolAddress.toBase58();
     const params = new URLSearchParams({
       interval,
       limit: limit.toString(),
     });
 
-    return this.fetchWithCache(`/pools/${address}/history?${params.toString()}`);
+    return this.fetchWithCache(
+      `/pools/${address}/history?${params.toString()}`,
+    );
   }
 
   /**
@@ -252,21 +299,24 @@ export class VertigoAPI {
       limit?: number;
       offset?: number;
       type?: "swap" | "add" | "remove" | "all";
-    }
-  ): Promise<Array<{
-    signature: string;
-    timestamp: number;
-    type: string;
-    user: string;
-    inputMint: string;
-    outputMint: string;
-    inputAmount: string;
-    outputAmount: string;
-    fee: string;
-  }>> {
-    const address = typeof poolAddress === "string" ? poolAddress : poolAddress.toBase58();
+    },
+  ): Promise<
+    Array<{
+      signature: string;
+      timestamp: number;
+      type: string;
+      user: string;
+      inputMint: string;
+      outputMint: string;
+      inputAmount: string;
+      outputAmount: string;
+      fee: string;
+    }>
+  > {
+    const address =
+      typeof poolAddress === "string" ? poolAddress : poolAddress.toBase58();
     const params = new URLSearchParams();
-    
+
     if (options?.limit) {
       params.append("limit", options.limit.toString());
     }
@@ -277,7 +327,9 @@ export class VertigoAPI {
       params.append("type", options.type);
     }
 
-    return this.fetchWithCache(`/pools/${address}/transactions?${params.toString()}`);
+    return this.fetchWithCache(
+      `/pools/${address}/transactions?${params.toString()}`,
+    );
   }
 
   /**
@@ -298,7 +350,8 @@ export class VertigoAPI {
       valueUsd: number;
     }>;
   }> {
-    const address = typeof userAddress === "string" ? userAddress : userAddress.toBase58();
+    const address =
+      typeof userAddress === "string" ? userAddress : userAddress.toBase58();
     return this.fetchWithCache(`/users/${address}/portfolio`);
   }
 
@@ -307,7 +360,9 @@ export class VertigoAPI {
    */
   async searchTokens(query: string): Promise<TokenInfo[]> {
     const params = new URLSearchParams({ q: query });
-    return this.fetchWithCache<TokenInfo[]>(`/tokens/search?${params.toString()}`);
+    return this.fetchWithCache<TokenInfo[]>(
+      `/tokens/search?${params.toString()}`,
+    );
   }
 
   /**
@@ -315,14 +370,16 @@ export class VertigoAPI {
    */
   async getTrendingPools(
     timeframe: "1h" | "24h" | "7d" = "24h",
-    limit: number = 10
+    limit: number = 10,
   ): Promise<PoolStats[]> {
     const params = new URLSearchParams({
       timeframe,
       limit: limit.toString(),
     });
-    
-    return this.fetchWithCache<PoolStats[]>(`/pools/trending?${params.toString()}`);
+
+    return this.fetchWithCache<PoolStats[]>(
+      `/pools/trending?${params.toString()}`,
+    );
   }
 
   /**
@@ -332,7 +389,7 @@ export class VertigoAPI {
     const params = new URLSearchParams({
       limit: limit.toString(),
     });
-    
+
     return this.fetchWithCache<PoolStats[]>(`/pools/new?${params.toString()}`);
   }
 
@@ -342,20 +399,23 @@ export class VertigoAPI {
   subscribeToPool(
     poolAddress: string | PublicKey,
     callbacks: {
-      onSwap?: (data: any) => void;
-      onLiquidityChange?: (data: any) => void;
-      onPriceUpdate?: (data: any) => void;
-      onError?: (error: any) => void;
-    }
+      onSwap?: (data: SwapEvent) => void;
+      onLiquidityChange?: (data: LiquidityEvent) => void;
+      onPriceUpdate?: (data: PriceUpdateEvent) => void;
+      onError?: (error: Error) => void;
+    },
   ): () => void {
-    const address = typeof poolAddress === "string" ? poolAddress : poolAddress.toBase58();
-    const wsUrl = this.baseUrl.replace("https://", "wss://").replace("http://", "ws://");
+    const address =
+      typeof poolAddress === "string" ? poolAddress : poolAddress.toBase58();
+    const wsUrl = this.baseUrl
+      .replace("https://", "wss://")
+      .replace("http://", "ws://");
     const ws = new WebSocket(`${wsUrl}/ws/pools/${address}`);
 
     ws.onmessage = (event) => {
       try {
         const data = JSON.parse(event.data);
-        
+
         switch (data.type) {
           case "swap":
             callbacks.onSwap?.(data);
@@ -372,8 +432,8 @@ export class VertigoAPI {
       }
     };
 
-    ws.onerror = (error) => {
-      callbacks.onError?.(error);
+    ws.onerror = (event) => {
+      callbacks.onError?.(new Error(`WebSocket error: ${event.type}`));
     };
 
     // Return cleanup function

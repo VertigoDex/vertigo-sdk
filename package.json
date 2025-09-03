@@ -1,6 +1,6 @@
 {
   "name": "@vertigo/sdk",
-  "version": "2.0.0@alpha",
+  "version": "2.0.0",
   "description": "Official TypeScript SDK for the Vertigo AMM protocol on Solana",
   "homepage": "https://vertigo.so",
   "repository": {
@@ -64,8 +64,8 @@
   "license": "MIT",
   "scripts": {
     "clean": "rm -rf dist",
-    "build": "yarn clean && tsc && yarn build:esm && yarn copy-files",
-    "build:esm": "tsc --module esnext --outDir dist/esm && find dist/esm -name '*.js' -exec sh -c 'mv \"$1\" \"${1%.js}.mjs\"' _ {} \\;",
+    "build": "yarn clean && tsc --noEmit false --skipLibCheck --project tsconfig.build.json && yarn build:esm && yarn copy-files",
+    "build:esm": "tsc --module esnext --outDir dist/esm --noEmit false --skipLibCheck --project tsconfig.build.json && find dist/esm -name '*.js' -exec sh -c 'mv \"$1\" \"${1%.js}.mjs\"' _ {} \\;",
     "copy-files": "mkdir -p dist/target && cp -r target/* dist/target/",
     "dev": "tsc --watch",
     "test": "vitest run",

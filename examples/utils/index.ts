@@ -16,7 +16,7 @@ export function getFactoryPda(
   owner: PublicKey,
   mintA: PublicKey,
   nonce: number,
-  programId: PublicKey
+  programId: PublicKey,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [
@@ -25,7 +25,7 @@ export function getFactoryPda(
       mintA.toBuffer(),
       Uint8Array.from([nonce]),
     ],
-    programId
+    programId,
   );
 }
 
@@ -33,29 +33,29 @@ export function getPoolPda(
   owner: PublicKey,
   mintA: PublicKey,
   mintB: PublicKey,
-  programId: PublicKey
+  programId: PublicKey,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [Buffer.from("pool"), owner.toBuffer(), mintA.toBuffer(), mintB.toBuffer()],
-    programId
+    programId,
   );
 }
 
 export function getVaultPda(
   pool: PublicKey,
   mint: PublicKey,
-  programId: PublicKey
+  programId: PublicKey,
 ): [PublicKey, number] {
   return PublicKey.findProgramAddressSync(
     [pool.toBuffer(), mint.toBuffer()],
-    programId
+    programId,
   );
 }
 
 export async function fundSol(
   provider: anchor.AnchorProvider,
   account: PublicKey,
-  amount: number
+  amount: number,
 ) {
   await provider.connection.requestAirdrop(account, amount);
 }
@@ -63,7 +63,7 @@ export async function fundSol(
 export async function fundWsol(
   provider: anchor.AnchorProvider,
   account: PublicKey,
-  amount: number
+  amount: number,
 ): Promise<PublicKey> {
   await fundSol(provider, provider.wallet.publicKey, amount);
   return await wrapSol(
@@ -71,7 +71,7 @@ export async function fundWsol(
     amount,
     account,
     (provider.wallet as anchor.Wallet).payer,
-    null
+    null,
   );
 }
 
@@ -80,7 +80,7 @@ export async function wrapSol(
   amount: number,
   owner: PublicKey,
   payer: Keypair,
-  wsolAta: PublicKey | null
+  wsolAta: PublicKey | null,
 ): Promise<PublicKey> {
   // Get or create ATA for wSOL
   wsolAta =
@@ -89,7 +89,7 @@ export async function wrapSol(
       NATIVE_MINT,
       owner,
       false,
-      TOKEN_PROGRAM_ID
+      TOKEN_PROGRAM_ID,
     ));
 
   const instructions = [];
@@ -103,8 +103,8 @@ export async function wrapSol(
         wsolAta,
         owner,
         NATIVE_MINT,
-        TOKEN_PROGRAM_ID
-      )
+        TOKEN_PROGRAM_ID,
+      ),
     );
   }
 
@@ -115,7 +115,7 @@ export async function wrapSol(
       toPubkey: wsolAta,
       lamports: amount,
     }),
-    createSyncNativeInstruction(wsolAta, TOKEN_PROGRAM_ID)
+    createSyncNativeInstruction(wsolAta, TOKEN_PROGRAM_ID),
   );
 
   // Send transaction
@@ -128,16 +128,16 @@ export async function wrapSol(
 // Helper function to get token balance
 export async function getTokenBalance(
   provider: anchor.AnchorProvider,
-  account: PublicKey
+  account: PublicKey,
 ): Promise<anchor.BN> {
   return new anchor.BN(
-    (await provider.connection.getTokenAccountBalance(account)).value.amount
+    (await provider.connection.getTokenAccountBalance(account)).value.amount,
   );
 }
 
 export async function getTxLogs(
   provider: anchor.AnchorProvider,
-  txSignature: anchor.web3.TransactionSignature
+  txSignature: anchor.web3.TransactionSignature,
 ) {
   // Get logs for this transaction
   const txInfo = await provider.connection.getTransaction(txSignature, {
@@ -185,7 +185,7 @@ export function generateAndSaveKeypair(filePath: string): Keypair {
   fs.writeFileSync(
     absolutePath,
     JSON.stringify(Array.from(keypair.secretKey)),
-    { mode: 0o600 }
+    { mode: 0o600 },
   );
 
   console.log(`Keypair saved to: ${absolutePath}`);
@@ -200,7 +200,7 @@ export function generateAndSaveKeypair(filePath: string): Keypair {
  */
 export function loadOrGenerateKeypair(
   filePath?: string,
-  newFilePath?: string
+  newFilePath?: string,
 ): Keypair {
   try {
     // If filePath is provided, try to load the keypair
@@ -215,7 +215,7 @@ export function loadOrGenerateKeypair(
           return Keypair.fromSecretKey(Buffer.from(JSON.parse(fileContent)));
         } catch (parseError) {
           throw new Error(
-            `Invalid keypair file format at ${absolutePath}: ${parseError.message}`
+            `Invalid keypair file format at ${absolutePath}: ${parseError.message}`,
           );
         }
       }
@@ -225,7 +225,7 @@ export function loadOrGenerateKeypair(
     // Generate new keypair using newFilePath
     if (!newFilePath) {
       throw new Error(
-        "Must provide either an existing keypair file path or a path to save a new keypair"
+        "Must provide either an existing keypair file path or a path to save a new keypair",
       );
     }
 
@@ -244,7 +244,7 @@ export function loadOrGenerateKeypair(
 export function loadLocalWallet() {
   const pathToWallet = `${os.homedir()}/.config/solana/id.json`;
   const walletKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(pathToWallet, "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(pathToWallet, "utf-8"))),
   );
   const wallet = new anchor.Wallet(walletKeypair);
   return wallet;

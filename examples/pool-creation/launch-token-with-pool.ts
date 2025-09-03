@@ -1,6 +1,6 @@
 /**
  * Vertigo SDK - Launch Token with Pool
- * 
+ *
  * This example shows how to launch a new token and create a pool in one flow
  */
 
@@ -15,9 +15,9 @@ async function main() {
   // Load wallet
   const walletPath = path.join(os.homedir(), ".config/solana/id.json");
   const walletKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8"))),
   );
-  
+
   const wallet = new anchor.Wallet(walletKeypair);
 
   // Initialize SDK
@@ -72,7 +72,6 @@ async function main() {
     console.log(`- Expected output: ${quote.outputAmount.toString()} tokens`);
     console.log(`- Fee: ${quote.fee.toString()} lamports`);
     console.log(`- Price Impact: ${quote.priceImpact.toFixed(2)}%`);
-
   } catch (error) {
     console.error("Failed to launch token with pool:", error);
   }

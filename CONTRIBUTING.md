@@ -48,11 +48,13 @@ By participating in this project, you agree to abide by our Code of Conduct:
 ### Installation
 
 1. **Install dependencies**:
+
    ```bash
    yarn install
    ```
 
 2. **Build the SDK**:
+
    ```bash
    yarn build
    ```
@@ -75,6 +77,7 @@ yarn dev
 ### Branch Naming
 
 Use descriptive branch names:
+
 - `feature/add-new-swap-method`
 - `fix/pool-calculation-error`
 - `docs/update-api-reference`
@@ -83,6 +86,7 @@ Use descriptive branch names:
 ### Development Workflow
 
 1. **Create a new branch** from `main`:
+
    ```bash
    git checkout -b feature/your-feature-name
    ```
@@ -129,13 +133,13 @@ yarn test src/client/PoolClient.test.ts
 Example test structure:
 
 ```typescript
-describe('FeatureName', () => {
-  describe('methodName', () => {
-    it('should handle normal case', async () => {
+describe("FeatureName", () => {
+  describe("methodName", () => {
+    it("should handle normal case", async () => {
       // Test implementation
     });
 
-    it('should handle error case', async () => {
+    it("should handle error case", async () => {
       // Test implementation
     });
   });
@@ -157,12 +161,14 @@ describe('FeatureName', () => {
 ### Pull Request Process
 
 1. **Update your branch** with the latest changes from upstream:
+
    ```bash
    git fetch upstream
    git rebase upstream/main
    ```
 
 2. **Push your changes** to your fork:
+
    ```bash
    git push origin your-branch-name
    ```
@@ -177,19 +183,23 @@ describe('FeatureName', () => {
 
 ```markdown
 ## Description
+
 Brief description of changes
 
 ## Type of Change
+
 - [ ] Bug fix
 - [ ] New feature
 - [ ] Breaking change
 - [ ] Documentation update
 
 ## Testing
+
 - [ ] Tests pass locally
 - [ ] Added new tests for changes
 
 ## Checklist
+
 - [ ] Code follows style guidelines
 - [ ] Self-reviewed code
 - [ ] Updated documentation
@@ -243,6 +253,7 @@ type(scope): description
 ```
 
 Types:
+
 - `feat`: New feature
 - `fix`: Bug fix
 - `docs`: Documentation changes
@@ -252,6 +263,7 @@ Types:
 - `chore`: Build process or auxiliary tool changes
 
 Examples:
+
 ```bash
 feat(swap): add slippage tolerance option
 fix(pool): correct fee calculation
@@ -322,6 +334,7 @@ We especially welcome contributions in these areas:
 ## 🏆 Recognition
 
 Contributors will be:
+
 - Listed in our contributors file
 - Mentioned in release notes
 - Given credit in the documentation
