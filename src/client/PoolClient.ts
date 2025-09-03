@@ -17,6 +17,29 @@ import {
   TOKEN_2022_PROGRAM_ID,
 } from "@solana/spl-token";
 
+/**
+ * Calculate the size of a Pool account based on its structure
+ */
+const POOL_ACCOUNT_SIZE =
+  8 + // discriminator
+  1 + // enabled (bool)
+  32 + // owner (pubkey)
+  32 + // mint_a (pubkey)
+  32 + // mint_b (pubkey)
+  16 + // token_a_reserves (u128)
+  16 + // token_b_reserves (u128)
+  16 + // shift (u128)
+  8 + // royalties (u64)
+  8 + // vertigo_fees (u64)
+  1 + // bump (u8)
+  // FeeParams struct:
+  8 + // normalization_period (u64)
+  8 + // decay (f64)
+  8 + // reference (u64)
+  2 + // royalties_bps (u16)
+  1 +
+  32; // privileged_swapper (Option<Pubkey>: 1 byte for option flag + 32 bytes for pubkey)
+
 export class PoolClient {
   constructor(private client: VertigoClient) {}
 
@@ -73,6 +96,49 @@ export class PoolClient {
     } catch (error) {
       console.error("Failed to fetch pool:", error);
       return null;
+    }
+  }
+
+  /**
+   * Fetch all pools from the AMM program
+   */
+  async getAllPools(): Promise<PoolData[]> {
+    try {
+      // Use getProgramAccounts to fetch all pool accounts
+      const accounts = await this.client.connection.getProgramAccounts(
+        this.client.ammProgram.programId,
+        {
+          // Filter for pool accounts by exact size
+          filters: [
+            {
+              dataSize: POOL_ACCOUNT_SIZE,
+            },
+          ],
+        },
+      );
+
+      const pools: PoolData[] = [];
+      for (const { pubkey, account } of accounts) {
+        try {
+          // Parse the account data - this is simplified, actual parsing depends on IDL
+          // For now, return mock structure for integration tests
+          const pool = await this.getPool(pubkey);
+          if (pool) {
+            pools.push(pool);
+          }
+        } catch (err) {
+          // Skip malformed accounts
+          console.warn(
+            `Failed to parse pool account ${pubkey.toString()}:`,
+            err,
+          );
+        }
+      }
+
+      return pools;
+    } catch (error) {
+      console.error("Failed to fetch all pools:", error);
+      return [];
     }
   }
 

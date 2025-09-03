@@ -1,6 +1,6 @@
 {
   "name": "@vertigo-amm/vertigo-sdk",
-  "version": "0.1.13",
+  "version": "2.0.0",
   "description": "Official TypeScript SDK for the Vertigo AMM protocol on Solana",
   "homepage": "https://vertigo.so",
   "repository": {

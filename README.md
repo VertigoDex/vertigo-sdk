@@ -3,7 +3,7 @@
 <div align="center">
   <h3>🚀 Official TypeScript SDK for the Vertigo AMM Protocol on Solana</h3>
   <p>Build powerful DeFi applications with Vertigo's innovative AMM design</p>
-  
+
   [![npm version](https://img.shields.io/npm/v/@vertigo/sdk)](https://www.npmjs.com/package/@vertigo/sdk)
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
   [![Documentation](https://img.shields.io/badge/docs-vertigo.so-green)](https://docs.vertigo.so)
@@ -317,7 +317,6 @@ We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) f
 
 - **Discord**: [Join our community](https://discord.gg/vertigo)
 - **GitHub Issues**: [Report bugs](https://github.com/vertigo-protocol/vertigo-sdk/issues)
-- **Email**: sdk@vertigo.so
 
 ## 📄 License
 
