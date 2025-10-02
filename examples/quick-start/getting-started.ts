@@ -4,25 +4,25 @@
  * This example shows the simplest way to get started with the Vertigo SDK
  */
 
-import { Vertigo } from "@vertigo/sdk";
-import { Connection, Keypair, PublicKey } from "@solana/web3.js";
+import { Vertigo } from "../../src";
+import { Connection, PublicKey } from "@solana/web3.js";
 import { NATIVE_MINT } from "@solana/spl-token";
 
 async function main() {
-  // 1. Initialize the SDK
+  // 1. Initialize the SDK (read-only, no wallet needed)
   const vertigo = await Vertigo.load({
     connection: new Connection("https://api.mainnet-beta.solana.com"),
     network: "mainnet",
-    // wallet is optional for read-only operations
   });
 
   console.log("✅ Vertigo SDK initialized");
 
   // 2. Find pools for a token pair
-  const pools = await vertigo.pools.findPoolsByMints(
-    NATIVE_MINT, // SOL
-    new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"), // USDC
+  const USDC_MAINNET = new PublicKey(
+    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
   );
+
+  const pools = await vertigo.pools.findPoolsByMints(NATIVE_MINT, USDC_MAINNET);
 
   console.log(`Found ${pools.length} pools for SOL/USDC`);
 
@@ -30,15 +30,19 @@ async function main() {
   if (pools.length > 0) {
     const quote = await vertigo.swap.getQuote({
       inputMint: NATIVE_MINT,
-      outputMint: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
+      outputMint: USDC_MAINNET,
       amount: 1_000_000_000, // 1 SOL
       slippageBps: 50, // 0.5%
     });
 
-    console.log("Swap Quote:");
-    console.log(`- Input: ${quote.inputAmount.toString()} lamports`);
-    console.log(`- Output: ${quote.outputAmount.toString()} USDC`);
-    console.log(`- Fee: ${quote.fee.toString()} lamports`);
+    console.log("\nSwap Quote:");
+    console.log(
+      `- Input: ${(quote.inputAmount.toNumber() / 1e9).toFixed(4)} SOL`
+    );
+    console.log(
+      `- Output: ${(quote.outputAmount.toNumber() / 1e6).toFixed(2)} USDC`
+    );
+    console.log(`- Fee: ${(quote.fee.toNumber() / 1e9).toFixed(6)} SOL`);
     console.log(`- Price Impact: ${quote.priceImpact.toFixed(2)}%`);
   }
 

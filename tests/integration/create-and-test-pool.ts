@@ -52,7 +52,7 @@ async function createAndTestPool() {
 
     const connection = new Connection(
       "https://api.devnet.solana.com",
-      "confirmed",
+      "confirmed"
     );
 
     if (!process.env.DEVNET_PRIVATE_KEY) {
@@ -70,7 +70,7 @@ async function createAndTestPool() {
 
     if (balance < 0.5 * LAMPORTS_PER_SOL) {
       console.log(
-        chalk.red("\n❌ Insufficient balance (need at least 0.5 SOL)"),
+        chalk.red("\n❌ Insufficient balance (need at least 0.5 SOL)")
       );
       return;
     }
@@ -88,12 +88,12 @@ async function createAndTestPool() {
     try {
       const idl = await anchor.Program.fetchIdl(PROGRAMS.AMM, provider);
       if (idl) {
-        program = new anchor.Program(idl as any, PROGRAMS.AMM, provider);
+        program = new anchor.Program(idl as any, idl as any, provider as any);
         console.log(chalk.green("✅ AMM program loaded"));
       }
     } catch (error) {
       console.log(
-        chalk.yellow("⚠️  Could not load IDL, will use manual approach"),
+        chalk.yellow("⚠️  Could not load IDL, will use manual approach")
       );
     }
 
@@ -108,7 +108,7 @@ async function createAndTestPool() {
       9,
       undefined,
       undefined,
-      TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID
     );
     console.log(chalk.green(`✅ Token A: ${mintA.toBase58()}`));
 
@@ -120,7 +120,7 @@ async function createAndTestPool() {
       6,
       undefined,
       undefined,
-      TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID
     );
     console.log(chalk.green(`✅ Token B: ${mintB.toBase58()}`));
 
@@ -131,14 +131,14 @@ async function createAndTestPool() {
       connection,
       wallet,
       mintA,
-      wallet.publicKey,
+      wallet.publicKey
     );
 
     const tokenAccountB = await getOrCreateAssociatedTokenAccount(
       connection,
       wallet,
       mintB,
-      wallet.publicKey,
+      wallet.publicKey
     );
 
     await mintTo(
@@ -147,7 +147,7 @@ async function createAndTestPool() {
       mintA,
       tokenAccountA.address,
       wallet.publicKey,
-      1000 * 10 ** 9,
+      1000 * 10 ** 9
     );
     console.log(chalk.green("✅ Minted 1000 Token A"));
 
@@ -157,7 +157,7 @@ async function createAndTestPool() {
       mintB,
       tokenAccountB.address,
       wallet.publicKey,
-      1000 * 10 ** 6,
+      1000 * 10 ** 6
     );
     console.log(chalk.green("✅ Minted 1000 Token B"));
 
@@ -174,7 +174,7 @@ async function createAndTestPool() {
             mintA.toBuffer(),
             mintB.toBuffer(),
           ],
-          PROGRAMS.AMM,
+          PROGRAMS.AMM
         );
 
         console.log(chalk.gray(`Pool PDA: ${poolPda.toBase58()}`));
@@ -187,19 +187,19 @@ async function createAndTestPool() {
           // Derive vault addresses
           const [vaultA] = PublicKey.findProgramAddressSync(
             [Buffer.from("vault"), poolPda.toBuffer(), mintA.toBuffer()],
-            PROGRAMS.AMM,
+            PROGRAMS.AMM
           );
 
           const [vaultB] = PublicKey.findProgramAddressSync(
             [Buffer.from("vault"), poolPda.toBuffer(), mintB.toBuffer()],
-            PROGRAMS.AMM,
+            PROGRAMS.AMM
           );
 
           console.log(
-            chalk.gray(`Vault A: ${vaultA.toBase58().slice(0, 16)}...`),
+            chalk.gray(`Vault A: ${vaultA.toBase58().slice(0, 16)}...`)
           );
           console.log(
-            chalk.gray(`Vault B: ${vaultB.toBase58().slice(0, 16)}...`),
+            chalk.gray(`Vault B: ${vaultB.toBase58().slice(0, 16)}...`)
           );
 
           // Create the pool
@@ -266,14 +266,14 @@ async function createAndTestPool() {
 
             console.log(chalk.green("✅ Swap executed successfully!"));
             console.log(
-              chalk.gray(`   Transaction: ${swapTx.slice(0, 16)}...`),
+              chalk.gray(`   Transaction: ${swapTx.slice(0, 16)}...`)
             );
           } catch (txError: any) {
             console.log(chalk.red(`❌ Transaction failed: ${txError.message}`));
             if (txError.logs) {
               console.log(chalk.gray("Logs:"));
               txError.logs.forEach((log: string) =>
-                console.log(chalk.gray(`  ${log}`)),
+                console.log(chalk.gray(`  ${log}`))
               );
             }
           }
@@ -284,7 +284,7 @@ async function createAndTestPool() {
     } else {
       console.log(chalk.yellow("⚠️  Cannot create pool without proper IDL"));
       console.log(
-        chalk.gray("The program requires specific instruction encoding"),
+        chalk.gray("The program requires specific instruction encoding")
       );
 
       // Still provide the information
@@ -295,11 +295,11 @@ async function createAndTestPool() {
           mintA.toBuffer(),
           mintB.toBuffer(),
         ],
-        PROGRAMS.AMM,
+        PROGRAMS.AMM
       );
 
       console.log(
-        chalk.gray(`\nPool would be created at: ${poolPda.toBase58()}`),
+        chalk.gray(`\nPool would be created at: ${poolPda.toBase58()}`)
       );
       console.log(chalk.gray(`Token A: ${mintA.toBase58()}`));
       console.log(chalk.gray(`Token B: ${mintB.toBase58()}`));
@@ -313,10 +313,10 @@ async function createAndTestPool() {
     console.log(chalk.gray(`Token A: ${mintA.toBase58()}`));
     console.log(chalk.gray(`Token B: ${mintB.toBase58()}`));
     console.log(
-      chalk.gray(`Token Account A: ${tokenAccountA.address.toBase58()}`),
+      chalk.gray(`Token Account A: ${tokenAccountA.address.toBase58()}`)
     );
     console.log(
-      chalk.gray(`Token Account B: ${tokenAccountB.address.toBase58()}`),
+      chalk.gray(`Token Account B: ${tokenAccountB.address.toBase58()}`)
     );
 
     const [poolPda] = PublicKey.findProgramAddressSync(
@@ -326,7 +326,7 @@ async function createAndTestPool() {
         mintA.toBuffer(),
         mintB.toBuffer(),
       ],
-      PROGRAMS.AMM,
+      PROGRAMS.AMM
     );
     console.log(chalk.gray(`Pool PDA: ${poolPda.toBase58()}`));
   } catch (error: any) {

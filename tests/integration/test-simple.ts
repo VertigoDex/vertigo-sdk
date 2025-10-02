@@ -113,7 +113,7 @@ async function main() {
         );
 
         // Try to create program instance
-        const program = new anchor.Program(idl as any, ammProgramId, provider);
+        const program = new anchor.Program(idl as any, provider);
         console.log(chalk.green("✅ AMM Program instance created"));
 
         // List instructions

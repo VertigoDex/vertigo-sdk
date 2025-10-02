@@ -53,6 +53,11 @@ export type SwapQuote = {
   priceImpact: number;
   minimumReceived: anchor.BN;
   route: SwapRoute[];
+  // Legacy properties for backwards compatibility
+  amountIn: anchor.BN;
+  estimatedAmountOut: anchor.BN;
+  minimumAmountOut: anchor.BN;
+  priceImpactPct: number;
 };
 
 export type SwapRoute = {
@@ -60,6 +65,16 @@ export type SwapRoute = {
   inputMint: PublicKey;
   outputMint: PublicKey;
   fee: number;
+};
+
+export type PoolAccount = {
+  owner: PublicKey;
+  mintA: PublicKey;
+  mintB: PublicKey;
+  reserveA: anchor.BN;
+  reserveB: anchor.BN;
+  totalSupply: anchor.BN;
+  feeRate: number;
 };
 
 export type PoolData = {
@@ -74,6 +89,9 @@ export type PoolData = {
   volume24h?: anchor.BN;
   tvl?: anchor.BN;
   apy?: number;
+  // Legacy properties for backwards compatibility
+  publicKey: PublicKey;
+  account: PoolAccount;
 };
 
 export type TransactionOptions = {

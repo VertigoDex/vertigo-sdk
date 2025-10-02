@@ -56,7 +56,7 @@ Frontend integration examples
 1. **Install dependencies:**
 
 ```bash
-yarn add @vertigo/sdk @solana/web3.js @coral-xyz/anchor
+yarn add @vertigo-amm/vertigo-sdk @solana/web3.js @coral-xyz/anchor
 ```
 
 2. **Set up your wallet:**
