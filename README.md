@@ -4,7 +4,7 @@
   <h3>🚀 Official TypeScript SDK for the Vertigo AMM Protocol on Solana</h3>
   <p>Build powerful DeFi applications with Vertigo's innovative AMM design</p>
 
-  [![npm version](https://img.shields.io/npm/v/@vertigo/sdk)](https://www.npmjs.com/package/@vertigo/sdk)
+  [![npm version](https://img.shields.io/npm/v/@vertigo-amm/vertigo-sdk)](https://www.npmjs.com/package/@vertigo-amm/vertigo-sdk)
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
   [![Documentation](https://img.shields.io/badge/docs-vertigo.so-green)](https://docs.vertigo.so)
 </div>
@@ -23,11 +23,11 @@
 ## 📦 Installation
 
 ```bash
-yarn add @vertigo/sdk
+yarn add @vertigo-amm/vertigo-sdk
 # or
-npm install @vertigo/sdk
+npm install @vertigo-amm/vertigo-sdk
 # or
-bun install @vertigo/sdk
+bun install @vertigo-amm/vertigo-sdk
 ```
 
 ## 🚀 Quick Start
@@ -35,7 +35,7 @@ bun install @vertigo/sdk
 ### Basic Usage (Read-Only)
 
 ```typescript
-import { Vertigo } from "@vertigo/sdk";
+import { Vertigo } from "@vertigo-amm/vertigo-sdk";
 import { Connection } from "@solana/web3.js";
 
 // Initialize SDK without wallet (read-only)
@@ -59,7 +59,7 @@ const quote = await vertigo.swap.getQuote({
 ### With Wallet (Full Features)
 
 ```typescript
-import { Vertigo } from "@vertigo/sdk";
+import { Vertigo } from "@vertigo-amm/vertigo-sdk";
 import { Connection, Keypair } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 
@@ -151,7 +151,7 @@ const result = await vertigo.swap.swap({
 Advanced pool management for authorized users:
 
 ```typescript
-import { PoolAuthority } from "@vertigo/sdk";
+import { PoolAuthority } from "@vertigo-amm/vertigo-sdk";
 
 // Initialize Pool Authority client
 const poolAuth = await PoolAuthority.load({
@@ -195,7 +195,7 @@ import {
   estimatePriorityFee,
   retry,
   getExplorerUrl,
-} from "@vertigo/sdk";
+} from "@vertigo-amm/vertigo-sdk";
 
 // Format token amounts
 const formatted = formatTokenAmount(amount, decimals, 4);
@@ -286,11 +286,11 @@ import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
 const sdk = new VertigoSDK(provider);
 
 // New (v2)
-import { Vertigo } from "@vertigo/sdk";
+import { Vertigo } from "@vertigo-amm/vertigo-sdk";
 const vertigo = await Vertigo.load({ connection, wallet });
 
 // The old SDK is still available for backwards compatibility
-import { VertigoSDK } from "@vertigo/sdk";
+import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
 ```
 
 ## 🔗 Network Support

@@ -4,19 +4,26 @@
  * This example shows how to connect a wallet and execute swaps
  */
 
-import { Vertigo } from "@vertigo/sdk";
+import { Vertigo } from "../../src";
 import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 import { NATIVE_MINT } from "@solana/spl-token";
-import fs from "fs";
-import os from "os";
-import path from "path";
+import * as fs from "fs";
+import * as os from "os";
+import * as path from "path";
 
 async function main() {
   // 1. Load wallet from file (or use wallet adapter in browser)
   const walletPath = path.join(os.homedir(), ".config/solana/id.json");
+
+  if (!fs.existsSync(walletPath)) {
+    console.error(`Wallet not found at ${walletPath}`);
+    console.log("Please create a wallet using: solana-keygen new");
+    process.exit(1);
+  }
+
   const walletKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8"))),
+    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")))
   );
 
   const wallet = new anchor.Wallet(walletKeypair);
@@ -26,77 +33,90 @@ async function main() {
     connection: new Connection("https://api.devnet.solana.com"),
     wallet,
     network: "devnet",
-    priority: {
-      autoFee: true, // Automatically calculate priority fees
-    },
   });
 
   console.log(
     "✅ Vertigo SDK initialized with wallet:",
-    wallet.publicKey.toBase58(),
+    wallet.publicKey.toBase58()
   );
 
-  // 3. Execute a swap
+  // 3. Get wallet balance
+  const balance = await vertigo.connection.getBalance(wallet.publicKey);
+  console.log(`Wallet balance: ${(balance / 1e9).toFixed(4)} SOL`);
+
+  if (balance === 0) {
+    console.log("\n⚠️  Wallet has no SOL. Request airdrop with:");
+    console.log(`solana airdrop 2 ${wallet.publicKey.toBase58()} --url devnet`);
+    process.exit(0);
+  }
+
+  // 4. Example: Get swap quote
   const USDC_DEVNET = new PublicKey(
-    "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
+    "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
   );
 
   try {
-    // First, simulate the swap
-    const simulation = await vertigo.swap.simulateSwap({
+    console.log("\n💱 Getting swap quote for 0.1 SOL -> USDC...");
+
+    const quote = await vertigo.swap.getQuote({
       inputMint: NATIVE_MINT,
       outputMint: USDC_DEVNET,
       amount: 100_000_000, // 0.1 SOL
+      slippageBps: 100, // 1% slippage
+    });
+
+    console.log(
+      `Expected output: ${(quote.outputAmount.toNumber() / 1e6).toFixed(
+        2
+      )} USDC`
+    );
+    console.log(
+      `Minimum received: ${(quote.minimumReceived.toNumber() / 1e6).toFixed(
+        2
+      )} USDC`
+    );
+    console.log(`Price impact: ${quote.priceImpact.toFixed(4)}%`);
+
+    // 5. Simulate the swap
+    console.log("\n🔍 Simulating swap...");
+    const simulation = await vertigo.swap.simulateSwap({
+      inputMint: NATIVE_MINT,
+      outputMint: USDC_DEVNET,
+      amount: 100_000_000,
       options: {
-        slippageBps: 100, // 1% slippage
-        wrapSol: true, // Auto-wrap SOL
-        unwrapSol: false,
+        slippageBps: 100,
+        wrapSol: true,
       },
     });
 
     if (simulation.success) {
+      console.log("✅ Simulation successful!");
+      console.log("\nTo execute the swap, uncomment the code below:");
+      console.log("/*");
+      console.log("const result = await vertigo.swap.swap({");
+      console.log("  inputMint: NATIVE_MINT,");
+      console.log("  outputMint: USDC_DEVNET,");
+      console.log("  amount: 100_000_000,");
       console.log(
-        `Simulation successful! Expected output: ${simulation.outputAmount?.toString()}`,
+        "  options: { slippageBps: 100, wrapSol: true, priorityFee: 'auto' }"
       );
-
-      // Execute the actual swap
-      const result = await vertigo.swap.swap({
-        inputMint: NATIVE_MINT,
-        outputMint: USDC_DEVNET,
-        amount: 100_000_000,
-        options: {
-          slippageBps: 100,
-          wrapSol: true,
-          priorityFee: "auto", // Use automatic priority fee
-        },
-      });
-
-      console.log("✅ Swap executed successfully!");
-      console.log(`Transaction: ${result.signature}`);
-      console.log(`Input: ${result.inputAmount.toString()} lamports`);
-      console.log(`Output: ${result.outputAmount.toString()} USDC`);
+      console.log("});");
+      console.log("console.log(`Swap successful: ${result.signature}`);");
+      console.log("*/");
     } else {
       console.log("❌ Simulation failed:", simulation.error);
     }
   } catch (error) {
-    console.error("Failed to execute swap:", error);
+    console.error(
+      "Failed to get quote:",
+      error instanceof Error ? error.message : error
+    );
   }
 
-  // 4. Create a new pool
-  try {
-    const { signature, poolAddress } = await vertigo.pools.createPool({
-      mintA: NATIVE_MINT,
-      mintB: USDC_DEVNET,
-      initialMarketCap: 10_000_000_000, // 10 SOL initial market cap
-      royaltiesBps: 100, // 1% royalties
-    });
-
-    console.log("✅ Pool created successfully!");
-    console.log(`Transaction: ${signature}`);
-    console.log(`Pool Address: ${poolAddress.toBase58()}`);
-  } catch (error) {
-    console.error("Failed to create pool:", error);
-  }
+  // 6. Get all pools
+  console.log("\n🏊 Fetching pools...");
+  const allPools = await vertigo.pools.getAllPools();
+  console.log(`Found ${allPools.length} pools on ${vertigo.network}`);
 }
 
 main().catch(console.error);

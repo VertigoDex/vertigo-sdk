@@ -1,4 +1,4 @@
-import { vi } from "vitest";
+import { afterEach, vi } from "vitest";
 import dotenv from "dotenv";
 
 // Load environment variables

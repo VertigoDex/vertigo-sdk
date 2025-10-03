@@ -15,7 +15,7 @@ yarn add @vertigo-amm/vertigo-sdk
 **v2:**
 
 ```bash
-yarn add @vertigo/sdk
+yarn add @vertigo-amm/vertigo-sdk
 ```
 
 ### Import Changes
@@ -31,13 +31,13 @@ import { SDKConfig } from "@vertigo-amm/vertigo-sdk";
 
 ```typescript
 // New recommended approach
-import { Vertigo } from "@vertigo/sdk";
+import { Vertigo } from "@vertigo-amm/vertigo-sdk";
 
 // Or use specific clients
-import { VertigoClient, PoolClient, SwapClient } from "@vertigo/sdk";
+import { VertigoClient, PoolClient, SwapClient } from "@vertigo-amm/vertigo-sdk";
 
 // Legacy SDK still available for gradual migration
-import { VertigoSDK } from "@vertigo/sdk";
+import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
 ```
 
 ## 🔄 Initialization Changes
@@ -60,7 +60,7 @@ const sdk = new VertigoSDK(provider, {
 **v2:**
 
 ```typescript
-import { Vertigo } from "@vertigo/sdk";
+import { Vertigo } from "@vertigo-amm/vertigo-sdk";
 
 // Simple initialization
 const vertigo = await Vertigo.load({
@@ -386,7 +386,7 @@ import {
   retry,
   getExplorerUrl,
   sendTransactionWithRetry,
-} from "@vertigo/sdk";
+} from "@vertigo-amm/vertigo-sdk";
 
 // Rich utility functions
 const formatted = formatTokenAmount(amount, decimals);
@@ -469,13 +469,13 @@ The v2 SDK includes the legacy `VertigoSDK` class for backwards compatibility:
 
 ```typescript
 // Step 1: Update package
-yarn add @vertigo/sdk
+yarn add @vertigo-amm/vertigo-sdk
 
 // Step 2: Update imports (SDK still works the same)
-import { VertigoSDK } from "@vertigo/sdk";
+import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
 
 // Step 3: Gradually migrate to new API
-import { Vertigo } from "@vertigo/sdk";
+import { Vertigo } from "@vertigo-amm/vertigo-sdk";
 const vertigo = await Vertigo.load({...});
 ```
 

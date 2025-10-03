@@ -2,6 +2,7 @@
 export { VertigoClient } from "./client/VertigoClient";
 export { PoolClient } from "./client/PoolClient";
 export { SwapClient } from "./client/SwapClient";
+export { FactoryClient } from "./client/FactoryClient";
 export {
   RelayClient,
   type RelayConfig,
@@ -47,7 +48,7 @@ export const Vertigo = {
  * Import separately to avoid confusion for normal users
  *
  * @example
- * import { PoolAuthority } from '@vertigo/sdk';
+ * import { PoolAuthority } from '@vertigo-amm/vertigo-sdk';
  * const poolAuth = await PoolAuthority.load({ connection, wallet });
  */
 export const PoolAuthority = {
@@ -55,4 +56,4 @@ export const PoolAuthority = {
 };
 
 // Version export
-export const VERSION = "2.0.0";
+export const VERSION = "2.0.1";

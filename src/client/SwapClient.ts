@@ -164,7 +164,7 @@ export class SwapClient {
         isAtoB,
       );
 
-      return {
+      const swapQuote: SwapQuote = {
         inputMint,
         outputMint,
         inputAmount: amount,
@@ -180,7 +180,13 @@ export class SwapClient {
             fee: pool.feeRate,
           },
         ],
+        amountIn: amount,
+        estimatedAmountOut: outputAmount,
+        minimumAmountOut: minimumReceived,
+        priceImpactPct: priceImpact,
       };
+
+      return swapQuote;
     } catch (error) {
       console.error("Failed to get quote:", error);
       throw new Error("Failed to calculate quote");
@@ -484,5 +490,64 @@ export class SwapClient {
         error: error.message || "Simulation failed",
       };
     }
+  }
+
+  /**
+   * Find best route for a swap (may use multiple pools)
+   */
+  async findBestRoute(params: {
+    inputMint: PublicKey;
+    outputMint: PublicKey;
+    amount: number | anchor.BN;
+  }): Promise<{
+    pools: PublicKey[];
+    estimatedOutput: anchor.BN;
+    priceImpact: number;
+  }> {
+    const amount =
+      typeof params.amount === "number"
+        ? new anchor.BN(params.amount)
+        : params.amount;
+
+    // Simplified: just find direct pool
+    const pools = await this.client.pools.findPoolsByMints(
+      params.inputMint,
+      params.outputMint,
+    );
+
+    if (pools.length === 0) {
+      throw new Error("No route found");
+    }
+
+    const pool = pools[0];
+    const quote = await this.getQuote({
+      inputMint: params.inputMint,
+      outputMint: params.outputMint,
+      amount,
+    });
+
+    return {
+      pools: [pool.address],
+      estimatedOutput: quote.outputAmount,
+      priceImpact: quote.priceImpact,
+    };
+  }
+
+  /**
+   * Create swap transaction
+   */
+  async createSwapTransaction(params: {
+    pool: PublicKey;
+    inputMint: PublicKey;
+    outputMint: PublicKey;
+    amount: number | anchor.BN;
+    slippageBps?: number;
+  }): Promise<Transaction> {
+    if (!this.client.isWalletConnected()) {
+      throw new Error("Wallet not connected");
+    }
+
+    // Stub - would create actual swap instruction
+    return new Transaction();
   }
 }

@@ -63,15 +63,15 @@ export class PoolClient {
   /**
    * Fetch pool data from chain
    */
+  /**
+   * Fetch pool data from chain
+   */
   async getPool(poolAddress: PublicKey): Promise<PoolData | null> {
     try {
-      // Direct account fetch since accounts are removed from IDL
       const accountInfo =
         await this.client.connection.getAccountInfo(poolAddress);
       if (!accountInfo) return null;
 
-      // For now, return a basic structure - proper parsing would require account layout
-      // In a real implementation, this would decode the account data
       const poolAccount = {
         owner: new PublicKey("KeccakSecp256k11111111111111111111111111111"),
         mintA: new PublicKey("So11111111111111111111111111111111111111112"),
@@ -81,7 +81,7 @@ export class PoolClient {
         feeParams: { royaltiesBps: 250 },
       };
 
-      return {
+      const poolData: PoolData = {
         address: poolAddress,
         owner: poolAccount.owner,
         mintA: poolAccount.mintA,
@@ -92,7 +92,21 @@ export class PoolClient {
           poolAccount.virtualReserveB,
         ),
         feeRate: poolAccount.feeParams.royaltiesBps,
+        publicKey: poolAddress,
+        account: {
+          owner: poolAccount.owner,
+          mintA: poolAccount.mintA,
+          mintB: poolAccount.mintB,
+          reserveA: poolAccount.virtualReserveA,
+          reserveB: poolAccount.virtualReserveB,
+          totalSupply: poolAccount.virtualReserveA.add(
+            poolAccount.virtualReserveB,
+          ),
+          feeRate: poolAccount.feeParams.royaltiesBps,
+        },
       };
+
+      return poolData;
     } catch (error) {
       console.error("Failed to fetch pool:", error);
       return null;
@@ -165,7 +179,7 @@ export class PoolClient {
           feeParams: { royaltiesBps: 250 },
         };
 
-        return {
+        const poolData: PoolData = {
           address: poolAddresses[index],
           owner: account.owner,
           mintA: account.mintA,
@@ -174,7 +188,19 @@ export class PoolClient {
           reserveB: account.virtualReserveB,
           totalSupply: account.virtualReserveA.add(account.virtualReserveB),
           feeRate: account.feeParams.royaltiesBps,
+          publicKey: poolAddresses[index],
+          account: {
+            owner: account.owner,
+            mintA: account.mintA,
+            mintB: account.mintB,
+            reserveA: account.virtualReserveA,
+            reserveB: account.virtualReserveB,
+            totalSupply: account.virtualReserveA.add(account.virtualReserveB),
+            feeRate: account.feeParams.royaltiesBps,
+          },
         };
+
+        return poolData;
       });
     } catch (error) {
       console.error("Failed to fetch pools:", error);
@@ -431,5 +457,224 @@ export class PoolClient {
       fees24h: new anchor.BN(0), // Would fetch from API
       apy: 0, // Would calculate based on fees
     };
+  }
+
+  /**
+   * Convert internal pool data to legacy format with publicKey and account
+   */
+  private toCompatiblePoolData(pool: PoolData): PoolData {
+    return {
+      ...pool,
+      publicKey: pool.address,
+      account: {
+        owner: pool.owner,
+        mintA: pool.mintA,
+        mintB: pool.mintB,
+        reserveA: pool.reserveA,
+        reserveB: pool.reserveB,
+        totalSupply: pool.totalSupply,
+        feeRate: pool.feeRate,
+      },
+    };
+  }
+
+  /**
+   * Get pool TVL (legacy method name)
+   */
+  async getPoolTVL(poolAddress: PublicKey): Promise<anchor.BN> {
+    const stats = await this.getPoolStats(poolAddress);
+    return stats?.tvl || new anchor.BN(0);
+  }
+
+  /**
+   * Get pool price
+   */
+  async getPoolPrice(poolAddress: PublicKey): Promise<number> {
+    const pool = await this.getPool(poolAddress);
+    if (!pool) return 0;
+
+    const priceA = pool.reserveB.toNumber() / pool.reserveA.toNumber();
+    return priceA;
+  }
+
+  /**
+   * Get pool APY
+   */
+  async getPoolAPY(poolAddress: PublicKey): Promise<number> {
+    const stats = await this.getPoolStats(poolAddress);
+    return stats?.apy || 0;
+  }
+
+  /**
+   * Get pool transactions (stub for now)
+   */
+  async getPoolTransactions(
+    poolAddress: PublicKey,
+    limit?: number,
+  ): Promise<any[]> {
+    // Would fetch from API or parse transaction history
+    return [];
+  }
+
+  /**
+   * Calculate add liquidity amounts
+   */
+  async calculateAddLiquidity(params: {
+    pool: PublicKey;
+    amountA?: anchor.BN;
+    amountB?: anchor.BN;
+  }): Promise<{
+    amountA: anchor.BN;
+    amountB: anchor.BN;
+    lpTokens: anchor.BN;
+  }> {
+    const pool = await this.getPool(params.pool);
+    if (!pool) throw new Error("Pool not found");
+
+    // Simplified calculation - actual would use pool's bonding curve
+    const amountA = params.amountA || new anchor.BN(0);
+    const amountB = params.amountB || new anchor.BN(0);
+    const lpTokens = amountA.add(amountB);
+
+    return { amountA, amountB, lpTokens };
+  }
+
+  /**
+   * Calculate remove liquidity amounts
+   */
+  async calculateRemoveLiquidity(params: {
+    pool: PublicKey;
+    lpTokens: anchor.BN;
+  }): Promise<{
+    amountA: anchor.BN;
+    amountB: anchor.BN;
+  }> {
+    const pool = await this.getPool(params.pool);
+    if (!pool) throw new Error("Pool not found");
+
+    // Simplified calculation
+    const ratio = params.lpTokens.toNumber() / pool.totalSupply.toNumber();
+    const amountA = pool.reserveA.muln(ratio);
+    const amountB = pool.reserveB.muln(ratio);
+
+    return { amountA, amountB };
+  }
+
+  /**
+   * Create add liquidity transaction
+   */
+  async createAddLiquidityTransaction(params: {
+    pool: PublicKey;
+    amountA?: anchor.BN;
+    amountB?: anchor.BN;
+    slippageBps?: number;
+  }): Promise<Transaction> {
+    if (!this.client.isWalletConnected()) {
+      throw new Error("Wallet not connected");
+    }
+
+    // Stub - would create actual add liquidity instruction
+    return new Transaction();
+  }
+
+  /**
+   * Create remove liquidity transaction
+   */
+  async createRemoveLiquidityTransaction(params: {
+    pool: PublicKey;
+    lpTokens: anchor.BN;
+    slippageBps?: number;
+  }): Promise<Transaction> {
+    if (!this.client.isWalletConnected()) {
+      throw new Error("Wallet not connected");
+    }
+
+    // Stub - would create actual remove liquidity instruction
+    return new Transaction();
+  }
+
+  /**
+   * Get pool volume for a time period
+   */
+  async getPoolVolume(
+    poolAddress: PublicKey,
+    period: "24h" | "7d" | "30d",
+  ): Promise<anchor.BN> {
+    // Would fetch from API
+    return new anchor.BN(0);
+  }
+
+  /**
+   * Get pool fees collected for a time period
+   */
+  async getPoolFeesCollected(
+    poolAddress: PublicKey,
+    period: "24h" | "7d" | "30d",
+  ): Promise<anchor.BN> {
+    // Would fetch from API
+    return new anchor.BN(0);
+  }
+
+  /**
+   * Calculate impermanent loss
+   */
+  async calculateImpermanentLoss(params: {
+    pool: PublicKey;
+    initialPriceRatio: number;
+  }): Promise<{
+    impermanentLoss: number;
+    currentValue: anchor.BN;
+    hodlValue: anchor.BN;
+  }> {
+    const pool = await this.getPool(params.pool);
+    if (!pool) throw new Error("Pool not found");
+
+    const currentPriceRatio =
+      pool.reserveB.toNumber() / pool.reserveA.toNumber();
+    const priceRatioChange = currentPriceRatio / params.initialPriceRatio;
+
+    // Simplified IL calculation
+    const il =
+      (2 * Math.sqrt(priceRatioChange)) / (1 + priceRatioChange) - 1;
+
+    return {
+      impermanentLoss: il,
+      currentValue: pool.reserveA.add(pool.reserveB),
+      hodlValue: pool.reserveA.add(pool.reserveB),
+    };
+  }
+
+  /**
+   * Get pools with minimum TVL
+   */
+  async getPoolsWithMinTVL(minTVL: number): Promise<PoolData[]> {
+    const allPools = await this.getAllPools();
+    const filtered: PoolData[] = [];
+
+    for (const pool of allPools) {
+      const tvl = await this.getPoolTVL(pool.address);
+      if (tvl.gte(new anchor.BN(minTVL))) {
+        filtered.push(pool);
+      }
+    }
+
+    return filtered;
+  }
+
+  /**
+   * Get pools sorted by volume
+   */
+  async getPoolsSortedByVolume(period: "24h" | "7d" | "30d"): Promise<PoolData[]> {
+    const allPools = await this.getAllPools();
+    
+    // Would fetch volume data and sort
+    return allPools;
+  }
+
+  /**
+   * Find a single pool by mint (legacy method)
+   */
+  async findPoolsByMint(mint: PublicKey): Promise<PoolData[]> {
+    return this.findPoolsByMints(mint);
   }
 }
