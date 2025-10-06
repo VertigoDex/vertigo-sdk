@@ -42,7 +42,7 @@ export class VertigoSDK {
 
   constructor(
     provider: anchor.AnchorProvider,
-    sdkConfig: SDKConfig = defaultConfig,
+    sdkConfig: SDKConfig = defaultConfig
   ) {
     try {
       this.config = new VertigoConfig(provider, sdkConfig);
@@ -54,7 +54,7 @@ export class VertigoSDK {
       throw new SDKError(
         "Failed to initialize SDK",
         SDKErrorType.InitializationError,
-        error,
+        error
       );
     }
   }
@@ -69,7 +69,7 @@ export class VertigoSDK {
   getPoolAddress(
     owner: PublicKey,
     mintA: PublicKey,
-    mintB: PublicKey,
+    mintB: PublicKey
   ): PublicKey {
     const [pool] = getPoolPda(owner, mintA, mintB, this.programId);
     return pool;
@@ -84,7 +84,7 @@ export class VertigoSDK {
    */
   async createInstruction(
     request: CreateRequest,
-    options: { createMissingAccounts?: boolean } = {},
+    options: { createMissingAccounts?: boolean } = {}
   ): Promise<TransactionInstruction[]> {
     const instructions: TransactionInstruction[] = [];
 
@@ -93,17 +93,17 @@ export class VertigoSDK {
         request.owner.publicKey,
         request.mintA,
         request.mintB,
-        this.programId,
+        this.programId
       );
 
       const [vaultA] = PublicKey.findProgramAddressSync(
         [pool.toBuffer(), request.mintA.toBuffer()],
-        this.programId,
+        this.programId
       );
 
       const [vaultB] = PublicKey.findProgramAddressSync(
         [pool.toBuffer(), request.mintB.toBuffer()],
-        this.programId,
+        this.programId
       );
 
       const createIx = await this.amm.methods
@@ -130,7 +130,7 @@ export class VertigoSDK {
       throw new SDKError(
         "Failed to build create instruction",
         SDKErrorType.TransactionError,
-        error,
+        error
       );
     }
   }
@@ -144,7 +144,7 @@ export class VertigoSDK {
    */
   async create(
     request: CreateRequest,
-    options: { createMissingAccounts?: boolean } = {},
+    options: { createMissingAccounts?: boolean } = {}
   ): Promise<string> {
     try {
       const instructions = await this.createInstruction(request, options);
@@ -165,7 +165,7 @@ export class VertigoSDK {
       throw new SDKError(
         "Failed to execute create transaction",
         SDKErrorType.TransactionError,
-        error,
+        error
       );
     }
   }
@@ -193,11 +193,11 @@ export class VertigoSDK {
       const [pool] = getPoolPda(owner, mintA, mintB, this.programId);
       const [vaultA] = PublicKey.findProgramAddressSync(
         [pool.toBuffer(), mintA.toBuffer()],
-        this.programId,
+        this.programId
       );
       const [vaultB] = PublicKey.findProgramAddressSync(
         [pool.toBuffer(), mintB.toBuffer()],
-        this.programId,
+        this.programId
       );
 
       return await this.amm.methods
@@ -208,15 +208,14 @@ export class VertigoSDK {
           owner,
           mintA,
           mintB,
-          vaultA,
-          vaultB,
+          program: this.programId,
         })
         .view();
     } catch (error) {
       throw new SDKError(
         "Failed to get buy quote",
         SDKErrorType.QuoteError,
-        error,
+        error
       );
     }
   }
@@ -244,11 +243,11 @@ export class VertigoSDK {
       const [pool] = getPoolPda(owner, mintA, mintB, this.programId);
       const [vaultA] = PublicKey.findProgramAddressSync(
         [pool.toBuffer(), mintA.toBuffer()],
-        this.programId,
+        this.programId
       );
       const [vaultB] = PublicKey.findProgramAddressSync(
         [pool.toBuffer(), mintB.toBuffer()],
-        this.programId,
+        this.programId
       );
 
       return await this.amm.methods
@@ -259,15 +258,14 @@ export class VertigoSDK {
           owner,
           mintA,
           mintB,
-          vaultA,
-          vaultB,
+          program: this.programId,
         })
         .view();
     } catch (error) {
       throw new SDKError(
         "Failed to get sell quote",
         SDKErrorType.QuoteError,
-        error,
+        error
       );
     }
   }
@@ -281,7 +279,7 @@ export class VertigoSDK {
    */
   async buyInstruction(
     request: BuyRequest,
-    options: { createMissingAccounts?: boolean } = {},
+    options: { createMissingAccounts?: boolean } = {}
   ): Promise<TransactionInstruction[]> {
     const { createMissingAccounts = false } = options;
     const instructions: TransactionInstruction[] = [];
@@ -294,7 +292,7 @@ export class VertigoSDK {
           request.mintB,
           request.user.publicKey,
           false,
-          request.tokenProgramB,
+          request.tokenProgramB
         );
 
       if (createMissingAccounts) {
@@ -305,8 +303,8 @@ export class VertigoSDK {
             userTaB,
             request.user.publicKey,
             request.mintB,
-            request.tokenProgramB,
-          ),
+            request.tokenProgramB
+          )
         );
       }
 
@@ -315,15 +313,15 @@ export class VertigoSDK {
         request.owner,
         request.mintA,
         request.mintB,
-        this.programId,
+        this.programId
       );
       const [vaultA] = PublicKey.findProgramAddressSync(
         [pool.toBuffer(), request.mintA.toBuffer()],
-        this.programId,
+        this.programId
       );
       const [vaultB] = PublicKey.findProgramAddressSync(
         [pool.toBuffer(), request.mintB.toBuffer()],
-        this.programId,
+        this.programId
       );
 
       const buyIx = await this.amm.methods
@@ -350,7 +348,7 @@ export class VertigoSDK {
       throw new SDKError(
         "Failed to build buy instruction",
         SDKErrorType.TransactionError,
-        error,
+        error
       );
     }
   }
@@ -364,7 +362,7 @@ export class VertigoSDK {
    */
   async sellInstruction(
     request: SellRequest,
-    options: { createMissingAccounts?: boolean } = {},
+    options: { createMissingAccounts?: boolean } = {}
   ): Promise<TransactionInstruction[]> {
     const { createMissingAccounts = false } = options;
     const instructions: TransactionInstruction[] = [];
@@ -377,7 +375,7 @@ export class VertigoSDK {
           request.mintA,
           request.user.publicKey,
           false,
-          request.tokenProgramA,
+          request.tokenProgramA
         );
 
       if (createMissingAccounts) {
@@ -388,8 +386,8 @@ export class VertigoSDK {
             userTaA,
             request.user.publicKey,
             request.mintA,
-            request.tokenProgramA,
-          ),
+            request.tokenProgramA
+          )
         );
       }
 
@@ -398,15 +396,15 @@ export class VertigoSDK {
         request.owner,
         request.mintA,
         request.mintB,
-        this.programId,
+        this.programId
       );
       const [vaultA] = PublicKey.findProgramAddressSync(
         [pool.toBuffer(), request.mintA.toBuffer()],
-        this.programId,
+        this.programId
       );
       const [vaultB] = PublicKey.findProgramAddressSync(
         [pool.toBuffer(), request.mintB.toBuffer()],
-        this.programId,
+        this.programId
       );
 
       const sellIx = await this.amm.methods
@@ -433,7 +431,7 @@ export class VertigoSDK {
       throw new SDKError(
         "Failed to build sell instruction",
         SDKErrorType.TransactionError,
-        error,
+        error
       );
     }
   }
@@ -447,7 +445,7 @@ export class VertigoSDK {
    */
   async buy(
     request: BuyRequest,
-    options: { createMissingAccounts?: boolean } = {},
+    options: { createMissingAccounts?: boolean } = {}
   ): Promise<string> {
     try {
       const instructions = await this.buyInstruction(request, options);
@@ -463,7 +461,7 @@ export class VertigoSDK {
       throw new SDKError(
         "Failed to execute buy transaction",
         SDKErrorType.TransactionError,
-        error,
+        error
       );
     }
   }
@@ -477,7 +475,7 @@ export class VertigoSDK {
    */
   async sell(
     request: SellRequest,
-    options: { createMissingAccounts?: boolean } = {},
+    options: { createMissingAccounts?: boolean } = {}
   ): Promise<string> {
     try {
       const instructions = await this.sellInstruction(request, options);
@@ -493,7 +491,7 @@ export class VertigoSDK {
       throw new SDKError(
         "Failed to execute sell transaction",
         SDKErrorType.TransactionError,
-        error,
+        error
       );
     }
   }
@@ -507,7 +505,7 @@ export class VertigoSDK {
    */
   async claimInstruction(
     request: ClaimRequest,
-    options: { unwrap?: boolean } = {},
+    options: { unwrap?: boolean } = {}
   ): Promise<{
     instructions: TransactionInstruction[];
     signers: Keypair[];
@@ -531,7 +529,7 @@ export class VertigoSDK {
 
       const rent =
         await this.config.provider.connection.getMinimumBalanceForRentExemption(
-          165,
+          165
         );
 
       instructions.push(
@@ -545,8 +543,8 @@ export class VertigoSDK {
         createInitializeAccountInstruction(
           tempAcct.publicKey,
           NATIVE_MINT,
-          request.claimer.publicKey,
-        ),
+          request.claimer.publicKey
+        )
       );
 
       claimTargetTa = tempAcct.publicKey;
@@ -555,7 +553,7 @@ export class VertigoSDK {
     // the actual claim
     const [vaultA] = PublicKey.findProgramAddressSync(
       [request.pool.toBuffer(), request.mintA.toBuffer()],
-      this.programId,
+      this.programId
     );
 
     const claimIx = await this.amm.methods
@@ -584,7 +582,7 @@ export class VertigoSDK {
       ) {
         throw new SDKError(
           "Failed to get receiver account info",
-          SDKErrorType.TransactionError,
+          SDKErrorType.TransactionError
         );
       }
 
@@ -594,8 +592,8 @@ export class VertigoSDK {
         createCloseAccountInstruction(
           tempAcct.publicKey,
           new PublicKey(receiverOwner),
-          request.claimer.publicKey,
-        ),
+          request.claimer.publicKey
+        )
       );
     }
 
@@ -611,12 +609,12 @@ export class VertigoSDK {
    */
   async claim(
     request: ClaimRequest,
-    options: { unwrap?: boolean } = {},
+    options: { unwrap?: boolean } = {}
   ): Promise<string> {
     try {
       const { instructions, signers } = await this.claimInstruction(
         request,
-        options,
+        options
       );
 
       // Create and send the transaction
@@ -626,7 +624,7 @@ export class VertigoSDK {
 
       const signature = await this.config.provider.sendAndConfirm(
         tx,
-        allSigners,
+        allSigners
       );
 
       this.config.logTx(signature, "Claim");
@@ -635,7 +633,7 @@ export class VertigoSDK {
       throw new SDKError(
         "Failed to execute claim transaction",
         SDKErrorType.TransactionError,
-        error,
+        error
       );
     }
   }
