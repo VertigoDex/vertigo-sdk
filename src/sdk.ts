@@ -20,6 +20,7 @@ import {
   NATIVE_MINT,
   TOKEN_PROGRAM_ID,
 } from "@solana/spl-token";
+import ammIdlJson from "../target/idl/amm.json";
 
 import {
   BuyRequest,
@@ -47,8 +48,10 @@ export class VertigoSDK {
     try {
       this.config = new VertigoConfig(provider, sdkConfig);
 
-      const ammIdl = require("../../target/idl/amm.json");
-      this.amm = new anchor.Program<Amm>(ammIdl, this.config.provider);
+      this.amm = new anchor.Program<Amm>(
+        ammIdlJson as any,
+        this.config.provider
+      );
       this.programId = this.amm.programId;
     } catch (error) {
       throw new SDKError(
@@ -339,6 +342,7 @@ export class VertigoSDK {
           tokenProgramA: request.tokenProgramA,
           tokenProgramB: request.tokenProgramB,
           systemProgram: SystemProgram.programId,
+          program: this.programId,
         })
         .instruction();
 
@@ -422,6 +426,7 @@ export class VertigoSDK {
           tokenProgramA: request.tokenProgramA,
           tokenProgramB: request.tokenProgramB,
           systemProgram: SystemProgram.programId,
+          program: this.programId,
         })
         .instruction();
 

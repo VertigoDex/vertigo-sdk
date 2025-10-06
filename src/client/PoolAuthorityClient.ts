@@ -8,6 +8,7 @@ import {
 import { TOKEN_PROGRAM_ID, TOKEN_2022_PROGRAM_ID } from "@solana/spl-token";
 import { VERTIGO_PROGRAMS, Network } from "../core/constants";
 import type { PoolAuthority } from "../../target/types/pool_authority";
+import poolAuthorityIdlJson from "../../target/idl/pool_authority.json";
 
 export type PoolAuthorityConfig = {
   connection: Connection;
@@ -49,15 +50,14 @@ export class PoolAuthorityClient {
     // Initialize Pool Authority program
     const programId =
       config.programId || VERTIGO_PROGRAMS[this.network].POOL_AUTHORITY;
-    const idl = require("../../target/idl/pool_authority.json");
 
     // Apply the same workaround as VertigoClient for Anchor issues
-    const modifiedIdl = JSON.parse(JSON.stringify(idl));
+    const modifiedIdl = JSON.parse(JSON.stringify(poolAuthorityIdlJson));
     modifiedIdl.accounts = [];
 
     this.program = new anchor.Program<PoolAuthority>(
-      modifiedIdl,
-      this.provider,
+      modifiedIdl as any,
+      this.provider
     );
   }
 
@@ -74,7 +74,7 @@ export class PoolAuthorityClient {
   deriveAuthorityPDA(owner: PublicKey): [PublicKey, number] {
     return PublicKey.findProgramAddressSync(
       [Buffer.from("authority"), owner.toBuffer()],
-      this.program.programId,
+      this.program.programId
     );
   }
 

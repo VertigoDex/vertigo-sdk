@@ -19,6 +19,9 @@ import {
 import type { Amm } from "../../target/types/amm";
 import type { PoolAuthority } from "../../target/types/pool_authority";
 import type { PermissionedRelay } from "../../target/types/permissioned_relay";
+import ammIdlJson from "../../target/idl/amm.json";
+import poolAuthorityIdlJson from "../../target/idl/pool_authority.json";
+import permissionedRelayIdlJson from "../../target/idl/permissioned_relay.json";
 
 export class VertigoClient {
   public readonly connection: Connection;
@@ -61,7 +64,7 @@ export class VertigoClient {
     const ammProgram = this.initializeProgram<Amm>("amm", config.programs.amm);
     if (!ammProgram) {
       throw new Error(
-        "Failed to initialize AMM program - required for SDK operation",
+        "Failed to initialize AMM program - required for SDK operation"
       );
     }
     this.ammProgram = ammProgram;
@@ -69,14 +72,14 @@ export class VertigoClient {
     if (config.programs.poolAuthority) {
       this.poolAuthorityProgram = this.initializeProgram<PoolAuthority>(
         "pool_authority",
-        config.programs.poolAuthority,
+        config.programs.poolAuthority
       );
     }
 
     if (config.programs.permissionedRelay) {
       this.permissionedRelayProgram = this.initializeProgram<PermissionedRelay>(
         "permissioned_relay",
-        config.programs.permissionedRelay,
+        config.programs.permissionedRelay
       );
     }
 
@@ -94,10 +97,21 @@ export class VertigoClient {
 
   private initializeProgram<T extends anchor.Idl>(
     idlName: string,
-    programId?: PublicKey,
+    programId?: PublicKey
   ): anchor.Program<T> | undefined {
     try {
-      const idl = require(`../../target/idl/${idlName}.json`);
+      // Get the appropriate IDL based on the program name
+      const idlMap: Record<string, any> = {
+        amm: ammIdlJson,
+        pool_authority: poolAuthorityIdlJson,
+        permissioned_relay: permissionedRelayIdlJson,
+      };
+
+      const idl = idlMap[idlName];
+      if (!idl) {
+        console.warn(`No IDL found for ${idlName}`);
+        return undefined;
+      }
       // Use program ID from parameter, or from IDL metadata, or throw error
       const finalProgramId =
         programId ||
@@ -106,7 +120,7 @@ export class VertigoClient {
           : undefined);
       if (!finalProgramId) {
         console.warn(
-          `No program ID found for ${idlName}, skipping initialization`,
+          `No program ID found for ${idlName}, skipping initialization`
         );
         return undefined;
       }
@@ -141,7 +155,9 @@ export class VertigoClient {
       }
 
       console.log(
-        `Initializing ${idlName} (removed ${idl.accounts?.length || 0} accounts to work around Anchor issue)`,
+        `Initializing ${idlName} (removed ${
+          idl.accounts?.length || 0
+        } accounts to work around Anchor issue)`
       );
 
       return new anchor.Program(modifiedIdl, this.provider);
@@ -160,7 +176,7 @@ export class VertigoClient {
       config.connection ||
       new Connection(
         RPC_ENDPOINTS[network],
-        config.commitment || DEFAULT_COMMITMENT,
+        config.commitment || DEFAULT_COMMITMENT
       );
 
     const fullConfig: Required<VertigoConfig> = {
@@ -197,7 +213,7 @@ export class VertigoClient {
    * Load with custom configuration
    */
   static async loadWithConfig(
-    config: Required<VertigoConfig>,
+    config: Required<VertigoConfig>
   ): Promise<VertigoClient> {
     return new VertigoClient(config);
   }
@@ -207,7 +223,7 @@ export class VertigoClient {
    */
   static async loadReadOnly(
     connection: Connection,
-    network: Network = "mainnet",
+    network: Network = "mainnet"
   ): Promise<VertigoClient> {
     return VertigoClient.load({
       connection,
