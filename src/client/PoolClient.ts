@@ -49,13 +49,13 @@ export class PoolClient {
   getPoolAddress(
     owner: PublicKey,
     mintA: PublicKey,
-    mintB: PublicKey,
+    mintB: PublicKey
   ): PublicKey {
     const [pool] = getPoolPda(
       owner,
       mintA,
       mintB,
-      this.client.ammProgram.programId,
+      this.client.ammProgram.programId
     );
     return pool;
   }
@@ -68,8 +68,9 @@ export class PoolClient {
    */
   async getPool(poolAddress: PublicKey): Promise<PoolData | null> {
     try {
-      const accountInfo =
-        await this.client.connection.getAccountInfo(poolAddress);
+      const accountInfo = await this.client.connection.getAccountInfo(
+        poolAddress
+      );
       if (!accountInfo) return null;
 
       const poolAccount = {
@@ -89,7 +90,7 @@ export class PoolClient {
         reserveA: poolAccount.virtualReserveA,
         reserveB: poolAccount.virtualReserveB,
         totalSupply: poolAccount.virtualReserveA.add(
-          poolAccount.virtualReserveB,
+          poolAccount.virtualReserveB
         ),
         feeRate: poolAccount.feeParams.royaltiesBps,
         publicKey: poolAddress,
@@ -100,7 +101,7 @@ export class PoolClient {
           reserveA: poolAccount.virtualReserveA,
           reserveB: poolAccount.virtualReserveB,
           totalSupply: poolAccount.virtualReserveA.add(
-            poolAccount.virtualReserveB,
+            poolAccount.virtualReserveB
           ),
           feeRate: poolAccount.feeParams.royaltiesBps,
         },
@@ -128,7 +129,7 @@ export class PoolClient {
               dataSize: POOL_ACCOUNT_SIZE,
             },
           ],
-        },
+        }
       );
 
       const pools: PoolData[] = [];
@@ -144,7 +145,7 @@ export class PoolClient {
           // Skip malformed accounts
           console.warn(
             `Failed to parse pool account ${pubkey.toString()}:`,
-            err,
+            err
           );
         }
       }
@@ -162,8 +163,9 @@ export class PoolClient {
   async getPools(poolAddresses: PublicKey[]): Promise<(PoolData | null)[]> {
     try {
       // Direct account fetch since accounts are removed from IDL
-      const accountInfos =
-        await this.client.connection.getMultipleAccountsInfo(poolAddresses);
+      const accountInfos = await this.client.connection.getMultipleAccountsInfo(
+        poolAddresses
+      );
 
       return accountInfos.map((accountInfo, index) => {
         if (!accountInfo) return null;
@@ -213,7 +215,7 @@ export class PoolClient {
    */
   async findPoolsByMints(
     mintA: PublicKey,
-    mintB?: PublicKey,
+    mintB?: PublicKey
   ): Promise<PoolData[]> {
     const filters: { memcmp: { offset: number; bytes: string } }[] = [
       {
@@ -262,7 +264,7 @@ export class PoolClient {
       launchTime?: anchor.BN;
       privilegedSwapper?: PublicKey;
     },
-    options?: TransactionOptions,
+    options?: TransactionOptions
   ): Promise<{
     signature: string;
     poolAddress: PublicKey;
@@ -285,7 +287,7 @@ export class PoolClient {
       true,
       params.mintB.equals(TOKEN_2022_PROGRAM_ID)
         ? TOKEN_2022_PROGRAM_ID
-        : TOKEN_PROGRAM_ID,
+        : TOKEN_PROGRAM_ID
     );
 
     const createRequest: CreateRequest = {
@@ -322,8 +324,8 @@ export class PoolClient {
         tokenWalletB,
         tokenWalletAuthority.publicKey,
         params.mintB,
-        createRequest.tokenProgramB,
-      ),
+        createRequest.tokenProgramB
+      )
     );
 
     // Create pool instruction - simplified to avoid complex type inference
@@ -345,7 +347,7 @@ export class PoolClient {
       tx.add(
         anchor.web3.ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: options.priorityFee,
-        }),
+        })
       );
     }
 
@@ -356,13 +358,13 @@ export class PoolClient {
         skipPreflight:
           options?.skipPreflight ?? this.client.getConfig().skipPreflight,
         commitment: options?.commitment ?? this.client.getConfig().commitment,
-      },
+      }
     );
 
     const poolAddress = this.getPoolAddress(
       owner.publicKey,
       params.mintA,
-      params.mintB,
+      params.mintB
     );
 
     return {
@@ -383,16 +385,13 @@ export class PoolClient {
       royaltiesBps: number;
       useToken2022?: boolean;
     },
-    options?: TransactionOptions,
+    options?: TransactionOptions
   ): Promise<{
     signature: string;
     poolAddress: PublicKey;
     tokenMint: PublicKey;
   }> {
-    // This would integrate with the factory client
-    throw new Error(
-      "Not implemented yet - will be implemented with FactoryClient",
-    );
+    throw new Error("Not implemented yet");
   }
 
   /**
@@ -400,7 +399,7 @@ export class PoolClient {
    */
   async claimFees(
     poolAddress: PublicKey,
-    options?: TransactionOptions,
+    options?: TransactionOptions
   ): Promise<string> {
     if (!this.client.isWalletConnected()) {
       throw new Error("Wallet not connected");
@@ -426,7 +425,7 @@ export class PoolClient {
       tx.add(
         anchor.web3.ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: options.priorityFee,
-        }),
+        })
       );
     }
 
@@ -510,7 +509,7 @@ export class PoolClient {
    */
   async getPoolTransactions(
     poolAddress: PublicKey,
-    limit?: number,
+    limit?: number
   ): Promise<any[]> {
     // Would fetch from API or parse transaction history
     return [];
@@ -598,7 +597,7 @@ export class PoolClient {
    */
   async getPoolVolume(
     poolAddress: PublicKey,
-    period: "24h" | "7d" | "30d",
+    period: "24h" | "7d" | "30d"
   ): Promise<anchor.BN> {
     // Would fetch from API
     return new anchor.BN(0);
@@ -609,7 +608,7 @@ export class PoolClient {
    */
   async getPoolFeesCollected(
     poolAddress: PublicKey,
-    period: "24h" | "7d" | "30d",
+    period: "24h" | "7d" | "30d"
   ): Promise<anchor.BN> {
     // Would fetch from API
     return new anchor.BN(0);
@@ -634,8 +633,7 @@ export class PoolClient {
     const priceRatioChange = currentPriceRatio / params.initialPriceRatio;
 
     // Simplified IL calculation
-    const il =
-      (2 * Math.sqrt(priceRatioChange)) / (1 + priceRatioChange) - 1;
+    const il = (2 * Math.sqrt(priceRatioChange)) / (1 + priceRatioChange) - 1;
 
     return {
       impermanentLoss: il,
@@ -664,9 +662,11 @@ export class PoolClient {
   /**
    * Get pools sorted by volume
    */
-  async getPoolsSortedByVolume(period: "24h" | "7d" | "30d"): Promise<PoolData[]> {
+  async getPoolsSortedByVolume(
+    period: "24h" | "7d" | "30d"
+  ): Promise<PoolData[]> {
     const allPools = await this.getAllPools();
-    
+
     // Would fetch volume data and sort
     return allPools;
   }

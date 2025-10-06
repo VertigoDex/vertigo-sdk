@@ -2,7 +2,6 @@
 export { VertigoClient } from "./client/VertigoClient";
 export { PoolClient } from "./client/PoolClient";
 export { SwapClient } from "./client/SwapClient";
-export { FactoryClient } from "./client/FactoryClient";
 export {
   RelayClient,
   type RelayConfig,

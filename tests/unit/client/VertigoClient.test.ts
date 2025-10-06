@@ -57,30 +57,6 @@ vi.mock("../../../target/idl/pool_authority.json", () => ({
   },
 }));
 
-vi.mock("../../../target/idl/spl_token_factory.json", () => ({
-  default: {
-    version: "0.1.0",
-    name: "spl_token_factory",
-    instructions: [],
-    accounts: [],
-    metadata: {
-      address: "SplF11111111111111111111111111111111111111",
-    },
-  },
-}));
-
-vi.mock("../../../target/idl/token_2022_factory.json", () => ({
-  default: {
-    version: "0.1.0",
-    name: "token_2022_factory",
-    instructions: [],
-    accounts: [],
-    metadata: {
-      address: "Tok211111111111111111111111111111111111111",
-    },
-  },
-}));
-
 vi.mock("../../../target/idl/permissioned_relay.json", () => ({
   default: {
     version: "0.1.0",
@@ -105,7 +81,7 @@ describe("VertigoClient", () => {
     it("should initialize with connection only (read-only mode)", async () => {
       const client = await VertigoClient.loadReadOnly(
         mockConnection,
-        "mainnet",
+        "mainnet"
       );
 
       expect(client).toBeDefined();
@@ -170,7 +146,7 @@ describe("VertigoClient", () => {
 
     it("should initialize with custom program addresses", async () => {
       const customAmmAddress = new PublicKey(
-        "CJsLwbP1iu5DuUikHEJnLfANgKy6stB2uFgvBBHoyxwz",
+        "CJsLwbP1iu5DuUikHEJnLfANgKy6stB2uFgvBBHoyxwz"
       );
       const client = await VertigoClient.load({
         connection: mockConnection,
@@ -245,7 +221,7 @@ describe("VertigoClient", () => {
     it("should correctly check wallet connection status", async () => {
       const clientWithoutWallet = await VertigoClient.loadReadOnly(
         mockConnection,
-        "mainnet",
+        "mainnet"
       );
       expect(clientWithoutWallet.isWalletConnected()).toBe(false);
 
