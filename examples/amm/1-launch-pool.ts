@@ -7,7 +7,6 @@ import yargs from "yargs";
 import { hideBin } from "yargs/helpers";
 import { getRpcUrl, validateLaunchParams } from "../../src/utils/helpers";
 import { CreateRequest } from "../../src/types/generated/amm";
-import { DevBuyArgs } from "../../src";
 import { parseJsonOrThrow } from "../utils";
 
 const argv = yargs(hideBin(process.argv))
@@ -95,8 +94,8 @@ async function main() {
   // Load wallet from path
   const wallet = new anchor.Wallet(
     Keypair.fromSecretKey(
-      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-payer"], "utf-8"))),
-    ),
+      Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-payer"], "utf-8")))
+    )
   );
   const provider = new anchor.AnchorProvider(connection, wallet);
 
@@ -104,21 +103,21 @@ async function main() {
 
   // Load owner from path
   const owner = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-owner"], "utf-8"))),
+    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-owner"], "utf-8")))
   );
 
   // Load user from path
   const user = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8"))),
+    Buffer.from(JSON.parse(fs.readFileSync(argv["path-to-user"], "utf-8")))
   );
 
   // Load token wallet authority from path
   const tokenWalletAuthority = Keypair.fromSecretKey(
     Buffer.from(
       JSON.parse(
-        fs.readFileSync(argv["path-to-token-wallet-authority"], "utf-8"),
-      ),
-    ),
+        fs.readFileSync(argv["path-to-token-wallet-authority"], "utf-8")
+      )
+    )
   );
 
   // Read and parse pool params
@@ -130,7 +129,7 @@ async function main() {
     initialTokenBReserves: new anchor.BN(rawPoolParams.initialTokenBReserves),
     feeParams: {
       normalizationPeriod: new anchor.BN(
-        rawPoolParams.feeParams.normalizationPeriod,
+        rawPoolParams.feeParams.normalizationPeriod
       ),
       decay: rawPoolParams.feeParams.decay,
       royaltiesBps: rawPoolParams.feeParams.royaltiesBps,
@@ -146,7 +145,7 @@ async function main() {
   // Validate the converted params
   validateLaunchParams(poolParams);
 
-  const launchArgs: CreateRequest & Partial<DevBuyArgs> = {
+  const createRequest: CreateRequest = {
     params: poolParams,
     payer: wallet.payer,
     owner,
@@ -158,16 +157,14 @@ async function main() {
     tokenProgramB: new PublicKey(argv["token-program-b"]),
   };
 
-  if (argv.dev && argv.devTaA && argv.devTaB && argv.devBuyAmount) {
-    launchArgs.amount = new anchor.BN(argv.devBuyAmount);
-    launchArgs.limit = new anchor.BN(argv.devBuyAmount);
-    launchArgs.devTaA = new PublicKey(argv.devTaA);
-    launchArgs.dev = user;
-  }
+  const signature = await vertigo.create(createRequest);
+  const poolAddress = vertigo.getPoolAddress(
+    owner.publicKey,
+    createRequest.mintA,
+    createRequest.mintB
+  );
 
-  const { deploySignature, poolAddress } = await vertigo.launchPool(launchArgs);
-
-  console.log(`Transaction signature: ${deploySignature}`);
-  console.log(`Pool address: ${poolAddress}`);
+  console.log(`Transaction signature: ${signature}`);
+  console.log(`Pool address: ${poolAddress.toBase58()}`);
 }
 main();
