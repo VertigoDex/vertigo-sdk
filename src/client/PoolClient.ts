@@ -375,6 +375,7 @@ export class PoolClient {
 
   /**
    * Launch pool with token factory integration
+   * @deprecated Factory integration will be removed from the SDK. Use createPool() instead and manage token creation separately.
    */
   async launchPoolWithFactory(
     params: {
@@ -395,10 +396,28 @@ export class PoolClient {
   }
 
   /**
-   * Claim fees from a pool
+   * Claim accumulated royalty fees from a pool
+   *
+   * Claimed fees are sent to the specified destination token account (or the claimer's associated token account if not specified).
+   * The fees are always in the pool's quote token (mintA).
+   *
+   * @param poolAddress - The pool to claim fees from
+   * @param destinationAccount - Optional destination token account address where claimed fees will be sent (must be for quote token/mintA). If not provided, fees are sent to the claimer's associated token account for mintA
+   * @param options - Transaction options (priority fee, etc)
+   * @returns Transaction signature
+   *
+   * @example
+   * ```typescript
+   * // Claim fees to your own account (default)
+   * const signature = await vertigo.pools.claimFees(poolAddress);
+   *
+   * // Claim fees to a specific token account
+   * const signature = await vertigo.pools.claimFees(poolAddress, myTokenAccount);
+   * ```
    */
   async claimFees(
     poolAddress: PublicKey,
+    destinationAccount?: PublicKey,
     options?: TransactionOptions
   ): Promise<string> {
     if (!this.client.isWalletConnected()) {
@@ -410,24 +429,81 @@ export class PoolClient {
       throw new Error("Pool not found");
     }
 
-    const user = this.client.wallet!.publicKey;
+    const claimer = this.client.wallet!.publicKey;
 
-    // Simplified to avoid complex type inference
-    const ix = SystemProgram.transfer({
-      fromPubkey: user,
-      toPubkey: pool.owner,
-      lamports: 0,
-    });
+    // Get or create destination token account for mintA (quote token)
+    const receiverTaA =
+      destinationAccount ||
+      getAssociatedTokenAddressSync(
+        pool.mintA,
+        claimer,
+        false,
+        TOKEN_PROGRAM_ID
+      );
 
-    const tx = new Transaction().add(ix);
+    // Determine token program for mintA
+    let tokenProgramA = TOKEN_PROGRAM_ID;
+    try {
+      const mintInfo = await this.client.connection.getAccountInfo(pool.mintA);
+      if (
+        mintInfo?.owner.equals(
+          new PublicKey("TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb")
+        )
+      ) {
+        tokenProgramA = new PublicKey(
+          "TokenzQdBNbLqP5VEhdkAS6EPFLC1PHnBqCXEpPxuEb"
+        );
+      }
+    } catch {
+      // Default to TOKEN_PROGRAM_ID
+    }
 
+    const instructions: TransactionInstruction[] = [];
+
+    // Create destination token account if needed and not provided
+    if (!destinationAccount) {
+      instructions.push(
+        createAssociatedTokenAccountIdempotentInstruction(
+          claimer,
+          receiverTaA,
+          claimer,
+          pool.mintA,
+          tokenProgramA
+        )
+      );
+    }
+
+    // Build claim instruction
+    const [vaultA] = PublicKey.findProgramAddressSync(
+      [poolAddress.toBuffer(), pool.mintA.toBuffer()],
+      this.client.ammProgram.programId
+    );
+
+    const claimIx = await this.client.ammProgram.methods
+      .claim()
+      .accountsStrict({
+        pool: poolAddress,
+        claimer,
+        receiverTaA,
+        mintA: pool.mintA,
+        vaultA,
+        tokenProgramA,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction();
+
+    instructions.push(claimIx);
+
+    // Add priority fee if specified
     if (options?.priorityFee && options.priorityFee !== "auto") {
-      tx.add(
+      instructions.unshift(
         anchor.web3.ComputeBudgetProgram.setComputeUnitPrice({
           microLamports: options.priorityFee,
         })
       );
     }
+
+    const tx = new Transaction().add(...instructions);
 
     return await this.client.provider.sendAndConfirm(tx, [], {
       skipPreflight:
