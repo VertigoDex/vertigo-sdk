@@ -28,7 +28,7 @@ export const getOrCreateATA = async (
   mint: PublicKey,
   owner: PublicKey,
   payer: PublicKey,
-  allowOwnerOffCurve: boolean = false,
+  allowOwnerOffCurve: boolean = false
 ): Promise<{
   address: PublicKey;
   instruction?: TransactionInstruction;
@@ -39,7 +39,7 @@ export const getOrCreateATA = async (
     mint,
     owner,
     allowOwnerOffCurve,
-    tokenProgram,
+    tokenProgram
   );
 
   try {
@@ -52,7 +52,7 @@ export const getOrCreateATA = async (
       ata,
       owner,
       mint,
-      tokenProgram,
+      tokenProgram
     );
 
     return {
@@ -67,7 +67,7 @@ export const getOrCreateATA = async (
  */
 export const getTokenProgram = async (
   connection: Connection,
-  mint: PublicKey,
+  mint: PublicKey
 ): Promise<PublicKey> => {
   try {
     // Try to get mint with Token-2022 first
@@ -86,7 +86,7 @@ export const createWrappedSolAccount = async (
   connection: Connection,
   owner: PublicKey,
   amount: number | anchor.BN,
-  keypair?: Keypair,
+  keypair?: Keypair
 ): Promise<{
   account: Keypair;
   instructions: TransactionInstruction[];
@@ -98,8 +98,9 @@ export const createWrappedSolAccount = async (
   const instructions: TransactionInstruction[] = [];
 
   // Create account
-  const rentExemptBalance =
-    await connection.getMinimumBalanceForRentExemption(165);
+  const rentExemptBalance = await connection.getMinimumBalanceForRentExemption(
+    165
+  );
 
   instructions.push(
     SystemProgram.createAccount({
@@ -108,7 +109,7 @@ export const createWrappedSolAccount = async (
       lamports: rentExemptBalance + lamports,
       space: 165,
       programId: TOKEN_PROGRAM_ID,
-    }),
+    })
   );
 
   // Initialize account
@@ -117,13 +118,13 @@ export const createWrappedSolAccount = async (
       account.publicKey,
       NATIVE_MINT,
       owner,
-      TOKEN_PROGRAM_ID,
-    ),
+      TOKEN_PROGRAM_ID
+    )
   );
 
   // Sync native account
   instructions.push(
-    createSyncNativeInstruction(account.publicKey, TOKEN_PROGRAM_ID),
+    createSyncNativeInstruction(account.publicKey, TOKEN_PROGRAM_ID)
   );
 
   // Cleanup instructions
@@ -133,7 +134,7 @@ export const createWrappedSolAccount = async (
       owner,
       owner,
       [],
-      TOKEN_PROGRAM_ID,
+      TOKEN_PROGRAM_ID
     ),
   ];
 
@@ -150,7 +151,7 @@ export const createWrappedSolAccount = async (
 export const getTokenBalance = async (
   connection: Connection,
   tokenAccount: PublicKey,
-  decimals?: number,
+  decimals?: number
 ): Promise<{
   raw: anchor.BN;
   ui: number;
@@ -179,7 +180,7 @@ export const getTokenBalance = async (
  */
 export const getSolBalance = async (
   connection: Connection,
-  address: PublicKey,
+  address: PublicKey
 ): Promise<{
   raw: anchor.BN;
   ui: number;
@@ -197,7 +198,7 @@ export const getSolBalance = async (
  */
 export const getTokenMetadata = async (
   connection: Connection,
-  mint: PublicKey,
+  mint: PublicKey
 ): Promise<{
   name?: string;
   symbol?: string;
@@ -229,7 +230,7 @@ export const getTokenMetadata = async (
 export const calculateAmountWithSlippage = (
   amount: anchor.BN,
   slippageBps: number,
-  isMinimum: boolean = true,
+  isMinimum: boolean = true
 ): anchor.BN => {
   const slippageMultiplier = isMinimum
     ? 10000 - slippageBps
@@ -246,7 +247,7 @@ export const calculateAmountWithSlippage = (
 export const formatTokenAmount = (
   amount: anchor.BN | number | string,
   decimals: number,
-  displayDecimals: number = 4,
+  displayDecimals: number = 4
 ): string => {
   const value =
     typeof amount === "string" || typeof amount === "number"
@@ -270,14 +271,14 @@ export const formatTokenAmount = (
  */
 export const parseTokenAmount = (
   amount: string,
-  decimals: number,
+  decimals: number
 ): anchor.BN => {
   const parts = amount.split(".");
   const wholePart = parts[0] || "0";
   const decimalPart = (parts[1] || "").padEnd(decimals, "0").slice(0, decimals);
 
   const wholeAmount = new anchor.BN(wholePart).mul(
-    new anchor.BN(10).pow(new anchor.BN(decimals)),
+    new anchor.BN(10).pow(new anchor.BN(decimals))
   );
   const decimalAmount = new anchor.BN(decimalPart);
 
@@ -297,7 +298,7 @@ export const isNativeMint = (mint: PublicKey): boolean => {
 export const getAllTokenAccounts = async (
   connection: Connection,
   owner: PublicKey,
-  programId: PublicKey = TOKEN_PROGRAM_ID,
+  programId: PublicKey = TOKEN_PROGRAM_ID
 ): Promise<
   Array<{
     pubkey: PublicKey;
@@ -314,4 +315,45 @@ export const getAllTokenAccounts = async (
     mint: new PublicKey(account.account.data.parsed.info.mint),
     amount: new anchor.BN(account.account.data.parsed.info.tokenAmount.amount),
   }));
+};
+
+/**
+ * Token metadata configuration for creating tokens
+ */
+export type TokenMetadata = {
+  name: string;
+  symbol: string;
+  uri: string;
+};
+
+/**
+ * Creates a token metadata object with validation
+ * @param name - Token name (max 32 characters)
+ * @param symbol - Token symbol (max 10 characters)
+ * @param uri - Token metadata URI (e.g., link to off-chain JSON metadata)
+ * @returns TokenMetadata object ready to use with token factory
+ * @throws Error if validation fails
+ */
+export const createTokenMetadata = (
+  name: string,
+  symbol: string,
+  uri: string
+): TokenMetadata => {
+  if (!name || name.length > 32) {
+    throw new Error("Token name must be between 1 and 32 characters");
+  }
+
+  if (!symbol || symbol.length > 10) {
+    throw new Error("Token symbol must be between 1 and 10 characters");
+  }
+
+  if (!uri) {
+    throw new Error("Token URI is required");
+  }
+
+  return {
+    name: name.trim(),
+    symbol: symbol.trim().toUpperCase(),
+    uri: uri.trim(),
+  };
 };

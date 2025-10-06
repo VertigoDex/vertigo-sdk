@@ -195,6 +195,7 @@ import {
   estimatePriorityFee,
   retry,
   getExplorerUrl,
+  createTokenMetadata,
 } from "@vertigo-amm/vertigo-sdk";
 
 // Format token amounts
@@ -214,7 +215,43 @@ const result = await retry(() => fetchData(), { maxRetries: 3 });
 
 // Get explorer links
 const url = getExplorerUrl(signature, "mainnet", "solscan");
+
+// Create token metadata for token factories
+const metadata = createTokenMetadata(
+  "My Token",
+  "MYTKN",
+  "https://example.com/metadata.json"
+);
 ```
+
+### 🪙 Token Metadata Helper
+
+When creating tokens with the factory programs, use the `createTokenMetadata` helper for validation:
+
+```typescript
+import { createTokenMetadata } from "@vertigo-amm/vertigo-sdk";
+
+// Create and validate token metadata
+const metadata = createTokenMetadata(
+  "My Amazing Token", // name (max 32 characters)
+  "MAT",              // symbol (max 10 characters, auto-uppercased)
+  "https://example.com/token-metadata.json" // URI to off-chain metadata
+);
+
+// Use with token factory launch params
+const launchParams = {
+  token_config: metadata,
+  reference: new anchor.BN(Date.now() / 1000),
+  nonce: 0,
+};
+```
+
+The helper automatically:
+- ✅ Validates name length (1-32 characters)
+- ✅ Validates symbol length (1-10 characters)
+- ✅ Trims whitespace from all fields
+- ✅ Uppercases the symbol
+- ✅ Ensures URI is provided
 
 ## ⚙️ Advanced Configuration
 
