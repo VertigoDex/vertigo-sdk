@@ -94,7 +94,7 @@ export class VertigoSDK {
     try {
       const createIx = await this.amm.methods
         .create(request.params)
-        .accounts({
+        .accountsPartial({
           payer: request.payer.publicKey,
           owner: request.owner.publicKey,
           mintA: request.mintA,
@@ -174,7 +174,7 @@ export class VertigoSDK {
     try {
       return await this.amm.methods
         .quoteBuy(params)
-        .accounts({
+        .accountsPartial({
           user,
           owner,
           mintA,
@@ -212,7 +212,7 @@ export class VertigoSDK {
     try {
       return await this.amm.methods
         .quoteSell(params)
-        .accounts({
+        .accountsPartial({
           user,
           owner,
           mintA,
@@ -269,7 +269,7 @@ export class VertigoSDK {
       // Add the buy instruction
       const buyIx = await this.amm.methods
         .buy(request.params)
-        .accounts({
+        .accountsPartial({
           user: request.user.publicKey,
           owner: request.owner,
           mintA: request.mintA,
@@ -333,7 +333,7 @@ export class VertigoSDK {
       // Add the sell instruction
       const sellIx = await this.amm.methods
         .sell(request.params)
-        .accounts({
+        .accountsPartial({
           user: request.user.publicKey,
           owner: request.owner,
           mintA: request.mintA,
@@ -473,7 +473,7 @@ export class VertigoSDK {
     // the actual claim
     const claimIx = await this.amm.methods
       .claim()
-      .accounts({
+      .accountsPartial({
         pool: request.pool,
         claimer: request.claimer.publicKey,
         receiverTaA: claimTargetTa,
