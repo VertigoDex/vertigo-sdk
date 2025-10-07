@@ -92,38 +92,17 @@ export class VertigoSDK {
     const instructions: TransactionInstruction[] = [];
 
     try {
-      const [pool] = getPoolPda(
-        request.owner.publicKey,
-        request.mintA,
-        request.mintB,
-        this.programId
-      );
-
-      const [vaultA] = PublicKey.findProgramAddressSync(
-        [pool.toBuffer(), request.mintA.toBuffer()],
-        this.programId
-      );
-
-      const [vaultB] = PublicKey.findProgramAddressSync(
-        [pool.toBuffer(), request.mintB.toBuffer()],
-        this.programId
-      );
-
       const createIx = await this.amm.methods
         .create(request.params)
         .accounts({
           payer: request.payer.publicKey,
           owner: request.owner.publicKey,
-          pool,
           mintA: request.mintA,
           mintB: request.mintB,
-          vaultA,
-          vaultB,
           tokenWalletAuthority: request.tokenWalletAuthority.publicKey,
           tokenWalletB: request.tokenWalletB,
           tokenProgramA: request.tokenProgramA,
           tokenProgramB: request.tokenProgramB,
-          systemProgram: SystemProgram.programId,
         })
         .instruction();
 
@@ -193,25 +172,13 @@ export class VertigoSDK {
     mintB,
   }: QuoteBuyRequest): Promise<SwapResponse> {
     try {
-      const [pool] = getPoolPda(owner, mintA, mintB, this.programId);
-      const [vaultA] = PublicKey.findProgramAddressSync(
-        [pool.toBuffer(), mintA.toBuffer()],
-        this.programId
-      );
-      const [vaultB] = PublicKey.findProgramAddressSync(
-        [pool.toBuffer(), mintB.toBuffer()],
-        this.programId
-      );
-
       return await this.amm.methods
         .quoteBuy(params)
         .accounts({
-          pool,
           user,
           owner,
           mintA,
           mintB,
-          program: this.programId,
         })
         .view();
     } catch (error) {
@@ -243,25 +210,13 @@ export class VertigoSDK {
     mintB,
   }: QuoteSellRequest): Promise<SwapResponse> {
     try {
-      const [pool] = getPoolPda(owner, mintA, mintB, this.programId);
-      const [vaultA] = PublicKey.findProgramAddressSync(
-        [pool.toBuffer(), mintA.toBuffer()],
-        this.programId
-      );
-      const [vaultB] = PublicKey.findProgramAddressSync(
-        [pool.toBuffer(), mintB.toBuffer()],
-        this.programId
-      );
-
       return await this.amm.methods
         .quoteSell(params)
         .accounts({
-          pool,
           user,
           owner,
           mintA,
           mintB,
-          program: this.programId,
         })
         .view();
     } catch (error) {
@@ -312,37 +267,17 @@ export class VertigoSDK {
       }
 
       // Add the buy instruction
-      const [pool] = getPoolPda(
-        request.owner,
-        request.mintA,
-        request.mintB,
-        this.programId
-      );
-      const [vaultA] = PublicKey.findProgramAddressSync(
-        [pool.toBuffer(), request.mintA.toBuffer()],
-        this.programId
-      );
-      const [vaultB] = PublicKey.findProgramAddressSync(
-        [pool.toBuffer(), request.mintB.toBuffer()],
-        this.programId
-      );
-
       const buyIx = await this.amm.methods
         .buy(request.params)
         .accounts({
-          pool,
           user: request.user.publicKey,
           owner: request.owner,
           mintA: request.mintA,
           mintB: request.mintB,
           userTaA: request.userTaA,
           userTaB,
-          vaultA,
-          vaultB,
           tokenProgramA: request.tokenProgramA,
           tokenProgramB: request.tokenProgramB,
-          systemProgram: SystemProgram.programId,
-          program: this.programId,
         })
         .instruction();
 
@@ -396,37 +331,17 @@ export class VertigoSDK {
       }
 
       // Add the sell instruction
-      const [pool] = getPoolPda(
-        request.owner,
-        request.mintA,
-        request.mintB,
-        this.programId
-      );
-      const [vaultA] = PublicKey.findProgramAddressSync(
-        [pool.toBuffer(), request.mintA.toBuffer()],
-        this.programId
-      );
-      const [vaultB] = PublicKey.findProgramAddressSync(
-        [pool.toBuffer(), request.mintB.toBuffer()],
-        this.programId
-      );
-
       const sellIx = await this.amm.methods
         .sell(request.params)
         .accounts({
-          pool,
           user: request.user.publicKey,
           owner: request.owner,
           mintA: request.mintA,
           mintB: request.mintB,
           userTaA,
           userTaB: request.userTaB,
-          vaultA,
-          vaultB,
           tokenProgramA: request.tokenProgramA,
           tokenProgramB: request.tokenProgramB,
-          systemProgram: SystemProgram.programId,
-          program: this.programId,
         })
         .instruction();
 
@@ -556,11 +471,6 @@ export class VertigoSDK {
     }
 
     // the actual claim
-    const [vaultA] = PublicKey.findProgramAddressSync(
-      [request.pool.toBuffer(), request.mintA.toBuffer()],
-      this.programId
-    );
-
     const claimIx = await this.amm.methods
       .claim()
       .accounts({
@@ -568,9 +478,7 @@ export class VertigoSDK {
         claimer: request.claimer.publicKey,
         receiverTaA: claimTargetTa,
         mintA: request.mintA,
-        vaultA,
         tokenProgramA: request.tokenProgramA,
-        systemProgram: SystemProgram.programId,
       })
       .instruction();
     instructions.push(claimIx);
