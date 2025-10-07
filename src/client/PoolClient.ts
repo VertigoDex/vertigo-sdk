@@ -559,9 +559,10 @@ export class PoolClient {
       this.client.ammProgram.programId
     );
 
+    // @ts-expect-error - Anchor type instantiation depth issue
     const claimIx = await this.client.ammProgram.methods
       .claim()
-      .accountsPartial({
+      .accounts({
         pool: poolAddress,
         claimer,
         receiverTaA,
