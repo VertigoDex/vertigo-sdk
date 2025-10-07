@@ -73,24 +73,32 @@ export class PoolClient {
       );
       if (!accountInfo) return null;
 
-      const poolAccount = {
-        owner: new PublicKey("KeccakSecp256k11111111111111111111111111111"),
-        mintA: new PublicKey("So11111111111111111111111111111111111111112"),
-        mintB: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
-        virtualReserveA: new anchor.BN(1000000000),
-        virtualReserveB: new anchor.BN(1000000),
-        feeParams: { royaltiesBps: 250 },
-      };
+      // Decode the account data using Anchor's coder
+      const poolAccount = this.client.ammProgram.coder.accounts.decode(
+        "pool",
+        accountInfo.data
+      );
+
+      // Fetch token program IDs from mint accounts
+      const [mintAInfo, mintBInfo] = await Promise.all([
+        this.client.connection.getAccountInfo(poolAccount.mintA),
+        this.client.connection.getAccountInfo(poolAccount.mintB),
+      ]);
+
+      const tokenProgramA = mintAInfo?.owner || TOKEN_PROGRAM_ID;
+      const tokenProgramB = mintBInfo?.owner || TOKEN_PROGRAM_ID;
 
       const poolData: PoolData = {
         address: poolAddress,
         owner: poolAccount.owner,
         mintA: poolAccount.mintA,
         mintB: poolAccount.mintB,
-        reserveA: poolAccount.virtualReserveA,
-        reserveB: poolAccount.virtualReserveB,
-        totalSupply: poolAccount.virtualReserveA.add(
-          poolAccount.virtualReserveB
+        tokenProgramA,
+        tokenProgramB,
+        reserveA: new anchor.BN(poolAccount.tokenAReserves.toString()),
+        reserveB: new anchor.BN(poolAccount.tokenBReserves.toString()),
+        totalSupply: new anchor.BN(poolAccount.tokenAReserves.toString()).add(
+          new anchor.BN(poolAccount.tokenBReserves.toString())
         ),
         feeRate: poolAccount.feeParams.royaltiesBps,
         publicKey: poolAddress,
@@ -98,10 +106,10 @@ export class PoolClient {
           owner: poolAccount.owner,
           mintA: poolAccount.mintA,
           mintB: poolAccount.mintB,
-          reserveA: poolAccount.virtualReserveA,
-          reserveB: poolAccount.virtualReserveB,
-          totalSupply: poolAccount.virtualReserveA.add(
-            poolAccount.virtualReserveB
+          reserveA: new anchor.BN(poolAccount.tokenAReserves.toString()),
+          reserveB: new anchor.BN(poolAccount.tokenBReserves.toString()),
+          totalSupply: new anchor.BN(poolAccount.tokenAReserves.toString()).add(
+            new anchor.BN(poolAccount.tokenBReserves.toString())
           ),
           feeRate: poolAccount.feeParams.royaltiesBps,
         },
@@ -135,18 +143,52 @@ export class PoolClient {
       const pools: PoolData[] = [];
       for (const { pubkey, account } of accounts) {
         try {
-          // Parse the account data - this is simplified, actual parsing depends on IDL
-          // For now, return mock structure for integration tests
-          const pool = await this.getPool(pubkey);
-          if (pool) {
-            pools.push(pool);
-          }
-        } catch (err) {
-          // Skip malformed accounts
-          console.warn(
-            `Failed to parse pool account ${pubkey.toString()}:`,
-            err
+          // Try to decode the account data directly
+          const poolAccount = this.client.ammProgram.coder.accounts.decode(
+            "pool",
+            account.data
           );
+
+          // Fetch token program IDs from mint accounts
+          const [mintAInfo, mintBInfo] = await Promise.all([
+            this.client.connection.getAccountInfo(poolAccount.mintA),
+            this.client.connection.getAccountInfo(poolAccount.mintB),
+          ]);
+
+          const tokenProgramA = mintAInfo?.owner || TOKEN_PROGRAM_ID;
+          const tokenProgramB = mintBInfo?.owner || TOKEN_PROGRAM_ID;
+
+          const poolData: PoolData = {
+            address: pubkey,
+            owner: poolAccount.owner,
+            mintA: poolAccount.mintA,
+            mintB: poolAccount.mintB,
+            tokenProgramA,
+            tokenProgramB,
+            reserveA: new anchor.BN(poolAccount.tokenAReserves.toString()),
+            reserveB: new anchor.BN(poolAccount.tokenBReserves.toString()),
+            totalSupply: new anchor.BN(
+              poolAccount.tokenAReserves.toString()
+            ).add(new anchor.BN(poolAccount.tokenBReserves.toString())),
+            feeRate: poolAccount.feeParams.royaltiesBps,
+            publicKey: pubkey,
+            account: {
+              owner: poolAccount.owner,
+              mintA: poolAccount.mintA,
+              mintB: poolAccount.mintB,
+              reserveA: new anchor.BN(poolAccount.tokenAReserves.toString()),
+              reserveB: new anchor.BN(poolAccount.tokenBReserves.toString()),
+              totalSupply: new anchor.BN(
+                poolAccount.tokenAReserves.toString()
+              ).add(new anchor.BN(poolAccount.tokenBReserves.toString())),
+              feeRate: poolAccount.feeParams.royaltiesBps,
+            },
+          };
+
+          pools.push(poolData);
+        } catch (err) {
+          // Skip accounts that fail to decode (not valid pool accounts)
+          continue;
         }
       }
 
@@ -162,43 +204,81 @@ export class PoolClient {
    */
   async getPools(poolAddresses: PublicKey[]): Promise<(PoolData | null)[]> {
     try {
-      // Direct account fetch since accounts are removed from IDL
+      // Fetch all pool accounts in parallel
       const accountInfos = await this.client.connection.getMultipleAccountsInfo(
         poolAddresses
       );
 
-      return accountInfos.map((accountInfo, index) => {
+      // Decode all pool accounts
+      const poolAccounts = accountInfos.map((accountInfo) => {
         if (!accountInfo) return null;
+        try {
+          return this.client.ammProgram.coder.accounts.decode(
+            "pool",
+            accountInfo.data
+          );
+        } catch {
+          return null;
+        }
+      });
 
-        // Basic mock structure for compilation
-        // In a real implementation, this would decode the account data
-        const account = {
-          owner: new PublicKey("KeccakSecp256k11111111111111111111111111111"),
-          mintA: new PublicKey("So11111111111111111111111111111111111111112"),
-          mintB: new PublicKey("EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"),
-          virtualReserveA: new anchor.BN(1000000000),
-          virtualReserveB: new anchor.BN(1000000),
-          feeParams: { royaltiesBps: 250 },
-        };
+      // Collect all unique mint addresses to fetch token programs
+      const mintAddresses = new Set<string>();
+      poolAccounts.forEach((account) => {
+        if (account) {
+          mintAddresses.add(account.mintA.toString());
+          mintAddresses.add(account.mintB.toString());
+        }
+      });
+
+      // Fetch all mint account infos in one batch
+      const mintInfos = await this.client.connection.getMultipleAccountsInfo(
+        Array.from(mintAddresses).map((addr) => new PublicKey(addr))
+      );
+
+      // Create a map of mint address to token program
+      const mintToTokenProgram = new Map<string, PublicKey>();
+      Array.from(mintAddresses).forEach((mintAddr, index) => {
+        mintToTokenProgram.set(
+          mintAddr,
+          mintInfos[index]?.owner || TOKEN_PROGRAM_ID
+        );
+      });
+
+      return poolAccounts.map((poolAccount, index) => {
+        if (!poolAccount) return null;
+
+        const tokenProgramA =
+          mintToTokenProgram.get(poolAccount.mintA.toString()) ||
+          TOKEN_PROGRAM_ID;
+        const tokenProgramB =
+          mintToTokenProgram.get(poolAccount.mintB.toString()) ||
+          TOKEN_PROGRAM_ID;
 
         const poolData: PoolData = {
           address: poolAddresses[index],
-          owner: account.owner,
-          mintA: account.mintA,
-          mintB: account.mintB,
-          reserveA: account.virtualReserveA,
-          reserveB: account.virtualReserveB,
-          totalSupply: account.virtualReserveA.add(account.virtualReserveB),
-          feeRate: account.feeParams.royaltiesBps,
+          owner: poolAccount.owner,
+          mintA: poolAccount.mintA,
+          mintB: poolAccount.mintB,
+          tokenProgramA,
+          tokenProgramB,
+          reserveA: new anchor.BN(poolAccount.tokenAReserves.toString()),
+          reserveB: new anchor.BN(poolAccount.tokenBReserves.toString()),
+          totalSupply: new anchor.BN(poolAccount.tokenAReserves.toString()).add(
+            new anchor.BN(poolAccount.tokenBReserves.toString())
+          ),
+          feeRate: poolAccount.feeParams.royaltiesBps,
           publicKey: poolAddresses[index],
           account: {
-            owner: account.owner,
-            mintA: account.mintA,
-            mintB: account.mintB,
-            reserveA: account.virtualReserveA,
-            reserveB: account.virtualReserveB,
-            totalSupply: account.virtualReserveA.add(account.virtualReserveB),
-            feeRate: account.feeParams.royaltiesBps,
+            owner: poolAccount.owner,
+            mintA: poolAccount.mintA,
+            mintB: poolAccount.mintB,
+            reserveA: new anchor.BN(poolAccount.tokenAReserves.toString()),
+            reserveB: new anchor.BN(poolAccount.tokenBReserves.toString()),
+            totalSupply: new anchor.BN(
+              poolAccount.tokenAReserves.toString()
+            ).add(new anchor.BN(poolAccount.tokenBReserves.toString())),
+            feeRate: poolAccount.feeParams.royaltiesBps,
           },
         };
 

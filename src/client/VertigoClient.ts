@@ -42,7 +42,6 @@ export class VertigoClient {
 
   // Configuration
   private readonly config: Required<VertigoConfig>;
-  private originalAccounts?: Map<string, unknown[]>;
 
   private constructor(config: Required<VertigoConfig>) {
     this.config = config;
@@ -125,28 +124,8 @@ export class VertigoClient {
         return undefined;
       }
 
-      // Check if IDL has valid account definitions - but allow empty for workaround
-      // if (!idl.accounts || idl.accounts.length === 0) {
-      //   console.warn(`${idlName} has no account definitions, skipping initialization`);
-      //   return undefined;
-      // }
-
-      // Work around an Anchor issue with account size calculation
-      // Create a copy of the IDL and remove accounts to prevent Anchor from creating account clients
-      // We'll handle account encoding/decoding manually when needed
-      const modifiedIdl = JSON.parse(JSON.stringify(idl));
-
-      // Store original accounts for later use if needed
-      // Use a Map to store original accounts instead of dynamic property
-      if (!this.originalAccounts) {
-        this.originalAccounts = new Map();
-      }
-      this.originalAccounts.set(idlName, idl.accounts);
-
-      // Remove accounts from IDL to prevent Anchor errors
-      modifiedIdl.accounts = [];
-
       // Set the program ID in the IDL metadata if we have a finalProgramId
+      const modifiedIdl = JSON.parse(JSON.stringify(idl));
       if (finalProgramId) {
         if (!modifiedIdl.metadata) {
           modifiedIdl.metadata = {};
@@ -154,11 +133,7 @@ export class VertigoClient {
         modifiedIdl.metadata.address = finalProgramId.toBase58();
       }
 
-      console.log(
-        `Initializing ${idlName} (removed ${
-          idl.accounts?.length || 0
-        } accounts to work around Anchor issue)`
-      );
+      console.log(`Initializing ${idlName} with full IDL`);
 
       return new anchor.Program(modifiedIdl, this.provider);
     } catch (error) {

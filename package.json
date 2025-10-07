@@ -72,7 +72,7 @@
     "test:watch": "vitest watch",
     "test:coverage": "vitest run --coverage",
     "test:ui": "vitest --ui",
-    "test:integration": "vitest run tests/integration/*.integration.test.ts",
+    "test:integration": "INTEGRATION_TEST=true vitest run tests/integration/*.integration.test.ts --no-coverage",
     "test:devnet": "tsx tests/integration/test-runner.ts test",
     "test:devnet:verbose": "tsx tests/integration/test-runner.ts test --verbose",
     "test:devnet:export": "tsx tests/integration/test-runner.ts test --export test-results.json",

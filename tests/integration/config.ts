@@ -2,7 +2,7 @@ import { Connection, Keypair, PublicKey } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 
 export const DEVNET_CONFIG = {
-  RPC_ENDPOINT: "https://api.devnet.solana.com",
+  RPC_ENDPOINT: process.env.DEVNET_RPC_URL || "https://api.devnet.solana.com",
   COMMITMENT: "confirmed" as anchor.web3.Commitment,
 
   // Well-known devnet tokens for testing
@@ -45,13 +45,13 @@ export const setupConnection = (): Connection => {
 export const setupWallet = (): Keypair => {
   if (!DEVNET_CONFIG.TEST_WALLET.PRIVATE_KEY) {
     throw new Error(
-      "Please set DEVNET_PRIVATE_KEY environment variable with a base58 encoded private key",
+      "Please set DEVNET_PRIVATE_KEY environment variable with a base58 encoded private key"
     );
   }
 
   try {
     const privateKeyBytes = anchor.utils.bytes.bs58.decode(
-      DEVNET_CONFIG.TEST_WALLET.PRIVATE_KEY,
+      DEVNET_CONFIG.TEST_WALLET.PRIVATE_KEY
     );
     return Keypair.fromSecretKey(privateKeyBytes);
   } catch (error) {
@@ -62,7 +62,7 @@ export const setupWallet = (): Keypair => {
 export const waitForTransaction = async (
   connection: Connection,
   signature: string,
-  commitment: anchor.web3.Commitment = "confirmed",
+  commitment: anchor.web3.Commitment = "confirmed"
 ): Promise<void> => {
   const latestBlockhash = await connection.getLatestBlockhash();
   await connection.confirmTransaction(
@@ -71,17 +71,19 @@ export const waitForTransaction = async (
       blockhash: latestBlockhash.blockhash,
       lastValidBlockHeight: latestBlockhash.lastValidBlockHeight,
     },
-    commitment,
+    commitment
   );
 };
 
 export const fundWallet = async (
   connection: Connection,
   wallet: PublicKey,
-  lamports: number = 2 * anchor.web3.LAMPORTS_PER_SOL,
+  lamports: number = 2 * anchor.web3.LAMPORTS_PER_SOL
 ): Promise<void> => {
   console.log(
-    `Requesting airdrop of ${lamports / anchor.web3.LAMPORTS_PER_SOL} SOL to ${wallet.toBase58()}`,
+    `Requesting airdrop of ${
+      lamports / anchor.web3.LAMPORTS_PER_SOL
+    } SOL to ${wallet.toBase58()}`
   );
   const signature = await connection.requestAirdrop(wallet, lamports);
   await waitForTransaction(connection, signature);
