@@ -124,6 +124,7 @@ export class VertigoSDK {
           tokenProgramA: request.tokenProgramA,
           tokenProgramB: request.tokenProgramB,
           systemProgram: SystemProgram.programId,
+          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         })
         .instruction();
 
