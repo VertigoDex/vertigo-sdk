@@ -378,7 +378,134 @@ export class SwapClient {
     quote: SwapQuote,
     options?: SwapOptions
   ): Promise<Transaction> {
-    return this.buildSwapTransaction(quote, options);
+    if (!this.client.isWalletConnected()) {
+      throw new Error("Wallet not connected");
+    }
+
+    const user = this.client.wallet!.publicKey;
+    const instructions: TransactionInstruction[] = [];
+
+    // Handle priority fee
+    if (options?.priorityFee) {
+      const fee =
+        options.priorityFee === "auto"
+          ? await this.estimatePriorityFee()
+          : options.priorityFee;
+
+      instructions.push(
+        anchor.web3.ComputeBudgetProgram.setComputeUnitPrice({
+          microLamports: fee,
+        })
+      );
+    }
+
+    // Handle compute units
+    if (options?.computeUnits) {
+      instructions.push(
+        anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
+          units: options.computeUnits,
+        })
+      );
+    }
+
+    // Handle SOL wrapping if needed
+    let wrapAccount: Keypair | undefined;
+    if (options?.wrapSol && quote.inputMint.equals(NATIVE_MINT)) {
+      wrapAccount = Keypair.generate();
+      const wrapIxs = await this.createWrapSolInstructions(
+        user,
+        wrapAccount,
+        quote.inputAmount
+      );
+      instructions.push(...wrapIxs);
+    }
+
+    // Get or create token accounts
+    const quoteTokenAccount = getAssociatedTokenAddressSync(
+      quote.inputMint,
+      user,
+      false,
+      TOKEN_PROGRAM_ID
+    );
+
+    const baseTokenAccount = getAssociatedTokenAddressSync(
+      quote.outputMint,
+      user,
+      false,
+      TOKEN_PROGRAM_ID
+    );
+
+    // Create base token account if needed
+    instructions.push(
+      createAssociatedTokenAccountIdempotentInstruction(
+        user,
+        baseTokenAccount,
+        user,
+        quote.outputMint,
+        TOKEN_PROGRAM_ID
+      )
+    );
+
+    // Get pool info
+    const poolData = await this.client.pools.getPool(pool);
+    if (!poolData) {
+      throw new Error("Pool not found");
+    }
+
+    // Build the buy instruction
+    const [poolPda] = getPoolPda(
+      poolData.owner,
+      poolData.mintA,
+      poolData.mintB,
+      this.client.ammProgram.programId
+    );
+    const [vaultA] = PublicKey.findProgramAddressSync(
+      [poolPda.toBuffer(), poolData.mintA.toBuffer()],
+      this.client.ammProgram.programId
+    );
+    const [vaultB] = PublicKey.findProgramAddressSync(
+      [poolPda.toBuffer(), poolData.mintB.toBuffer()],
+      this.client.ammProgram.programId
+    );
+
+    const buyIx = await this.client.ammProgram.methods
+      .buy({
+        amount: quote.inputAmount,
+        limit: quote.minimumReceived,
+      })
+      .accounts({
+        pool: poolPda,
+        user,
+        owner: poolData.owner,
+        mintA: poolData.mintA,
+        mintB: poolData.mintB,
+        userTaA: quoteTokenAccount,
+        userTaB: baseTokenAccount,
+        vaultA,
+        vaultB,
+        tokenProgramA: TOKEN_PROGRAM_ID,
+        tokenProgramB: TOKEN_PROGRAM_ID,
+        systemProgram: SystemProgram.programId,
+      })
+      .instruction();
+
+    instructions.push(buyIx);
+
+    // Handle SOL unwrapping if needed
+    if (options?.unwrapSol && quote.outputMint.equals(NATIVE_MINT)) {
+      instructions.push(
+        createCloseAccountInstruction(
+          baseTokenAccount,
+          user,
+          user,
+          [],
+          TOKEN_PROGRAM_ID
+        )
+      );
+    }
+
+    const tx = new Transaction().add(...instructions);
+    return tx;
   }
 
   /**
@@ -387,17 +514,6 @@ export class SwapClient {
    */
   async buildSellTransaction(
     pool: PublicKey,
-    quote: SwapQuote,
-    options?: SwapOptions
-  ): Promise<Transaction> {
-    return this.buildSwapTransaction(quote, options);
-  }
-
-  /**
-   * Build swap transaction
-   * @deprecated Use buildBuyTransaction() or buildSellTransaction() instead to explicitly specify swap direction
-   */
-  async buildSwapTransaction(
     quote: SwapQuote,
     options?: SwapOptions
   ): Promise<Transaction> {
@@ -444,25 +560,25 @@ export class SwapClient {
     }
 
     // Get or create token accounts
-    const inputTokenAccount = getAssociatedTokenAddressSync(
+    const baseTokenAccount = getAssociatedTokenAddressSync(
       quote.inputMint,
       user,
       false,
       TOKEN_PROGRAM_ID
     );
 
-    const outputTokenAccount = getAssociatedTokenAddressSync(
+    const quoteTokenAccount = getAssociatedTokenAddressSync(
       quote.outputMint,
       user,
       false,
       TOKEN_PROGRAM_ID
     );
 
-    // Create output token account if needed
+    // Create quote token account if needed
     instructions.push(
       createAssociatedTokenAccountIdempotentInstruction(
         user,
-        outputTokenAccount,
+        quoteTokenAccount,
         user,
         quote.outputMint,
         TOKEN_PROGRAM_ID
@@ -470,47 +586,40 @@ export class SwapClient {
     );
 
     // Get pool info
-    const pool = await this.client.pools.getPool(quote.route[0].pool);
-    if (!pool) {
+    const poolData = await this.client.pools.getPool(pool);
+    if (!poolData) {
       throw new Error("Pool not found");
     }
 
-    // Determine swap direction
-    const isAtoB = pool.mintA.equals(quote.inputMint);
-
-    // Build the actual swap instruction
+    // Build the sell instruction
     const [poolPda] = getPoolPda(
-      pool.owner,
-      pool.mintA,
-      pool.mintB,
+      poolData.owner,
+      poolData.mintA,
+      poolData.mintB,
       this.client.ammProgram.programId
     );
     const [vaultA] = PublicKey.findProgramAddressSync(
-      [poolPda.toBuffer(), pool.mintA.toBuffer()],
+      [poolPda.toBuffer(), poolData.mintA.toBuffer()],
       this.client.ammProgram.programId
     );
     const [vaultB] = PublicKey.findProgramAddressSync(
-      [poolPda.toBuffer(), pool.mintB.toBuffer()],
+      [poolPda.toBuffer(), poolData.mintB.toBuffer()],
       this.client.ammProgram.programId
     );
 
-    const userTaA = isAtoB ? inputTokenAccount : outputTokenAccount;
-    const userTaB = isAtoB ? outputTokenAccount : inputTokenAccount;
-
-    const swapIx = await this.client.ammProgram.methods[
-      isAtoB ? "buy" : "sell"
-    ]({
-      amount: quote.inputAmount,
-      limit: quote.minimumReceived,
-    })
+    const sellIx = await this.client.ammProgram.methods
+      .sell({
+        amount: quote.inputAmount,
+        limit: quote.minimumReceived,
+      })
       .accounts({
         pool: poolPda,
         user,
-        owner: pool.owner,
-        mintA: pool.mintA,
-        mintB: pool.mintB,
-        userTaA,
-        userTaB,
+        owner: poolData.owner,
+        mintA: poolData.mintA,
+        mintB: poolData.mintB,
+        userTaA: quoteTokenAccount,
+        userTaB: baseTokenAccount,
         vaultA,
         vaultB,
         tokenProgramA: TOKEN_PROGRAM_ID,
@@ -519,13 +628,13 @@ export class SwapClient {
       })
       .instruction();
 
-    instructions.push(swapIx);
+    instructions.push(sellIx);
 
     // Handle SOL unwrapping if needed
     if (options?.unwrapSol && quote.outputMint.equals(NATIVE_MINT)) {
       instructions.push(
         createCloseAccountInstruction(
-          outputTokenAccount,
+          quoteTokenAccount,
           user,
           user,
           [],
@@ -536,6 +645,34 @@ export class SwapClient {
 
     const tx = new Transaction().add(...instructions);
     return tx;
+  }
+
+  /**
+   * Build swap transaction
+   * Automatically determines direction (buy or sell) and calls the appropriate method
+   */
+  async buildSwapTransaction(
+    quote: SwapQuote,
+    options?: SwapOptions
+  ): Promise<Transaction> {
+    if (!this.client.isWalletConnected()) {
+      throw new Error("Wallet not connected");
+    }
+
+    // Get pool info to determine direction
+    const pool = await this.client.pools.getPool(quote.route[0].pool);
+    if (!pool) {
+      throw new Error("Pool not found");
+    }
+
+    // Determine if this is a buy or sell based on input mint
+    const isBuy = pool.mintA.equals(quote.inputMint);
+
+    if (isBuy) {
+      return this.buildBuyTransaction(quote.route[0].pool, quote, options);
+    } else {
+      return this.buildSellTransaction(quote.route[0].pool, quote, options);
+    }
   }
 
   /**
