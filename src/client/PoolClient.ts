@@ -561,7 +561,7 @@ export class PoolClient {
 
     const claimIx = await this.client.ammProgram.methods
       .claim()
-      .accountsStrict({
+      .accounts({
         pool: poolAddress,
         claimer,
         receiverTaA,

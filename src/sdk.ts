@@ -111,7 +111,7 @@ export class VertigoSDK {
 
       const createIx = await this.amm.methods
         .create(request.params)
-        .accountsStrict({
+        .accounts({
           payer: request.payer.publicKey,
           owner: request.owner.publicKey,
           pool,
@@ -124,7 +124,6 @@ export class VertigoSDK {
           tokenProgramA: request.tokenProgramA,
           tokenProgramB: request.tokenProgramB,
           systemProgram: SystemProgram.programId,
-          rent: anchor.web3.SYSVAR_RENT_PUBKEY,
         })
         .instruction();
 
@@ -206,7 +205,7 @@ export class VertigoSDK {
 
       return await this.amm.methods
         .quoteBuy(params)
-        .accountsStrict({
+        .accounts({
           pool,
           user,
           owner,
@@ -256,7 +255,7 @@ export class VertigoSDK {
 
       return await this.amm.methods
         .quoteSell(params)
-        .accountsStrict({
+        .accounts({
           pool,
           user,
           owner,
@@ -330,7 +329,7 @@ export class VertigoSDK {
 
       const buyIx = await this.amm.methods
         .buy(request.params)
-        .accountsStrict({
+        .accounts({
           pool,
           user: request.user.publicKey,
           owner: request.owner,
@@ -414,7 +413,7 @@ export class VertigoSDK {
 
       const sellIx = await this.amm.methods
         .sell(request.params)
-        .accountsStrict({
+        .accounts({
           pool,
           user: request.user.publicKey,
           owner: request.owner,
@@ -564,7 +563,7 @@ export class VertigoSDK {
 
     const claimIx = await this.amm.methods
       .claim()
-      .accountsStrict({
+      .accounts({
         pool: request.pool,
         claimer: request.claimer.publicKey,
         receiverTaA: claimTargetTa,

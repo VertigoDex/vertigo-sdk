@@ -124,7 +124,7 @@ export class SwapClient {
       if (isAtoB) {
         result = await this.client.ammProgram.methods
           .quoteBuy({ amount, limit })
-          .accountsStrict({
+          .accounts({
             pool: poolPda,
             user,
             owner: pool.owner,
@@ -137,7 +137,7 @@ export class SwapClient {
       } else {
         result = await this.client.ammProgram.methods
           .quoteSell({ amount, limit })
-          .accountsStrict({
+          .accounts({
             pool: poolPda,
             user,
             owner: pool.owner,
@@ -503,7 +503,7 @@ export class SwapClient {
       amount: quote.inputAmount,
       limit: quote.minimumReceived,
     })
-      .accountsStrict({
+      .accounts({
         pool: poolPda,
         user,
         owner: pool.owner,
