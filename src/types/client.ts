@@ -14,10 +14,10 @@ export type WalletLike =
   | {
       publicKey: PublicKey;
       signTransaction?: <T extends Transaction | VersionedTransaction>(
-        tx: T,
+        tx: T
       ) => Promise<T>;
       signAllTransactions?: <T extends Transaction | VersionedTransaction>(
-        txs: T[],
+        txs: T[]
       ) => Promise<T[]>;
     };
 
@@ -82,6 +82,8 @@ export type PoolData = {
   owner: PublicKey;
   mintA: PublicKey;
   mintB: PublicKey;
+  tokenProgramA: PublicKey;
+  tokenProgramB: PublicKey;
   reserveA: anchor.BN;
   reserveB: anchor.BN;
   totalSupply: anchor.BN;
