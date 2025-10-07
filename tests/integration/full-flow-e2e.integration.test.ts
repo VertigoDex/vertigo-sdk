@@ -90,9 +90,14 @@ describe("End-to-End Pool Creation and Swap Flow (Devnet)", () => {
         return;
       }
 
-      const balance = await connection.getBalance(owner.publicKey);
-      if (balance < 0.5 * LAMPORTS_PER_SOL) {
-        console.warn("Skipping E2E test - insufficient balance");
+      try {
+        const balance = await connection.getBalance(owner.publicKey);
+        if (balance < 0.5 * LAMPORTS_PER_SOL) {
+          console.warn("Skipping E2E test - insufficient balance");
+          return;
+        }
+      } catch (error) {
+        console.warn("Skipping E2E test - RPC unavailable:", error);
         return;
       }
 
