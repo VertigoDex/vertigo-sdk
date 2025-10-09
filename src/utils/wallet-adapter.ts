@@ -15,10 +15,10 @@ export class WalletAdapter implements anchor.Wallet {
   public readonly payer: Keypair;
 
   private _signTransaction: <T extends Transaction | VersionedTransaction>(
-    tx: T,
+    tx: T
   ) => Promise<T>;
   private _signAllTransactions: <T extends Transaction | VersionedTransaction>(
-    txs: T[],
+    txs: T[]
   ) => Promise<T[]>;
 
   constructor(wallet: WalletLike) {
@@ -38,26 +38,26 @@ export class WalletAdapter implements anchor.Wallet {
 
       this._signTransaction =
         wallet.signTransaction ||
-        (async (tx) => {
+        (async () => {
           throw new Error("Wallet does not support signing");
         });
 
       this._signAllTransactions =
         wallet.signAllTransactions ||
-        (async (txs) => {
+        (async () => {
           throw new Error("Wallet does not support signing");
         });
     }
   }
 
   async signTransaction<T extends Transaction | VersionedTransaction>(
-    tx: T,
+    tx: T
   ): Promise<T> {
     return this._signTransaction(tx);
   }
 
   async signAllTransactions<T extends Transaction | VersionedTransaction>(
-    txs: T[],
+    txs: T[]
   ): Promise<T[]> {
     return this._signAllTransactions(txs);
   }
@@ -69,10 +69,10 @@ export class WalletAdapter implements anchor.Wallet {
 export function createDisconnectedWallet(): anchor.Wallet {
   return new WalletAdapter({
     publicKey: PublicKey.default,
-    signTransaction: async (tx) => {
+    signTransaction: async () => {
       throw new Error("Wallet not connected");
     },
-    signAllTransactions: async (txs) => {
+    signAllTransactions: async () => {
       throw new Error("Wallet not connected");
     },
   });

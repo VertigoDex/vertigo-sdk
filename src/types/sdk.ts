@@ -1,5 +1,5 @@
 import * as anchor from "@coral-xyz/anchor";
-import { Keypair, PublicKey } from "@solana/web3.js";
+import { Keypair } from "@solana/web3.js";
 export interface SDKConfig {
   /** Log level for SDK operations */
   logLevel?: "verbose" | "tx" | "none";

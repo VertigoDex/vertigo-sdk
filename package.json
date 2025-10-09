@@ -1,6 +1,6 @@
 {
   "name": "@vertigo-amm/vertigo-sdk",
-  "version": "2.0.6",
+  "version": "3.0.0",
   "description": "Official TypeScript SDK for the Vertigo AMM protocol on Solana",
   "homepage": "https://vertigo.so",
   "repository": {
@@ -22,15 +22,20 @@
       "import": "./dist/src/index.mjs",
       "require": "./dist/src/index.js"
     },
-    "./api": {
-      "types": "./dist/src/api/index.d.ts",
-      "import": "./dist/src/api/index.mjs",
-      "require": "./dist/src/api/index.js"
+    "./instructions": {
+      "types": "./dist/src/instructions/index.d.ts",
+      "import": "./dist/src/instructions/index.mjs",
+      "require": "./dist/src/instructions/index.js"
     },
-    "./client": {
-      "types": "./dist/src/client/index.d.ts",
-      "import": "./dist/src/client/index.mjs",
-      "require": "./dist/src/client/index.js"
+    "./helpers": {
+      "types": "./dist/src/helpers/index.d.ts",
+      "import": "./dist/src/helpers/index.mjs",
+      "require": "./dist/src/helpers/index.js"
+    },
+    "./builders": {
+      "types": "./dist/src/builders/index.d.ts",
+      "import": "./dist/src/builders/index.mjs",
+      "require": "./dist/src/builders/index.js"
     },
     "./utils": {
       "types": "./dist/src/utils/index.d.ts",
@@ -65,7 +70,7 @@
   "scripts": {
     "clean": "rm -rf dist",
     "build": "yarn clean && tsc --noEmit false --skipLibCheck --project tsconfig.build.json && yarn build:esm && yarn copy-files",
-    "build:esm": "tsc --module esnext --outDir dist/esm --noEmit false --skipLibCheck --project tsconfig.build.json && find dist/esm -name '*.js' -exec sh -c 'mv \"$1\" \"${1%.js}.mjs\"' _ {} \\;",
+    "build:esm": "tsc --module esnext --outDir dist/esm --noEmit false --skipLibCheck --project tsconfig.build.json && find dist/esm -name '*.js' -exec sh -c 'mv \"$1\" \"${1%.js}.mjs\"' _ {} \\; && rsync -av --include='*/' --include='*.mjs' --exclude='*' dist/esm/src/ dist/src/",
     "copy-files": "mkdir -p dist/target && cp -r target/* dist/target/",
     "dev": "tsc --watch",
     "test": "vitest run",

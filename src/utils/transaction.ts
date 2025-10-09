@@ -5,8 +5,6 @@ import {
   ComputeBudgetProgram,
   PublicKey,
   Commitment,
-  RpcResponseAndContext,
-  SimulatedTransactionResponse,
 } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 
@@ -16,7 +14,7 @@ import * as anchor from "@coral-xyz/anchor";
 export const addPriorityFee = (
   tx: Transaction,
   priorityFee: number,
-  computeUnits?: number,
+  computeUnits?: number
 ): Transaction => {
   const instructions: TransactionInstruction[] = [];
 
@@ -24,7 +22,7 @@ export const addPriorityFee = (
   instructions.push(
     ComputeBudgetProgram.setComputeUnitPrice({
       microLamports: priorityFee,
-    }),
+    })
   );
 
   // Add compute unit limit if specified
@@ -32,7 +30,7 @@ export const addPriorityFee = (
     instructions.push(
       ComputeBudgetProgram.setComputeUnitLimit({
         units: computeUnits,
-      }),
+      })
     );
   }
 
@@ -47,7 +45,7 @@ export const addPriorityFee = (
  */
 export const estimatePriorityFee = async (
   connection: Connection,
-  percentile: 50 | 75 | 90 | 95 = 75,
+  percentile: 50 | 75 | 90 | 95 = 75
 ): Promise<number> => {
   try {
     // Get recent prioritization fees
@@ -80,8 +78,7 @@ export const estimatePriorityFee = async (
  */
 export const simulateTransaction = async (
   connection: Connection,
-  tx: Transaction,
-  commitment: Commitment = "confirmed",
+  tx: Transaction
 ): Promise<{
   success: boolean;
   logs?: string[];
@@ -124,7 +121,7 @@ export const sendTransactionWithRetry = async (
     retryDelay?: number;
     commitment?: Commitment;
     skipPreflight?: boolean;
-  } = {},
+  } = {}
 ): Promise<string> => {
   const maxRetries = options.maxRetries ?? 3;
   const retryDelay = options.retryDelay ?? 1000;
@@ -158,12 +155,12 @@ export const sendTransactionWithRetry = async (
           blockhash,
           lastValidBlockHeight,
         },
-        commitment,
+        commitment
       );
 
       if (confirmation.value.err) {
         throw new Error(
-          `Transaction failed: ${JSON.stringify(confirmation.value.err)}`,
+          `Transaction failed: ${JSON.stringify(confirmation.value.err)}`
         );
       }
 
@@ -197,10 +194,9 @@ export const buildVersionedTransaction = async (
   connection: Connection,
   instructions: TransactionInstruction[],
   payer: PublicKey,
-  lookupTables?: anchor.web3.AddressLookupTableAccount[],
+  lookupTables?: anchor.web3.AddressLookupTableAccount[]
 ): Promise<anchor.web3.VersionedTransaction> => {
-  const { blockhash, lastValidBlockHeight } =
-    await connection.getLatestBlockhash();
+  const { blockhash } = await connection.getLatestBlockhash();
 
   const messageV0 = new anchor.web3.TransactionMessage({
     payerKey: payer,
@@ -233,7 +229,7 @@ export const isTransactionSizeValid = (tx: Transaction): boolean => {
  */
 export const splitInstructions = (
   instructions: TransactionInstruction[],
-  maxInstructionsPerTx: number = 10,
+  maxInstructionsPerTx: number = 10
 ): TransactionInstruction[][] => {
   const batches: TransactionInstruction[][] = [];
 
@@ -251,7 +247,7 @@ export const waitForConfirmation = async (
   connection: Connection,
   signature: string,
   commitment: Commitment = "confirmed",
-  timeoutMs: number = 30000,
+  timeoutMs: number = 30000
 ): Promise<boolean> => {
   const start = Date.now();
 
@@ -264,7 +260,7 @@ export const waitForConfirmation = async (
 
     if (status.value?.err) {
       throw new Error(
-        `Transaction failed: ${JSON.stringify(status.value.err)}`,
+        `Transaction failed: ${JSON.stringify(status.value.err)}`
       );
     }
 

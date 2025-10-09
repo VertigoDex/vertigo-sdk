@@ -1,4 +1,4 @@
-# Vertigo SDK v2.0
+# Vertigo SDK v3.0
 
 <div align="center">
   <h3>🚀 Official TypeScript SDK for the Vertigo AMM Protocol on Solana</h3>
@@ -8,6 +8,18 @@
   [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
   [![Documentation](https://img.shields.io/badge/docs-vertigo.so-green)](https://docs.vertigo.so)
 </div>
+
+## 🎉 What's New in v3
+
+v3 is a complete rewrite focused on simplicity and clarity:
+
+- **🎯 Clear Architecture**: Three layers (Instructions → Helpers → Builders) instead of complex classes
+- **🔄 No Fake Quotes**: Swap direction inferred automatically from pool + mints
+- **⚡ Simpler API**: Less configuration, more functionality
+- **📦 Better Tree-Shaking**: Import only what you need
+- **🧩 Layered Control**: Choose your level of abstraction
+
+**Migrating from v2?** See the [Migration Guide](./MIGRATION.md).
 
 ## ✨ Features
 
@@ -44,23 +56,23 @@ const vertigo = await Vertigo.load({
   network: "mainnet",
 });
 
-// Find pools for a token pair
-const pools = await vertigo.pools.findPoolsByMints(SOL_MINT, USDC_MINT);
-
 // Get swap quote
-const quote = await vertigo.swap.getQuote({
+const quote = await vertigo.quote({
+  pool: poolAddress,
   inputMint: SOL_MINT,
   outputMint: USDC_MINT,
   amount: 1_000_000_000, // 1 SOL
   slippageBps: 50,
 });
+
+console.log(`You'll receive ${quote.outputAmount} tokens`);
 ```
 
 ### With Wallet (Full Features)
 
 ```typescript
 import { Vertigo } from "@vertigo-amm/vertigo-sdk";
-import { Connection, Keypair } from "@solana/web3.js";
+import { Connection } from "@solana/web3.js";
 import * as anchor from "@coral-xyz/anchor";
 
 // Initialize with wallet
@@ -71,115 +83,122 @@ const vertigo = await Vertigo.load({
   network: "mainnet",
 });
 
-// Execute a swap
-const result = await vertigo.swap.swap({
+// Execute a swap - direction is inferred automatically!
+const result = await vertigo.swap({
+  pool: poolAddress,
   inputMint: SOL_MINT,
   outputMint: USDC_MINT,
   amount: 1_000_000_000,
-  options: {
-    slippageBps: 100,
-    priorityFee: "auto",
-  },
+  slippageBps: 100,
+  priorityFee: 10000,
 });
 
 console.log(`Swap successful: ${result.signature}`);
+console.log(`Spent ${result.inputAmount}, received ${result.outputAmount}`);
 ```
 
-## 📚 Core Modules
+## 📚 Three Layers of Control
 
-### 🏊 Pool Client
+v3 provides three layers, so you can choose your level of abstraction:
 
-Manage liquidity pools and fetch pool data:
+### Layer 1: Instructions (Low-Level)
+
+Direct wrappers around Anchor program instructions. For users who want maximum control:
 
 ```typescript
-// Create a new pool
-const { poolAddress } = await vertigo.pools.createPool({
+import { instructions } from "@vertigo-amm/vertigo-sdk";
+
+// Get just the instruction
+const ix = await instructions.buyInstruction({
+  program: vertigo.program,
+  pool: poolAddress,
+  user: wallet.publicKey,
+  owner: poolOwner,
   mintA: SOL_MINT,
   mintB: TOKEN_MINT,
-  initialMarketCap: 10_000_000_000,
-  royaltiesBps: 250,
+  userTaA: inputTokenAccount,
+  userTaB: outputTokenAccount,
+  vaultA,
+  vaultB,
+  amount: new anchor.BN(1_000_000_000),
+  limit: new anchor.BN(900_000_000),
 });
 
-// Get pool information
-const pool = await vertigo.pools.getPool(poolAddress);
-
-// Get all pools
-const pools = await vertigo.pools.getPools();
-
-// Find pools by tokens
-const pools = await vertigo.pools.findPoolsByMints(mintA, mintB);
-
-// Get pool statistics
-const stats = await vertigo.pools.getPoolStats(poolAddress);
+// Build your own transaction
+const tx = new Transaction().add(ix);
+await program.provider.sendAndConfirm(tx);
 ```
 
-### 💱 Swap Client
+### Layer 2: Helpers (Mid-Level) - **RECOMMENDED**
 
-Execute token swaps with advanced features:
+Smart helpers that handle common patterns automatically:
 
 ```typescript
-// Get swap quote
-const quote = await vertigo.swap.getQuote({
+// Quote - determines buy/sell automatically from pool + mints
+const quote = await vertigo.quote({
+  pool: poolAddress,
   inputMint: SOL_MINT,
   outputMint: USDC_MINT,
   amount: 1_000_000_000,
   slippageBps: 50,
 });
 
-// Simulate swap to check for errors
-const simulation = await vertigo.swap.simulateSwap({
+// Swap - handles ATAs, direction detection, wrapping, etc.
+const result = await vertigo.swap({
+  pool: poolAddress,
   inputMint: SOL_MINT,
   outputMint: USDC_MINT,
   amount: 1_000_000_000,
+  slippageBps: 100,
+  wrapSol: true,
+  priorityFee: 10000,
 });
 
-// Execute swap
-const result = await vertigo.swap.swap({
+// Create pool
+const { poolAddress, signature } = await vertigo.create({
+  owner: ownerKeypair,
+  tokenWalletAuthority: authorityKeypair,
+  mintA: SOL_MINT,
+  mintB: TOKEN_MINT,
+  initialMarketCap: 10_000_000_000,
+  initialTokenBReserves: 1_000_000_000,
+  royaltiesBps: 250,
+});
+
+// Claim fees
+const { signature } = await vertigo.claim({
+  pool: poolAddress,
+  destinationAccount, // optional
+  priorityFee: 10000,
+});
+```
+
+### Layer 3: Builders (Convenience)
+
+Optional utilities for constructing parameters with validation:
+
+```typescript
+import { buildSwapParams, buildFeeParams } from "@vertigo-amm/vertigo-sdk";
+
+// Build params with validation and defaults
+const swapParams = buildSwapParams({
+  program: vertigo.program,
+  connection: vertigo.connection,
+  pool: poolAddress,
   inputMint: SOL_MINT,
   outputMint: USDC_MINT,
-  amount: 1_000_000_000,
-  options: {
-    slippageBps: 100,
-    wrapSol: true,
-    priorityFee: "auto",
-  },
-});
-```
-
-### 🏗️ Pool Authority Client
-
-Advanced pool management for authorized users:
-
-```typescript
-import { PoolAuthority } from "@vertigo-amm/vertigo-sdk";
-
-// Initialize Pool Authority client
-const poolAuth = await PoolAuthority.load({
-  connection,
-  wallet,
+  amount: 1_000_000_000, // Accepts number or BN
+  user: wallet.publicKey,
 });
 
-// Create pools with authority permissions
-// Note: Token factory features are under development
-```
+// Use with helper
+const result = await swap(swapParams);
 
-### 📊 API Client
-
-Access market data and analytics:
-
-```typescript
-// Get pool statistics
-const stats = await vertigo.api.getPoolStats(poolAddress);
-
-// Get trending pools
-const trending = await vertigo.api.getTrendingPools("24h", 10);
-
-// Get token information
-const tokenInfo = await vertigo.api.getTokenInfo(mintAddress);
-
-// Subscribe to pool updates
-const unsubscribe = vertigo.api.subscribeToPool(poolAddress, {
-  onUpdate: (data) => console.log("Pool update:", data),
+// Build fee params with validation
+const feeParams = buildFeeParams({
+  royaltiesBps: 250, // Validated to be 0-10000
+  decay: 0.99, // Validated to be 0-1
+  normalizationPeriod: 3600,
 });
 ```
 

@@ -1,8 +1,6 @@
 import {
   Connection,
-  Keypair,
   PublicKey,
-  Signer,
   Transaction,
   VersionedTransaction,
 } from "@solana/web3.js";
@@ -22,26 +20,11 @@ export type WalletLike =
     };
 
 export type VertigoConfig = {
-  connection: Connection;
-  wallet?: WalletLike;
+  connection?: Connection;
+  wallet?: anchor.Wallet;
   network?: Network;
   commitment?: anchor.web3.Commitment;
-  skipPreflight?: boolean;
-  apiUrl?: string;
-  programs?: {
-    amm?: PublicKey;
-    poolAuthority?: PublicKey;
-    permissionedRelay?: PublicKey;
-  };
-  cache?: {
-    enabled?: boolean;
-    ttl?: number;
-  };
-  priority?: {
-    autoFee?: boolean;
-    baseFee?: number;
-    maxFee?: number;
-  };
+  programId?: PublicKey;
 };
 
 export type SwapQuote = {
