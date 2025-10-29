@@ -61,7 +61,7 @@ describe("V3 Comprehensive Integration Tests", () => {
       });
 
       expect(customVertigo.program.programId.toBase58()).toBe(
-        customProgramId.toBase58()
+        customProgramId.toBase58(),
       );
     });
   });
@@ -107,7 +107,7 @@ describe("V3 Comprehensive Integration Tests", () => {
           inputMint: Keypair.generate().publicKey,
           outputMint: Keypair.generate().publicKey,
           amount: new anchor.BN(1000),
-        })
+        }),
       ).rejects.toThrow("Wallet required for swap operations");
     });
   });
@@ -318,7 +318,7 @@ describe("V3 Comprehensive Integration Tests", () => {
           inputMint: mintA,
           outputMint: mintB,
           amount: new anchor.BN(1000),
-        })
+        }),
       ).rejects.toThrow();
     });
 
@@ -334,7 +334,7 @@ describe("V3 Comprehensive Integration Tests", () => {
           outputMint: mintB,
           amount: new anchor.BN(1000),
           slippageBps: 15000, // More than MAX_SLIPPAGE_BPS
-        })
+        }),
       ).rejects.toThrow(/Slippage too high/);
     });
   });

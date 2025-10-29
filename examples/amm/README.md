@@ -17,11 +17,13 @@ For most use cases, we recommend using the new simplified API shown in the `quic
 ## Prerequisites
 
 1. **Create a wallet:**
+
    ```bash
    solana-keygen new
    ```
 
 2. **Fund your wallet (for devnet):**
+
    ```bash
    solana airdrop 2 --url devnet
    ```
@@ -82,6 +84,7 @@ Create a `pool-params.json` file:
 ## For Simpler Usage
 
 If you're just looking to swap tokens or query pools, check out the simpler examples:
+
 - `examples/quick-start/getting-started.ts` - Read-only operations
 - `examples/quick-start/with-wallet.ts` - Basic wallet integration
 - `examples/trading/simple-swap.ts` - Simple token swaps

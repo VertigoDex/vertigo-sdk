@@ -4,9 +4,10 @@
   <h3>🚀 Official TypeScript SDK for the Vertigo AMM Protocol on Solana</h3>
   <p>Build powerful DeFi applications with Vertigo's innovative AMM design</p>
 
-  [![npm version](https://img.shields.io/npm/v/@vertigo-amm/vertigo-sdk)](https://www.npmjs.com/package/@vertigo-amm/vertigo-sdk)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-  [![Documentation](https://img.shields.io/badge/docs-vertigo.so-green)](https://docs.vertigo.so)
+[![npm version](https://img.shields.io/npm/v/@vertigo-amm/vertigo-sdk)](https://www.npmjs.com/package/@vertigo-amm/vertigo-sdk)
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
+[![Documentation](https://img.shields.io/badge/docs-vertigo.so-green)](https://docs.vertigo.so)
+
 </div>
 
 ## 🎉 What's New in v3
@@ -235,17 +236,17 @@ const result = await retry(() => fetchData(), { maxRetries: 3 });
 // Get explorer links
 const url = getExplorerUrl(signature, "mainnet", "solscan");
 
-// Create token metadata for token factories
+// Create token metadata
 const metadata = createTokenMetadata(
   "My Token",
   "MYTKN",
-  "https://example.com/metadata.json"
+  "https://example.com/metadata.json",
 );
 ```
 
 ### 🪙 Token Metadata Helper
 
-When creating tokens with the factory programs, use the `createTokenMetadata` helper for validation:
+Use the `createTokenMetadata` helper for validation:
 
 ```typescript
 import { createTokenMetadata } from "@vertigo-amm/vertigo-sdk";
@@ -253,19 +254,13 @@ import { createTokenMetadata } from "@vertigo-amm/vertigo-sdk";
 // Create and validate token metadata
 const metadata = createTokenMetadata(
   "My Amazing Token", // name (max 32 characters)
-  "MAT",              // symbol (max 10 characters, auto-uppercased)
-  "https://example.com/token-metadata.json" // URI to off-chain metadata
+  "MAT", // symbol (max 10 characters, auto-uppercased)
+  "https://example.com/token-metadata.json", // URI to off-chain metadata
 );
-
-// Use with token factory launch params
-const launchParams = {
-  token_config: metadata,
-  reference: new anchor.BN(Date.now() / 1000),
-  nonce: 0,
-};
 ```
 
 The helper automatically:
+
 - ✅ Validates name length (1-32 characters)
 - ✅ Validates symbol length (1-10 characters)
 - ✅ Trims whitespace from all fields
@@ -283,7 +278,6 @@ const vertigo = await Vertigo.load({
   // Custom program addresses
   programs: {
     amm: customAmmAddress,
-    factory: customFactoryAddress,
   },
 
   // API configuration

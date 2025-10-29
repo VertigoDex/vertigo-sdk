@@ -29,7 +29,7 @@ export type BuyParams = BuyInstructionParams & {
 };
 
 export const buyInstruction = async (
-  params: BuyInstructionParams
+  params: BuyInstructionParams,
 ): Promise<TransactionInstruction> => {
   // @ts-ignore - Anchor type instantiation depth limitation
   const ix = await params.program.methods

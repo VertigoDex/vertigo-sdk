@@ -157,27 +157,20 @@ Tests are organized into the following categories:
 - Slippage handling
 - Error scenarios
 
-### 4. **FactoryClient**
-
-- Factory state retrieval
-- Token metadata validation
-- Launch cost calculations
-- Token creation (simulation)
-
-### 5. **VertigoAPI**
+### 4. **VertigoAPI**
 
 - Health checks
 - Token price fetching
 - Pool statistics
 - Historical data
 
-### 6. **Liquidity**
+### 5. **Liquidity**
 
 - Add liquidity calculations
 - Remove liquidity calculations
 - Transaction building
 
-### 7. **Transactions**
+### 6. **Transactions**
 
 - Transaction simulation
 - Fee estimation

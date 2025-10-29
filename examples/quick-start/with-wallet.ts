@@ -23,7 +23,7 @@ async function main() {
   }
 
   const walletKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8"))),
   );
 
   const wallet = new anchor.Wallet(walletKeypair);
@@ -37,7 +37,7 @@ async function main() {
 
   console.log(
     "✅ Vertigo SDK initialized with wallet:",
-    wallet.publicKey.toBase58()
+    wallet.publicKey.toBase58(),
   );
 
   // 3. Get wallet balance
@@ -52,7 +52,7 @@ async function main() {
 
   // 4. Example: Get swap quote
   const USDC_DEVNET = new PublicKey(
-    "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
+    "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
   );
 
   try {
@@ -67,13 +67,13 @@ async function main() {
 
     console.log(
       `Expected output: ${(quote.outputAmount.toNumber() / 1e6).toFixed(
-        2
-      )} USDC`
+        2,
+      )} USDC`,
     );
     console.log(
       `Minimum received: ${(quote.minimumReceived.toNumber() / 1e6).toFixed(
-        2
-      )} USDC`
+        2,
+      )} USDC`,
     );
     console.log(`Price impact: ${quote.priceImpact.toFixed(4)}%`);
 
@@ -98,7 +98,7 @@ async function main() {
       console.log("  outputMint: USDC_DEVNET,");
       console.log("  amount: 100_000_000,");
       console.log(
-        "  options: { slippageBps: 100, wrapSol: true, priorityFee: 'auto' }"
+        "  options: { slippageBps: 100, wrapSol: true, priorityFee: 'auto' }",
       );
       console.log("});");
       console.log("console.log(`Swap successful: ${result.signature}`);");
@@ -109,7 +109,7 @@ async function main() {
   } catch (error) {
     console.error(
       "Failed to get quote:",
-      error instanceof Error ? error.message : error
+      error instanceof Error ? error.message : error,
     );
   }
 

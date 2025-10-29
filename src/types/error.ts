@@ -11,7 +11,7 @@ export class SDKError extends Error {
   constructor(
     message: string,
     public type: SDKErrorType,
-    public cause?: unknown
+    public cause?: unknown,
   ) {
     super(message);
     this.name = "SDKError";

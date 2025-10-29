@@ -22,7 +22,7 @@ export type ClaimParams = ClaimInstructionParams & {
 };
 
 export const claimInstruction = async (
-  params: ClaimInstructionParams
+  params: ClaimInstructionParams,
 ): Promise<TransactionInstruction> => {
   return params.program.methods
     .claim()

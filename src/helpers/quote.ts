@@ -27,11 +27,10 @@ export type QuoteResult = {
 
 const getPoolData = async (
   program: anchor.Program<Amm>,
-  poolAddress: PublicKey
+  poolAddress: PublicKey,
 ) => {
-  const accountInfo = await program.provider.connection.getAccountInfo(
-    poolAddress
-  );
+  const accountInfo =
+    await program.provider.connection.getAccountInfo(poolAddress);
   if (!accountInfo) {
     throw new Error("Pool not found");
   }
@@ -51,7 +50,7 @@ const calculatePriceImpact = (
   inputAmount: anchor.BN,
   outputAmount: anchor.BN,
   reserveIn: anchor.BN,
-  reserveOut: anchor.BN
+  reserveOut: anchor.BN,
 ): number => {
   const spotPrice = reserveOut.mul(new anchor.BN(10000)).div(reserveIn);
   const executionPrice = outputAmount
@@ -69,7 +68,7 @@ export const quote = async (params: QuoteParams): Promise<QuoteResult> => {
 
   if (slippageBps > MAX_SLIPPAGE_BPS) {
     throw new Error(
-      `Slippage too high: ${slippageBps} bps (max: ${MAX_SLIPPAGE_BPS})`
+      `Slippage too high: ${slippageBps} bps (max: ${MAX_SLIPPAGE_BPS})`,
     );
   }
 
@@ -80,7 +79,7 @@ export const quote = async (params: QuoteParams): Promise<QuoteResult> => {
 
   if (!isBuy && !pool.mintB.equals(params.inputMint)) {
     throw new Error(
-      `Input mint ${params.inputMint.toBase58()} does not match pool mints`
+      `Input mint ${params.inputMint.toBase58()} does not match pool mints`,
     );
   }
 
@@ -123,7 +122,7 @@ export const quote = async (params: QuoteParams): Promise<QuoteResult> => {
     params.amount,
     outputAmount,
     isBuy ? pool.reserveA : pool.reserveB,
-    isBuy ? pool.reserveB : pool.reserveA
+    isBuy ? pool.reserveB : pool.reserveA,
   );
 
   return {

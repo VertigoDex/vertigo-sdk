@@ -53,14 +53,6 @@ const idlMappings = [
     input: "target/idl/permissioned_relay.json",
     output: "target/types/permissioned_relay.ts",
   },
-  {
-    input: "target/idl/spl_token_factory.json",
-    output: "target/types/spl_token_factory.ts",
-  },
-  {
-    input: "target/idl/token_2022_factory.json",
-    output: "target/types/token_2022_factory.ts",
-  },
 ];
 
 idlMappings.forEach(({ input, output }) => {

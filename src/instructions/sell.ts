@@ -29,7 +29,7 @@ export type SellParams = SellInstructionParams & {
 };
 
 export const sellInstruction = async (
-  params: SellInstructionParams
+  params: SellInstructionParams,
 ): Promise<TransactionInstruction> => {
   return params.program.methods
     .sell({

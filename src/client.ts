@@ -44,7 +44,7 @@ export class VertigoClient {
     wallet: anchor.Wallet | undefined,
     network: Network,
     commitment: anchor.web3.Commitment,
-    programId: PublicKey
+    programId: PublicKey,
   ) {
     this.connection = connection;
     this.wallet = wallet;
@@ -77,7 +77,7 @@ export class VertigoClient {
       config.connection ||
       new Connection(
         RPC_ENDPOINTS[network],
-        config.commitment || DEFAULT_COMMITMENT
+        config.commitment || DEFAULT_COMMITMENT,
       );
     const commitment = config.commitment || DEFAULT_COMMITMENT;
     const programId = config.programId || VERTIGO_PROGRAMS[network].AMM;
@@ -87,12 +87,12 @@ export class VertigoClient {
       config.wallet,
       network,
       commitment,
-      programId
+      programId,
     );
   }
 
   async quote(
-    params: Omit<QuoteParams, "program" | "connection">
+    params: Omit<QuoteParams, "program" | "connection">,
   ): Promise<QuoteResult> {
     return quote({
       ...params,
@@ -102,7 +102,7 @@ export class VertigoClient {
   }
 
   async swap(
-    params: Omit<SwapParams, "program" | "connection" | "user">
+    params: Omit<SwapParams, "program" | "connection" | "user">,
   ): Promise<SwapResult> {
     if (!this.wallet) {
       throw new Error("Wallet required for swap operations");
@@ -117,7 +117,7 @@ export class VertigoClient {
   }
 
   async claim(
-    params: Omit<ClaimParams, "program" | "connection" | "claimer">
+    params: Omit<ClaimParams, "program" | "connection" | "claimer">,
   ): Promise<ClaimResult> {
     if (!this.wallet) {
       throw new Error("Wallet required for claim operations");
@@ -132,7 +132,7 @@ export class VertigoClient {
   }
 
   async create(
-    params: Omit<CreateParams, "program" | "connection" | "payer">
+    params: Omit<CreateParams, "program" | "connection" | "payer">,
   ): Promise<CreateResult> {
     if (!this.wallet) {
       throw new Error("Wallet required for create operations");

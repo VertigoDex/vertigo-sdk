@@ -42,11 +42,10 @@ export type SwapResult = {
 
 const getPoolData = async (
   program: anchor.Program<Amm>,
-  poolAddress: PublicKey
+  poolAddress: PublicKey,
 ) => {
-  const accountInfo = await program.provider.connection.getAccountInfo(
-    poolAddress
-  );
+  const accountInfo =
+    await program.provider.connection.getAccountInfo(poolAddress);
   if (!accountInfo) {
     throw new Error("Pool not found");
   }
@@ -62,7 +61,7 @@ const getPoolData = async (
 
 const getTokenProgram = async (
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<PublicKey> => {
   const mintInfo = await connection.getAccountInfo(mint);
   return mintInfo?.owner || TOKEN_PROGRAM_ID;
@@ -88,7 +87,7 @@ export const swap = async (params: SwapParams): Promise<SwapResult> => {
     instructions.push(
       anchor.web3.ComputeBudgetProgram.setComputeUnitPrice({
         microLamports: params.priorityFee,
-      })
+      }),
     );
   }
 
@@ -96,7 +95,7 @@ export const swap = async (params: SwapParams): Promise<SwapResult> => {
     instructions.push(
       anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
         units: params.computeUnits,
-      })
+      }),
     );
   }
 
@@ -111,7 +110,7 @@ export const swap = async (params: SwapParams): Promise<SwapResult> => {
         space: 165,
         programId: TOKEN_PROGRAM_ID,
       }),
-      createSyncNativeInstruction(wrapKeypair.publicKey, TOKEN_PROGRAM_ID)
+      createSyncNativeInstruction(wrapKeypair.publicKey, TOKEN_PROGRAM_ID),
     );
   }
 
@@ -124,14 +123,14 @@ export const swap = async (params: SwapParams): Promise<SwapResult> => {
     params.inputMint,
     params.user,
     false,
-    TOKEN_PROGRAM_ID
+    TOKEN_PROGRAM_ID,
   );
 
   const outputAta = getAssociatedTokenAddressSync(
     params.outputMint,
     params.user,
     false,
-    TOKEN_PROGRAM_ID
+    TOKEN_PROGRAM_ID,
   );
 
   instructions.push(
@@ -140,18 +139,18 @@ export const swap = async (params: SwapParams): Promise<SwapResult> => {
       outputAta,
       params.user,
       params.outputMint,
-      TOKEN_PROGRAM_ID
-    )
+      TOKEN_PROGRAM_ID,
+    ),
   );
 
   const [vaultA] = PublicKey.findProgramAddressSync(
     [params.pool.toBuffer(), pool.mintA.toBuffer()],
-    params.program.programId
+    params.program.programId,
   );
 
   const [vaultB] = PublicKey.findProgramAddressSync(
     [params.pool.toBuffer(), pool.mintB.toBuffer()],
-    params.program.programId
+    params.program.programId,
   );
 
   if (quoteResult.isBuy) {
@@ -199,8 +198,8 @@ export const swap = async (params: SwapParams): Promise<SwapResult> => {
         params.user,
         params.user,
         [],
-        TOKEN_PROGRAM_ID
-      )
+        TOKEN_PROGRAM_ID,
+      ),
     );
   }
 

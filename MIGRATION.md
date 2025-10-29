@@ -17,27 +17,29 @@ v3 is a complete rewrite that simplifies the API and removes confusing abstracti
 ### Client Initialization
 
 **v2:**
+
 ```typescript
-import { VertigoClient } from '@vertigo-amm/vertigo-sdk';
+import { VertigoClient } from "@vertigo-amm/vertigo-sdk";
 
 const client = await VertigoClient.load({
   connection,
   wallet,
-  network: 'mainnet',
-  apiUrl: 'https://api.vertigo.so',
+  network: "mainnet",
+  apiUrl: "https://api.vertigo.so",
   cache: { enabled: true, ttl: 60000 },
   // ... many other options
 });
 ```
 
 **v3:**
+
 ```typescript
-import { Vertigo } from '@vertigo-amm/vertigo-sdk';
+import { Vertigo } from "@vertigo-amm/vertigo-sdk";
 
 const vertigo = await Vertigo.load({
   connection,
   wallet,
-  network: 'mainnet',
+  network: "mainnet",
   // That's it! Much simpler.
 });
 ```
@@ -45,6 +47,7 @@ const vertigo = await Vertigo.load({
 ### Swaps
 
 **v2:**
+
 ```typescript
 // Had to get quote first, even if you didn't need it
 const quote = await client.swap.getQuote({
@@ -57,11 +60,12 @@ const quote = await client.swap.getQuote({
 const result = await client.swap.buy({
   pool: poolAddress,
   quoteAmount: amount,
-  options: { slippageBps: 50 }
+  options: { slippageBps: 50 },
 });
 ```
 
 **v3:**
+
 ```typescript
 // Just swap! The SDK figures out the direction
 const result = await vertigo.swap({
@@ -69,13 +73,14 @@ const result = await vertigo.swap({
   inputMint: SOL,
   outputMint: USDC,
   amount: 1_000_000_000,
-  slippageBps: 50
+  slippageBps: 50,
 });
 ```
 
 ### Quotes
 
 **v2:**
+
 ```typescript
 const quote = await client.swap.getQuote({
   inputMint: SOL,
@@ -86,6 +91,7 @@ const quote = await client.swap.getQuote({
 ```
 
 **v3:**
+
 ```typescript
 const quote = await vertigo.quote({
   pool: poolAddress,
@@ -99,6 +105,7 @@ const quote = await vertigo.quote({
 ### Pool Creation
 
 **v2:**
+
 ```typescript
 const result = await client.pools.createPool({
   mintA: SOL,
@@ -109,6 +116,7 @@ const result = await client.pools.createPool({
 ```
 
 **v3:**
+
 ```typescript
 const result = await vertigo.create({
   owner: ownerKeypair,
@@ -124,14 +132,13 @@ const result = await vertigo.create({
 ### Fee Claims
 
 **v2:**
+
 ```typescript
-const signature = await client.pools.claimFees(
-  poolAddress,
-  destinationAccount
-);
+const signature = await client.pools.claimFees(poolAddress, destinationAccount);
 ```
 
 **v3:**
+
 ```typescript
 const result = await vertigo.claim({
   pool: poolAddress,
@@ -142,17 +149,22 @@ const result = await vertigo.claim({
 ### Pool Data Fetching
 
 **v2:**
+
 ```typescript
 const pool = await client.pools.getPool(poolAddress);
 const allPools = await client.pools.getAllPools();
 ```
 
 **v3:**
+
 ```typescript
 // Pool fetching is now done internally by helpers
 // If you need raw pool data, use the program directly:
 const accountInfo = await vertigo.connection.getAccountInfo(poolAddress);
-const poolData = vertigo.program.coder.accounts.decode('pool', accountInfo.data);
+const poolData = vertigo.program.coder.accounts.decode(
+  "pool",
+  accountInfo.data,
+);
 ```
 
 ## New Features
@@ -162,7 +174,7 @@ const poolData = vertigo.program.coder.accounts.decode('pool', accountInfo.data)
 For advanced users who want full control:
 
 ```typescript
-import { instructions } from '@vertigo-amm/vertigo-sdk';
+import { instructions } from "@vertigo-amm/vertigo-sdk";
 
 // Get just the instruction
 const ix = await instructions.buyInstruction({
@@ -189,7 +201,7 @@ const tx = new Transaction().add(ix);
 The recommended way to interact with the protocol:
 
 ```typescript
-import { swap, quote, claim, create } from '@vertigo-amm/vertigo-sdk';
+import { swap, quote, claim, create } from "@vertigo-amm/vertigo-sdk";
 
 // These are the same helpers used by the client
 const result = await swap({
@@ -209,7 +221,7 @@ const result = await swap({
 Optional utilities for constructing parameters with validation:
 
 ```typescript
-import { buildSwapParams, buildCreateParams } from '@vertigo-amm/vertigo-sdk';
+import { buildSwapParams, buildCreateParams } from "@vertigo-amm/vertigo-sdk";
 
 const swapParams = buildSwapParams({
   program: vertigo.program,
@@ -240,7 +252,7 @@ await swap(swapParams);
 The API client has been removed. If you need market data, query the Vertigo API directly:
 
 ```typescript
-const response = await fetch('https://api.vertigo.so/pools');
+const response = await fetch("https://api.vertigo.so/pools");
 const pools = await response.json();
 ```
 
@@ -249,6 +261,7 @@ const pools = await response.json();
 These methods were confusing because they required a quote that already encoded the direction.
 
 **v2:**
+
 ```typescript
 // Confusing: quote already knows it's a buy, why do I need to call buildBuyTransaction?
 const quote = await client.swap.getQuote({...});
@@ -256,6 +269,7 @@ const tx = await client.swap.buildBuyTransaction(pool, quote, options);
 ```
 
 **v3:**
+
 ```typescript
 // Clear: swap helper does it all for you
 const result = await vertigo.swap({...});
@@ -272,16 +286,19 @@ v3 uses modern package exports for better tree-shaking:
 
 ```typescript
 // Main export
-import { Vertigo } from '@vertigo-amm/vertigo-sdk';
+import { Vertigo } from "@vertigo-amm/vertigo-sdk";
 
 // Instructions (low-level)
-import { buyInstruction, sellInstruction } from '@vertigo-amm/vertigo-sdk/instructions';
+import {
+  buyInstruction,
+  sellInstruction,
+} from "@vertigo-amm/vertigo-sdk/instructions";
 
 // Helpers (mid-level)
-import { swap, quote } from '@vertigo-amm/vertigo-sdk/helpers';
+import { swap, quote } from "@vertigo-amm/vertigo-sdk/helpers";
 
 // Builders (convenience)
-import { buildSwapParams } from '@vertigo-amm/vertigo-sdk/builders';
+import { buildSwapParams } from "@vertigo-amm/vertigo-sdk/builders";
 ```
 
 ## Migration Checklist
@@ -300,13 +317,14 @@ import { buildSwapParams } from '@vertigo-amm/vertigo-sdk/builders';
 ## Example: Full Migration
 
 **v2:**
+
 ```typescript
-import { VertigoClient } from '@vertigo-amm/vertigo-sdk';
+import { VertigoClient } from "@vertigo-amm/vertigo-sdk";
 
 const client = await VertigoClient.load({
   connection,
   wallet,
-  network: 'mainnet',
+  network: "mainnet",
   cache: { enabled: true },
 });
 
@@ -319,18 +337,19 @@ const quote = await client.swap.getQuote({
 const result = await client.swap.buy({
   pool: poolAddress,
   quoteAmount: quote.inputAmount,
-  options: { slippageBps: 50 }
+  options: { slippageBps: 50 },
 });
 ```
 
 **v3:**
+
 ```typescript
-import { Vertigo } from '@vertigo-amm/vertigo-sdk';
+import { Vertigo } from "@vertigo-amm/vertigo-sdk";
 
 const vertigo = await Vertigo.load({
   connection,
   wallet,
-  network: 'mainnet',
+  network: "mainnet",
 });
 
 const result = await vertigo.swap({

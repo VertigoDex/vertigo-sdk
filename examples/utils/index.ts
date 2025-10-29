@@ -12,23 +12,6 @@ import fs from "node:fs";
 import path from "node:path";
 import os from "node:os";
 
-export function getFactoryPda(
-  owner: PublicKey,
-  mintA: PublicKey,
-  nonce: number,
-  programId: PublicKey,
-): [PublicKey, number] {
-  return PublicKey.findProgramAddressSync(
-    [
-      Buffer.from("factory"),
-      owner.toBuffer(),
-      mintA.toBuffer(),
-      Uint8Array.from([nonce]),
-    ],
-    programId,
-  );
-}
-
 export function getPoolPda(
   owner: PublicKey,
   mintA: PublicKey,

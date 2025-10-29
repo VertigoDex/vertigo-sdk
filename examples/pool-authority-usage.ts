@@ -25,7 +25,7 @@ async function main() {
   }
 
   const walletKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8"))),
   );
 
   const wallet = new anchor.Wallet(walletKeypair);
@@ -33,7 +33,7 @@ async function main() {
   // Setup connection
   const connection = new Connection(
     "https://api.devnet.solana.com",
-    "confirmed"
+    "confirmed",
   );
 
   console.log("Wallet:", wallet.publicKey.toBase58());
@@ -84,12 +84,12 @@ async function main() {
   console.log("\n// For advanced users who need pool authority features:");
   console.log("import { PoolAuthority } from '@vertigo-amm/vertigo-sdk';");
   console.log(
-    "const poolAuth = await PoolAuthority.load({ connection, wallet });"
+    "const poolAuth = await PoolAuthority.load({ connection, wallet });",
   );
 
   console.log("\n// Both can be used together if needed:");
   console.log(
-    "import { Vertigo, PoolAuthority } from '@vertigo-amm/vertigo-sdk';"
+    "import { Vertigo, PoolAuthority } from '@vertigo-amm/vertigo-sdk';",
   );
 }
 

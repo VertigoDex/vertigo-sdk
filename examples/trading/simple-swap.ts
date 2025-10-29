@@ -15,7 +15,7 @@ import * as path from "path";
 async function main() {
   // Configuration
   const USDC_DEVNET = new PublicKey(
-    "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU"
+    "4zMMC9srt5Ri5X14GAgXhaHii3GnPAEERYPJgZJDncDU",
   );
   const AMOUNT_TO_SWAP = 100_000_000; // 0.1 SOL
   const SLIPPAGE_BPS = 50; // 0.5%
@@ -30,7 +30,7 @@ async function main() {
   }
 
   const walletKeypair = Keypair.fromSecretKey(
-    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8")))
+    Buffer.from(JSON.parse(fs.readFileSync(walletPath, "utf-8"))),
   );
 
   const wallet = new anchor.Wallet(walletKeypair);
@@ -52,11 +52,11 @@ async function main() {
   if (balance < AMOUNT_TO_SWAP) {
     console.error(
       `❌ Insufficient balance. Need at least ${(AMOUNT_TO_SWAP / 1e9).toFixed(
-        4
-      )} SOL`
+        4,
+      )} SOL`,
     );
     console.log(
-      `Request airdrop: solana airdrop 1 ${wallet.publicKey.toBase58()} --url devnet`
+      `Request airdrop: solana airdrop 1 ${wallet.publicKey.toBase58()} --url devnet`,
     );
     process.exit(1);
   }
@@ -73,17 +73,17 @@ async function main() {
 
     console.log("Quote received:");
     console.log(
-      `- Input: ${(quote.inputAmount.toNumber() / 1e9).toFixed(4)} SOL`
+      `- Input: ${(quote.inputAmount.toNumber() / 1e9).toFixed(4)} SOL`,
     );
     console.log(
       `- Expected output: ${(quote.outputAmount.toNumber() / 1e6).toFixed(
-        2
-      )} USDC`
+        2,
+      )} USDC`,
     );
     console.log(
       `- Minimum received: ${(quote.minimumReceived.toNumber() / 1e6).toFixed(
-        2
-      )} USDC`
+        2,
+      )} USDC`,
     );
     console.log(`- Price Impact: ${quote.priceImpact.toFixed(4)}%`);
     console.log(`- Fee: ${(quote.fee.toNumber() / 1e9).toFixed(6)} SOL`);
@@ -123,18 +123,18 @@ async function main() {
 
     console.log("\n✅ Swap completed successfully!");
     console.log(
-      `Transaction: https://solscan.io/tx/${result.signature}?cluster=devnet`
+      `Transaction: https://solscan.io/tx/${result.signature}?cluster=devnet`,
     );
     console.log(
-      `Input: ${(result.inputAmount.toNumber() / 1e9).toFixed(4)} SOL`
+      `Input: ${(result.inputAmount.toNumber() / 1e9).toFixed(4)} SOL`,
     );
     console.log(
-      `Output: ${(result.outputAmount.toNumber() / 1e6).toFixed(2)} USDC`
+      `Output: ${(result.outputAmount.toNumber() / 1e6).toFixed(2)} USDC`,
     );
   } catch (error) {
     console.error(
       "❌ Swap failed:",
-      error instanceof Error ? error.message : error
+      error instanceof Error ? error.message : error,
     );
     process.exit(1);
   }

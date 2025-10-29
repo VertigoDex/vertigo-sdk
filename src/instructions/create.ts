@@ -37,7 +37,7 @@ export type CreateParams = CreateInstructionParams & {
 };
 
 export const createInstruction = async (
-  params: CreateInstructionParams
+  params: CreateInstructionParams,
 ): Promise<TransactionInstruction> => {
   return params.program.methods
     .create({

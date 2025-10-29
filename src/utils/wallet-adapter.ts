@@ -15,10 +15,10 @@ export class WalletAdapter implements anchor.Wallet {
   public readonly payer: Keypair;
 
   private _signTransaction: <T extends Transaction | VersionedTransaction>(
-    tx: T
+    tx: T,
   ) => Promise<T>;
   private _signAllTransactions: <T extends Transaction | VersionedTransaction>(
-    txs: T[]
+    txs: T[],
   ) => Promise<T[]>;
 
   constructor(wallet: WalletLike) {
@@ -51,13 +51,13 @@ export class WalletAdapter implements anchor.Wallet {
   }
 
   async signTransaction<T extends Transaction | VersionedTransaction>(
-    tx: T
+    tx: T,
   ): Promise<T> {
     return this._signTransaction(tx);
   }
 
   async signAllTransactions<T extends Transaction | VersionedTransaction>(
-    txs: T[]
+    txs: T[],
   ): Promise<T[]> {
     return this._signAllTransactions(txs);
   }

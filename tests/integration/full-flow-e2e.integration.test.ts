@@ -22,7 +22,7 @@ describe("E2E Integration Tests (Devnet)", () => {
     if (process.env.DEVNET_PRIVATE_KEY) {
       try {
         const privateKeyBytes = anchor.utils.bytes.bs58.decode(
-          process.env.DEVNET_PRIVATE_KEY
+          process.env.DEVNET_PRIVATE_KEY,
         );
         owner = Keypair.fromSecretKey(privateKeyBytes);
       } catch (error) {

@@ -19,7 +19,7 @@ async function main() {
 
   // 2. Find pools for a token pair
   const USDC_MAINNET = new PublicKey(
-    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v"
+    "EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v",
   );
 
   const pools = await vertigo.pools.findPoolsByMints(NATIVE_MINT, USDC_MAINNET);
@@ -37,10 +37,10 @@ async function main() {
 
     console.log("\nSwap Quote:");
     console.log(
-      `- Input: ${(quote.inputAmount.toNumber() / 1e9).toFixed(4)} SOL`
+      `- Input: ${(quote.inputAmount.toNumber() / 1e9).toFixed(4)} SOL`,
     );
     console.log(
-      `- Output: ${(quote.outputAmount.toNumber() / 1e6).toFixed(2)} USDC`
+      `- Output: ${(quote.outputAmount.toNumber() / 1e6).toFixed(2)} USDC`,
     );
     console.log(`- Fee: ${(quote.fee.toNumber() / 1e9).toFixed(6)} SOL`);
     console.log(`- Price Impact: ${quote.priceImpact.toFixed(2)}%`);

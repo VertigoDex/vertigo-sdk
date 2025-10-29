@@ -34,7 +34,11 @@ import { SDKConfig } from "@vertigo-amm/vertigo-sdk";
 import { Vertigo } from "@vertigo-amm/vertigo-sdk";
 
 // Or use specific clients
-import { VertigoClient, PoolClient, SwapClient } from "@vertigo-amm/vertigo-sdk";
+import {
+  VertigoClient,
+  PoolClient,
+  SwapClient,
+} from "@vertigo-amm/vertigo-sdk";
 
 // Legacy SDK still available for gradual migration
 import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
@@ -304,38 +308,6 @@ if (simulation.success) {
 }
 ```
 
-## 🏭 Token Factory
-
-**v1:**
-
-```typescript
-// Not available in SDK v1
-```
-
-**v2:**
-
-```typescript
-// Launch a token
-const { mintAddress } = await vertigo.factory.launchToken({
-  metadata: {
-    name: "My Token",
-    symbol: "MTK",
-    decimals: 9,
-    uri: "https://...",
-  },
-  supply: 1_000_000_000_000_000,
-  useToken2022: false,
-});
-
-// Launch token with pool
-const result = await vertigo.factory.launchTokenWithPool({
-  metadata: { name: "My Token", symbol: "MTK" },
-  supply: 1_000_000_000_000_000,
-  initialMarketCap: 50_000_000_000,
-  royaltiesBps: 250,
-});
-```
-
 ## 📊 API Integration
 
 **v1:**
@@ -511,7 +483,6 @@ Take advantage of these new capabilities:
 - **API Client**: Access market data without manual fetching
 - **Transaction Utilities**: Automatic retries, priority fees, and simulation
 - **Token Utilities**: Format amounts, manage accounts, parse user input
-- **Factory Client**: Launch tokens and create pools programmatically
 - **Relay Client**: Use permissioned relays for advanced trading
 - **WebSocket Support**: Real-time updates for pools and prices
 - **Better TypeScript**: Full type safety and IntelliSense support

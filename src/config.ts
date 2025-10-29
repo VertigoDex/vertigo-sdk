@@ -14,7 +14,7 @@ export class VertigoConfig {
 
   constructor(
     provider: anchor.AnchorProvider,
-    config: SDKConfig = defaultConfig
+    config: SDKConfig = defaultConfig,
   ) {
     const sdkConfig = {
       ...defaultConfig,
@@ -36,7 +36,7 @@ export class VertigoConfig {
       const explorerUrl = getExplorerUrl(
         signature,
         this.cluster,
-        this.explorer
+        this.explorer,
       );
       console.log(`🔗 ${operation} transaction: ${explorerUrl}`);
     }

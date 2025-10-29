@@ -32,7 +32,7 @@ export type CreateResult = {
 
 const getTokenProgram = async (
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<PublicKey> => {
   const mintInfo = await connection.getAccountInfo(mint);
   return mintInfo?.owner || TOKEN_PROGRAM_ID;
@@ -45,7 +45,7 @@ export const create = async (params: CreateParams): Promise<CreateResult> => {
     instructions.push(
       anchor.web3.ComputeBudgetProgram.setComputeUnitPrice({
         microLamports: params.priorityFee,
-      })
+      }),
     );
   }
 
@@ -53,7 +53,7 @@ export const create = async (params: CreateParams): Promise<CreateResult> => {
     instructions.push(
       anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
         units: params.computeUnits,
-      })
+      }),
     );
   }
 
@@ -66,7 +66,7 @@ export const create = async (params: CreateParams): Promise<CreateResult> => {
     params.mintB,
     params.tokenWalletAuthority.publicKey,
     true,
-    tokenProgramB
+    tokenProgramB,
   );
 
   instructions.push(
@@ -75,8 +75,8 @@ export const create = async (params: CreateParams): Promise<CreateResult> => {
       tokenWalletB,
       params.tokenWalletAuthority.publicKey,
       params.mintB,
-      tokenProgramB
-    )
+      tokenProgramB,
+    ),
   );
 
   const [pool] = PublicKey.findProgramAddressSync(
@@ -86,17 +86,17 @@ export const create = async (params: CreateParams): Promise<CreateResult> => {
       params.mintA.toBuffer(),
       params.mintB.toBuffer(),
     ],
-    params.program.programId
+    params.program.programId,
   );
 
   const [vaultA] = PublicKey.findProgramAddressSync(
     [pool.toBuffer(), params.mintA.toBuffer()],
-    params.program.programId
+    params.program.programId,
   );
 
   const [vaultB] = PublicKey.findProgramAddressSync(
     [pool.toBuffer(), params.mintB.toBuffer()],
-    params.program.programId
+    params.program.programId,
   );
 
   const feeParams = {

@@ -32,12 +32,12 @@ describe("Full Flow Integration Tests (Devnet)", () => {
     if (process.env.DEVNET_PRIVATE_KEY) {
       try {
         const privateKeyBytes = anchor.utils.bytes.bs58.decode(
-          process.env.DEVNET_PRIVATE_KEY
+          process.env.DEVNET_PRIVATE_KEY,
         );
         owner = Keypair.fromSecretKey(privateKeyBytes);
         console.log(
           "Using wallet from DEVNET_PRIVATE_KEY:",
-          owner.publicKey.toBase58()
+          owner.publicKey.toBase58(),
         );
       } catch (error) {
         console.error("Failed to load wallet from DEVNET_PRIVATE_KEY:", error);
@@ -84,7 +84,7 @@ describe("Full Flow Integration Tests (Devnet)", () => {
         mintA.toBuffer(),
         mintB.toBuffer(),
       ],
-      vertigo.program.programId
+      vertigo.program.programId,
     );
     poolAddress = pda;
   }, TEST_TIMEOUT);
@@ -98,7 +98,7 @@ describe("Full Flow Integration Tests (Devnet)", () => {
     it("should fetch program accounts", async () => {
       try {
         const accounts = await connection.getProgramAccounts(
-          vertigo.program.programId
+          vertigo.program.programId,
         );
         expect(Array.isArray(accounts)).toBe(true);
       } catch (error) {
@@ -106,7 +106,6 @@ describe("Full Flow Integration Tests (Devnet)", () => {
       }
     });
   });
-
   describe("Pool Operations", () => {
     it("should derive pool PDA correctly", async () => {
       expect(poolAddress).toBeDefined();
@@ -128,7 +127,7 @@ describe("Full Flow Integration Tests (Devnet)", () => {
           9,
           Keypair.generate(),
           undefined,
-          TOKEN_PROGRAM_ID
+          TOKEN_PROGRAM_ID,
         );
 
         mintB = await createMint(
@@ -139,7 +138,7 @@ describe("Full Flow Integration Tests (Devnet)", () => {
           9,
           Keypair.generate(),
           undefined,
-          TOKEN_PROGRAM_ID
+          TOKEN_PROGRAM_ID,
         );
 
         const [pda] = PublicKey.findProgramAddressSync(
@@ -149,7 +148,7 @@ describe("Full Flow Integration Tests (Devnet)", () => {
             mintA.toBuffer(),
             mintB.toBuffer(),
           ],
-          vertigo.program.programId
+          vertigo.program.programId,
         );
         poolAddress = pda;
       } catch (error) {
@@ -185,7 +184,7 @@ describe("Full Flow Integration Tests (Devnet)", () => {
           console.warn("Quote failed (expected if pool doesn't exist):", error);
         }
       },
-      TEST_TIMEOUT
+      TEST_TIMEOUT,
     );
   });
 });

@@ -20,7 +20,7 @@ export type QuoteBuyResult = {
 };
 
 export const quoteBuy = async (
-  params: QuoteBuyParams
+  params: QuoteBuyParams,
 ): Promise<QuoteBuyResult> => {
   const result = await params.program.methods
     .quoteBuy({

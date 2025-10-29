@@ -75,7 +75,7 @@ describe("VertigoClient", () => {
 
     it("should initialize with custom program address", async () => {
       const customAmmAddress = new PublicKey(
-        "CJsLwbP1iu5DuUikHEJnLfANgKy6stB2uFgvBBHoyxwz"
+        "CJsLwbP1iu5DuUikHEJnLfANgKy6stB2uFgvBBHoyxwz",
       );
       const vertigo = await VertigoClient.load({
         connection: mockConnection,

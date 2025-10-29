@@ -28,7 +28,7 @@ export const retry = async <T>(
     initialDelay?: number;
     maxDelay?: number;
     backoffFactor?: number;
-  } = {}
+  } = {},
 ): Promise<T> => {
   const maxRetries = options.maxRetries ?? 3;
   const initialDelay = options.initialDelay ?? 1000;
@@ -75,7 +75,7 @@ export const bnToNumber = (bn: anchor.BN): number => {
 
   if (bn.gt(new anchor.BN(max))) {
     throw new Error(
-      `BN ${bn.toString()} is too large to convert to number safely`
+      `BN ${bn.toString()} is too large to convert to number safely`,
     );
   }
 
@@ -99,7 +99,7 @@ export const isValidAddress = (address: string): boolean => {
  */
 export const shortenAddress = (
   address: string | PublicKey,
-  chars: number = 4
+  chars: number = 4,
 ): string => {
   const str = typeof address === "string" ? address : address.toBase58();
   return `${str.slice(0, chars)}...${str.slice(-chars)}`;
@@ -111,7 +111,7 @@ export const shortenAddress = (
 export const getExplorerUrl = (
   signature: string,
   network: "mainnet" | "devnet" | "testnet" = "mainnet",
-  explorer: "solscan" | "solanaExplorer" | "solanaBeach" = "solscan"
+  explorer: "solscan" | "solanaExplorer" | "solanaBeach" = "solscan",
 ): string => {
   const cluster = network === "mainnet" ? "" : `?cluster=${network}`;
 
@@ -133,7 +133,7 @@ export const getExplorerUrl = (
 export const getAddressExplorerUrl = (
   address: string | PublicKey,
   network: "mainnet" | "devnet" | "testnet" = "mainnet",
-  explorer: "solscan" | "solanaExplorer" | "solanaBeach" = "solscan"
+  explorer: "solscan" | "solanaExplorer" | "solanaBeach" = "solscan",
 ): string => {
   const addr = typeof address === "string" ? address : address.toBase58();
   const cluster = network === "mainnet" ? "" : `?cluster=${network}`;
@@ -155,7 +155,7 @@ export const getAddressExplorerUrl = (
  */
 export const calculatePercentageChange = (
   oldValue: number | anchor.BN,
-  newValue: number | anchor.BN
+  newValue: number | anchor.BN,
 ): number => {
   const old = typeof oldValue === "number" ? oldValue : oldValue.toNumber();
   const current = typeof newValue === "number" ? newValue : newValue.toNumber();
@@ -170,14 +170,14 @@ export const calculatePercentageChange = (
  */
 export const formatNumber = (
   num: number | string | anchor.BN,
-  decimals: number = 2
+  decimals: number = 2,
 ): string => {
   const value =
     typeof num === "number"
       ? num
       : typeof num === "string"
-      ? parseFloat(num)
-      : num.toNumber();
+        ? parseFloat(num)
+        : num.toNumber();
 
   return value.toLocaleString("en-US", {
     minimumFractionDigits: decimals,
@@ -191,14 +191,14 @@ export const formatNumber = (
 export const formatCurrency = (
   amount: number | string | anchor.BN,
   currency: string = "USD",
-  locale: string = "en-US"
+  locale: string = "en-US",
 ): string => {
   const value =
     typeof amount === "number"
       ? amount
       : typeof amount === "string"
-      ? parseFloat(amount)
-      : amount.toNumber();
+        ? parseFloat(amount)
+        : amount.toNumber();
 
   return new Intl.NumberFormat(locale, {
     style: "currency",

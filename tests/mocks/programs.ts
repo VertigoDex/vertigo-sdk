@@ -5,12 +5,6 @@ import * as anchor from "@coral-xyz/anchor";
 export const MOCK_PROGRAM_IDS = {
   AMM: new PublicKey("11111111111111111111111111111111"),
   POOL_AUTHORITY: new PublicKey("DjPi1LtwrXJMAh2AUvuUMajCpMJEKg8N1J8fU4L2Xr9D"),
-  SPL_TOKEN_FACTORY: new PublicKey(
-    "EaYYJEmmLtwwnBJnscHdeHVEhUtgEN6B1PbLw6JUrH4x",
-  ),
-  TOKEN_2022_FACTORY: new PublicKey(
-    "FZFRvStz5MtADm3SgPD7Pbiw3hmVSJDBD9DfXnrtYabY",
-  ),
   PERMISSIONED_RELAY: new PublicKey(
     "GqnL1zHpKT9s8bdHdRTGPL9tai3W1YpntDUmccHfpjXB",
   ),

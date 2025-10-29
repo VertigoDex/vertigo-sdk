@@ -12,10 +12,10 @@ export type WalletLike =
   | {
       publicKey: PublicKey;
       signTransaction?: <T extends Transaction | VersionedTransaction>(
-        tx: T
+        tx: T,
       ) => Promise<T>;
       signAllTransactions?: <T extends Transaction | VersionedTransaction>(
-        txs: T[]
+        txs: T[],
       ) => Promise<T[]>;
     };
 
@@ -25,6 +25,22 @@ export type VertigoConfig = {
   network?: Network;
   commitment?: anchor.web3.Commitment;
   programId?: PublicKey;
+  skipPreflight?: boolean;
+  apiUrl?: string;
+  programs?: {
+    amm?: PublicKey;
+    poolAuthority?: PublicKey;
+    permissionedRelay?: PublicKey;
+  };
+  cache?: {
+    enabled?: boolean;
+    ttl?: number;
+  };
+  priority?: {
+    autoFee?: boolean;
+    baseFee?: number;
+    maxFee?: number;
+  };
 };
 
 export type SwapQuote = {

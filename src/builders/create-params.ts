@@ -21,7 +21,7 @@ export type CreateParamsOptions = {
 };
 
 export const buildCreateParams = (
-  options: CreateParamsOptions
+  options: CreateParamsOptions,
 ): CreateParams => {
   const initialMarketCap =
     typeof options.initialMarketCap === "number"
@@ -41,7 +41,7 @@ export const buildCreateParams = (
 
   if (options.royaltiesBps < 0 || options.royaltiesBps > 10000) {
     throw new Error(
-      `Invalid royaltiesBps: ${options.royaltiesBps} (must be between 0 and 10000)`
+      `Invalid royaltiesBps: ${options.royaltiesBps} (must be between 0 and 10000)`,
     );
   }
 

@@ -24,11 +24,10 @@ export type ClaimResult = {
 
 const getPoolData = async (
   program: anchor.Program<Amm>,
-  poolAddress: PublicKey
+  poolAddress: PublicKey,
 ) => {
-  const accountInfo = await program.provider.connection.getAccountInfo(
-    poolAddress
-  );
+  const accountInfo =
+    await program.provider.connection.getAccountInfo(poolAddress);
   if (!accountInfo) {
     throw new Error("Pool not found");
   }
@@ -42,7 +41,7 @@ const getPoolData = async (
 
 const getTokenProgram = async (
   connection: Connection,
-  mint: PublicKey
+  mint: PublicKey,
 ): Promise<PublicKey> => {
   const mintInfo = await connection.getAccountInfo(mint);
   return mintInfo?.owner || TOKEN_PROGRAM_ID;
@@ -56,7 +55,7 @@ export const claim = async (params: ClaimParams): Promise<ClaimResult> => {
     instructions.push(
       anchor.web3.ComputeBudgetProgram.setComputeUnitPrice({
         microLamports: params.priorityFee,
-      })
+      }),
     );
   }
 
@@ -64,7 +63,7 @@ export const claim = async (params: ClaimParams): Promise<ClaimResult> => {
     instructions.push(
       anchor.web3.ComputeBudgetProgram.setComputeUnitLimit({
         units: params.computeUnits,
-      })
+      }),
     );
   }
 
@@ -76,7 +75,7 @@ export const claim = async (params: ClaimParams): Promise<ClaimResult> => {
       pool.mintA,
       params.claimer,
       false,
-      tokenProgramA
+      tokenProgramA,
     );
 
   if (!params.destinationAccount) {
@@ -86,14 +85,14 @@ export const claim = async (params: ClaimParams): Promise<ClaimResult> => {
         receiverTaA,
         params.claimer,
         pool.mintA,
-        tokenProgramA
-      )
+        tokenProgramA,
+      ),
     );
   }
 
   const [vaultA] = PublicKey.findProgramAddressSync(
     [params.pool.toBuffer(), pool.mintA.toBuffer()],
-    params.program.programId
+    params.program.programId,
   );
 
   const ix = await claimInstruction({

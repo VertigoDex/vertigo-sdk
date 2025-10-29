@@ -32,13 +32,13 @@ export const buildFeeParams = (options: FeeParamsOptions): FeeParams => {
 
   if (options.royaltiesBps < 0 || options.royaltiesBps > 10000) {
     throw new Error(
-      `Invalid royaltiesBps: ${options.royaltiesBps} (must be between 0 and 10000)`
+      `Invalid royaltiesBps: ${options.royaltiesBps} (must be between 0 and 10000)`,
     );
   }
 
   if (options.decay !== undefined && (options.decay < 0 || options.decay > 1)) {
     throw new Error(
-      `Invalid decay: ${options.decay} (must be between 0 and 1)`
+      `Invalid decay: ${options.decay} (must be between 0 and 1)`,
     );
   }
 

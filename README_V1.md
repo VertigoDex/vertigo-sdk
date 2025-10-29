@@ -73,12 +73,10 @@ bun install @vertigo-amm/vertigo-sdk
 
 ### Examples
 
-This repo contains examples for interacting with the AMM and Factory programs via the SDK. To run the examples, navigate to the directory you are interested in and copy the code snippets in the README.md file into your terminal.
+This repo contains examples for interacting with the AMM program via the SDK. To run the examples, navigate to the directory you are interested in and copy the code snippets in the README.md file into your terminal.
 The examples are designed to work out of the box, but you can customize them to fit your needs.
 
 - [AMM](./examples/amm/README.md)
-- [Token 2022 Factory](./examples/token-2022-factory/README.md)
-- [SPL Token Factory](./examples/spl-token-factory/README.md)
 
 ### Configuration
 
