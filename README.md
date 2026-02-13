@@ -1,6 +1,8 @@
 # Vertigo SDK
 
-TypeScript SDK for the Vertigo AMM protocol on Solana. Provides pool operations (create, buy, sell, claim, quote) and dFlow-routed swaps through a single `VertigoClient` class.
+TypeScript SDK for the Vertigo AMM protocol on Solana. Provides pool operations (create, buy, sell, claim, quote), pluggable swap routing, and backend token creation through a single `VertigoClient` class.
+
+> **[Full API Reference →](./DOCS.md)**
 
 ## Installation
 
@@ -24,17 +26,18 @@ const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed
 const client = new VertigoClient(provider)
 ```
 
-With dFlow swap routing:
+With swap routing and/or token creation:
 
 ```typescript
 const client = new VertigoClient(provider, {
-  dflowApiKey: process.env.DFLOW_API_KEY,
+  swapApiKey: process.env.DFLOW_API_KEY,       // dFlow swap routing
+  tokenApiKey: process.env.VERTIGO_API_KEY,    // backend token creation
 })
 ```
 
-## dFlow Routed Swaps
+## Swap Routing
 
-The simplest way to swap tokens. Takes an input mint, output mint, and amount, then returns an unsigned `VersionedTransaction` from the dFlow aggregator.
+Pluggable swap routing via the `SwapApi` adapter. The default implementation uses dFlow, but you can provide any aggregator (Jupiter, your own router, etc.).
 
 ### Get a Swap Transaction
 
@@ -319,15 +322,19 @@ const client = new VertigoClient(provider, {
   // Custom Vertigo program ID (default: vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ)
   programId: new PublicKey('YOUR_PROGRAM_ID'),
 
-  // dFlow aggregator API key (enables production routing)
-  dflowApiKey: 'your-api-key',
+  // Swap routing — use dFlow default or provide a custom SwapApi
+  swapApiKey: 'your-dflow-key',
+  // swapApi: myJupiterAdapter,       // custom adapter takes precedence
 
-  // Custom dFlow API URL (overrides default prod/dev selection)
-  dflowApiUrl: 'https://custom-dflow-endpoint.com',
+  // Token creation — use Vertigo backend or provide a custom TokenApi
+  tokenApiKey: 'your-vertigo-key',
+  // tokenApi: myCustomBackend,       // custom adapter takes precedence
 })
 ```
 
-Without a `dflowApiKey`, the SDK uses the dFlow dev endpoint. With a key, it uses the production endpoint.
+Without a `swapApiKey`, the dFlow default uses the dev endpoint. With a key, it uses production.
+
+See [DOCS.md](./DOCS.md) for the full API reference, adapter contracts, and backend endpoint specs.
 
 ## API Reference
 
@@ -335,9 +342,11 @@ Without a `dflowApiKey`, the SDK uses the dFlow dev endpoint. With a key, it use
 
 | Method | Description | Returns |
 |--------|-------------|---------|
-| `swap(args)` | Get unsigned swap tx from dFlow | `SwapResult` |
+| `swap(args)` | Get unsigned swap tx via SwapApi adapter | `SwapResult` |
 | `submitSwap(signedTx)` | Submit a signed swap transaction | `string` (signature) |
 | `swapStatus(signature)` | Check swap confirmation status | `SwapStatusResult` |
+| `createToken(params)` | Create token via TokenApi adapter | `{ transaction, mint, pool }` |
+| `getTokenStatus(mint)` | Check token indexing status | `TokenStatus` |
 | `buy(args)` | Execute a buy (build + send + confirm) | `string` (signature) |
 | `sell(args)` | Execute a sell (build + send + confirm) | `string` (signature) |
 | `create(args)` | Create a pool (build + send + confirm) | `string` (signature) |

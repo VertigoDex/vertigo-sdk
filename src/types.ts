@@ -1,15 +1,93 @@
 import type { BN } from '@coral-xyz/anchor'
 import type { PublicKey, Signer, VersionedTransaction } from '@solana/web3.js'
 
-// ── Config ─────────────────────────────────────────────────
+// ── Swap API Adapter ────────────────────────────────────────
 
-type VertigoConfig = {
-  dflowApiKey?: string
-  dflowApiUrl?: string
-  programId?: PublicKey
+type SwapRouteParams = {
+  inputMint: string
+  outputMint: string
+  amount: string
+  userPublicKey: string
+  slippageBps: number
 }
 
-// ── dFlow Swap ─────────────────────────────────────────────
+type SwapRouteResult = {
+  transaction: string
+  expectedOutput: string
+  minimumOutput: string
+  priceImpact: string
+}
+
+type SwapApi = {
+  getSwapTransaction: (params: SwapRouteParams) => Promise<SwapRouteResult>
+}
+
+// ── Token API Adapter ───────────────────────────────────────
+
+type TokenMetadata = {
+  name: string
+  symbol: string
+  description: string
+  image: string
+  [key: string]: unknown
+}
+
+type PoolConfig = {
+  shift: string
+  initialTokenBReserves: string
+  feeParams: {
+    normalizationPeriod: string
+    decay: number
+    royaltiesBps: number
+    privilegedSwapper?: string | null
+    reference: string
+  }
+}
+
+type CreateTokenParams = {
+  payer: string
+  metadata: TokenMetadata
+  poolConfig: PoolConfig
+}
+
+type CreateTokenResult = {
+  transaction: string
+  mint: string
+  pool: string
+  metadataUri?: string
+}
+
+type GetTokenStatusParams = {
+  mint: string
+}
+
+type TokenStatus = {
+  status: 'pending' | 'indexed' | 'failed'
+  indexed: boolean
+  pool?: string
+  error?: string
+}
+
+type TokenApi = {
+  createToken: (params: CreateTokenParams) => Promise<CreateTokenResult>
+  getTokenStatus: (params: GetTokenStatusParams) => Promise<TokenStatus>
+}
+
+// ── Config ─────────────────────────────────────────────────
+
+type SwapOption =
+  | { swapApi: SwapApi; swapApiKey?: never; swapApiUrl?: never }
+  | { swapApi?: never; swapApiKey: string; swapApiUrl?: string }
+  | { swapApi?: never; swapApiKey?: never; swapApiUrl?: never }
+
+type TokenOption =
+  | { tokenApi: TokenApi; tokenApiKey?: never; tokenApiUrl?: never }
+  | { tokenApi?: never; tokenApiKey: string; tokenApiUrl?: string }
+  | { tokenApi?: never; tokenApiKey?: never; tokenApiUrl?: never }
+
+type VertigoConfig = { programId?: PublicKey } & SwapOption & TokenOption
+
+// ── Swap (SDK-level) ────────────────────────────────────────
 
 type SwapArgs = {
   inputMint: PublicKey
@@ -125,6 +203,16 @@ type PoolData = {
 }
 
 export type {
+  SwapRouteParams,
+  SwapRouteResult,
+  SwapApi,
+  TokenMetadata,
+  PoolConfig,
+  CreateTokenParams,
+  CreateTokenResult,
+  GetTokenStatusParams,
+  TokenStatus,
+  TokenApi,
   VertigoConfig,
   SwapArgs,
   SwapResult,

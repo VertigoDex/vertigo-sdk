@@ -11,18 +11,24 @@ import type { TransactionInstruction } from '@solana/web3.js'
 import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
 
 import ammIdl from './idl/amm.json'
-import { DFlowClient } from './dflow'
+import { createDFlowSwapApi } from './swap-api'
+import { createDefaultTokenApi } from './token-api'
 import type {
   BuyArgs,
   ClaimArgs,
   CreateArgs,
+  CreateTokenParams,
+  CreateTokenResult,
   PoolData,
   QuoteArgs,
   QuoteResult,
   SellArgs,
+  SwapApi,
   SwapArgs,
   SwapResult,
   SwapStatusResult,
+  TokenApi,
+  TokenStatus,
   VertigoConfig,
 } from './types'
 
@@ -39,7 +45,8 @@ class VertigoClient {
   readonly provider: AnchorProvider
   readonly program: Program
   readonly programId: PublicKey
-  private readonly dflow: DFlowClient
+  private readonly swapApi?: SwapApi
+  private readonly tokenApi?: TokenApi
 
   constructor(
     provider: AnchorProvider,
@@ -51,10 +58,15 @@ class VertigoClient {
     const idl = { ...ammIdl, address: this.programId.toBase58() } as Idl
     this.program = new Program(idl, provider)
 
-    this.dflow = new DFlowClient({
-      apiKey: config.dflowApiKey,
-      apiUrl: config.dflowApiUrl,
-    })
+    this.swapApi = config.swapApi
+      ?? (config.swapApiKey !== undefined
+        ? createDFlowSwapApi({ apiKey: config.swapApiKey, apiUrl: config.swapApiUrl })
+        : undefined)
+
+    this.tokenApi = config.tokenApi
+      ?? (config.tokenApiKey
+        ? createDefaultTokenApi({ apiKey: config.tokenApiKey, apiUrl: config.tokenApiUrl })
+        : undefined)
   }
 
   // ── PDA Helpers ──────────────────────────────────────────
@@ -104,10 +116,16 @@ class VertigoClient {
     }
   }
 
-  // ── dFlow Swap ───────────────────────────────────────────
+  // ── Swap (via SwapApi adapter) ─────────────────────────────
 
   async swap(args: SwapArgs): Promise<SwapResult> {
-    const order = await this.dflow.getOrder({
+    if (!this.swapApi) {
+      throw new Error(
+        'Swap API not configured. Provide swapApi or swapApiKey in VertigoConfig.',
+      )
+    }
+
+    const result = await this.swapApi.getSwapTransaction({
       inputMint: args.inputMint.toBase58(),
       outputMint: args.outputMint.toBase58(),
       amount: toBN(args.amount).toString(),
@@ -115,23 +133,83 @@ class VertigoClient {
       slippageBps: args.slippageBps ?? DEFAULT_SLIPPAGE_BPS,
     })
 
-    const txBytes = Buffer.from(order.transaction, 'base64')
+    const txBytes = Buffer.from(result.transaction, 'base64')
     const transaction = VersionedTransaction.deserialize(txBytes)
 
     return {
       transaction,
-      expectedOutput: order.outAmount,
-      minimumOutput: order.otherAmountThreshold,
-      priceImpact: order.priceImpactPct,
+      expectedOutput: result.expectedOutput,
+      minimumOutput: result.minimumOutput,
+      priceImpact: result.priceImpact,
     }
   }
 
   async submitSwap(signedTx: VersionedTransaction): Promise<string> {
-    return this.dflow.sendSignedTransaction(this.provider.connection, signedTx)
+    return this.provider.connection.sendRawTransaction(signedTx.serialize(), {
+      skipPreflight: false,
+    })
   }
 
   async swapStatus(signature: string): Promise<SwapStatusResult> {
-    return this.dflow.getTransactionStatus(this.provider.connection, signature)
+    const resp = await this.provider.connection.getSignatureStatuses([signature], {
+      searchTransactionHistory: true,
+    })
+
+    const result = resp.value[0]
+
+    if (!result) {
+      return { status: 'PENDING_CLOSE', success: false }
+    }
+
+    if (result.err) {
+      return { status: 'OPEN_FAILED', success: false }
+    }
+
+    if (
+      result.confirmationStatus === 'confirmed' ||
+      result.confirmationStatus === 'finalized'
+    ) {
+      return { status: 'CLOSED', success: true }
+    }
+
+    return { status: 'PENDING_CLOSE', success: false }
+  }
+
+  // ── Token Creation (via TokenApi adapter) ──────────────────
+
+  async createToken(params: CreateTokenParams): Promise<{
+    transaction: VersionedTransaction
+    mint: PublicKey
+    pool: PublicKey
+    metadataUri?: string
+  }> {
+    if (!this.tokenApi) {
+      throw new Error(
+        'Token API not configured. Provide tokenApi or tokenApiKey in VertigoConfig.',
+      )
+    }
+
+    const result = await this.tokenApi.createToken(params)
+
+    const txBytes = Buffer.from(result.transaction, 'base64')
+    const transaction = VersionedTransaction.deserialize(txBytes)
+
+    return {
+      transaction,
+      mint: new PublicKey(result.mint),
+      pool: new PublicKey(result.pool),
+      metadataUri: result.metadataUri,
+    }
+  }
+
+  async getTokenStatus(mint: PublicKey): Promise<TokenStatus> {
+    if (!this.tokenApi) {
+      throw new Error(
+        'Token API not configured. Provide tokenApi or tokenApiKey in VertigoConfig.',
+      )
+    }
+
+    return this.tokenApi.getTokenStatus({ mint: mint.toBase58() })
   }
 
   // ── Build Instructions ───────────────────────────────────

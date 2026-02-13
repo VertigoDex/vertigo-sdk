@@ -760,26 +760,35 @@ describe('VertigoClient', () => {
   })
 
   describe('swap', () => {
-    it('calls dFlow and returns deserialized transaction', async () => {
+    it('throws when no swapApi configured', async () => {
       const { provider } = makeMockProvider()
+      const client = new VertigoClient(provider)
 
+      await expect(
+        client.swap({
+          inputMint: Keypair.generate().publicKey,
+          outputMint: Keypair.generate().publicKey,
+          amount: 1,
+          user: Keypair.generate().publicKey,
+        }),
+      ).rejects.toThrow('Swap API not configured')
+    })
+
+    it('calls swapApi and returns deserialized transaction', async () => {
+      const { provider } = makeMockProvider()
       const mockTx = makeSerializableTx()
       const mockTxBase64 = Buffer.from(mockTx.serialize()).toString('base64')
 
-      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValue({
+      const mockSwapApi = {
+        getSwapTransaction: vi.fn().mockResolvedValue({
           transaction: mockTxBase64,
-          inAmount: '1000000',
-          outAmount: '500000',
-          otherAmountThreshold: '475000',
-          priceImpactPct: '0.5',
-          lastValidBlockHeight: 100,
-          executionMode: 'sync',
+          expectedOutput: '500000',
+          minimumOutput: '475000',
+          priceImpact: '0.5',
         }),
-      } as any)
+      }
 
-      const client = new VertigoClient(provider)
+      const client = new VertigoClient(provider, { swapApi: mockSwapApi })
       const result = await client.swap({
         inputMint: Keypair.generate().publicKey,
         outputMint: Keypair.generate().publicKey,
@@ -791,65 +800,52 @@ describe('VertigoClient', () => {
       expect(result.expectedOutput).toBe('500000')
       expect(result.minimumOutput).toBe('475000')
       expect(result.priceImpact).toBe('0.5')
-
-      vi.restoreAllMocks()
     })
 
-    it('passes correct params to dFlow API including default slippage', async () => {
+    it('passes correct params to swapApi including default slippage', async () => {
       const { provider } = makeMockProvider()
       const inputMint = Keypair.generate().publicKey
       const outputMint = Keypair.generate().publicKey
       const user = Keypair.generate().publicKey
-
       const mockTx = makeSerializableTx()
       const mockTxBase64 = Buffer.from(mockTx.serialize()).toString('base64')
 
-      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValue({
+      const mockSwapApi = {
+        getSwapTransaction: vi.fn().mockResolvedValue({
           transaction: mockTxBase64,
-          inAmount: '1000',
-          outAmount: '500',
-          otherAmountThreshold: '475',
-          priceImpactPct: '0',
-          lastValidBlockHeight: 100,
-          executionMode: 'sync',
+          expectedOutput: '500',
+          minimumOutput: '475',
+          priceImpact: '0',
         }),
-      } as any)
+      }
 
-      const client = new VertigoClient(provider)
+      const client = new VertigoClient(provider, { swapApi: mockSwapApi })
       await client.swap({ inputMint, outputMint, amount: new BN(1000), user })
 
-      const calledUrl = fetchSpy.mock.calls[0][0] as string
-      expect(calledUrl).toContain(`inputMint=${inputMint.toBase58()}`)
-      expect(calledUrl).toContain(`outputMint=${outputMint.toBase58()}`)
-      expect(calledUrl).toContain('amount=1000')
-      expect(calledUrl).toContain(`userPublicKey=${user.toBase58()}`)
-      expect(calledUrl).toContain('slippageBps=50') // default
-
-      vi.restoreAllMocks()
+      expect(mockSwapApi.getSwapTransaction).toHaveBeenCalledWith({
+        inputMint: inputMint.toBase58(),
+        outputMint: outputMint.toBase58(),
+        amount: '1000',
+        userPublicKey: user.toBase58(),
+        slippageBps: 50,
+      })
     })
 
     it('uses custom slippage when provided', async () => {
       const { provider } = makeMockProvider()
-
       const mockTx = makeSerializableTx()
       const mockTxBase64 = Buffer.from(mockTx.serialize()).toString('base64')
 
-      const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
-        ok: true,
-        json: vi.fn().mockResolvedValue({
+      const mockSwapApi = {
+        getSwapTransaction: vi.fn().mockResolvedValue({
           transaction: mockTxBase64,
-          inAmount: '1',
-          outAmount: '1',
-          otherAmountThreshold: '1',
-          priceImpactPct: '0',
-          lastValidBlockHeight: 1,
-          executionMode: 'sync',
+          expectedOutput: '1',
+          minimumOutput: '1',
+          priceImpact: '0',
         }),
-      } as any)
+      }
 
-      const client = new VertigoClient(provider)
+      const client = new VertigoClient(provider, { swapApi: mockSwapApi })
       await client.swap({
         inputMint: Keypair.generate().publicKey,
         outputMint: Keypair.generate().publicKey,
@@ -858,8 +854,35 @@ describe('VertigoClient', () => {
         slippageBps: 200,
       })
 
-      const calledUrl = fetchSpy.mock.calls[0][0] as string
-      expect(calledUrl).toContain('slippageBps=200')
+      const calledParams = mockSwapApi.getSwapTransaction.mock.calls[0][0]
+      expect(calledParams.slippageBps).toBe(200)
+    })
+
+    it('works with swapApiKey (dFlow default)', async () => {
+      const { provider } = makeMockProvider()
+      const mockTx = makeSerializableTx()
+      const mockTxBase64 = Buffer.from(mockTx.serialize()).toString('base64')
+
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          transaction: mockTxBase64,
+          outAmount: '500',
+          otherAmountThreshold: '475',
+          priceImpactPct: '0.5',
+        }),
+      } as any)
+
+      const client = new VertigoClient(provider, { swapApiKey: 'test-key' })
+      const result = await client.swap({
+        inputMint: Keypair.generate().publicKey,
+        outputMint: Keypair.generate().publicKey,
+        amount: 1000,
+        user: Keypair.generate().publicKey,
+      })
+
+      expect(result.transaction).toBeInstanceOf(VersionedTransaction)
+      expect(result.expectedOutput).toBe('500')
 
       vi.restoreAllMocks()
     })
@@ -936,6 +959,124 @@ describe('VertigoClient', () => {
       const status = await client.swapStatus('test-sig')
 
       expect(status).toEqual({ status: 'PENDING_CLOSE', success: false })
+    })
+  })
+
+  describe('createToken', () => {
+    it('throws when no tokenApi configured', async () => {
+      const { provider } = makeMockProvider()
+      const client = new VertigoClient(provider)
+
+      await expect(
+        client.createToken({
+          payer: 'payer',
+          metadata: { name: 'T', symbol: 'T', description: '', image: '' },
+          poolConfig: {
+            shift: '0',
+            initialTokenBReserves: '0',
+            feeParams: { normalizationPeriod: '0', decay: 0, royaltiesBps: 0, reference: '0' },
+          },
+        }),
+      ).rejects.toThrow('Token API not configured')
+    })
+
+    it('calls tokenApi and returns deserialized result', async () => {
+      const { provider } = makeMockProvider()
+      const mockTx = makeSerializableTx()
+      const mockTxBase64 = Buffer.from(mockTx.serialize()).toString('base64')
+      const mintKey = Keypair.generate().publicKey
+      const poolKey = Keypair.generate().publicKey
+
+      const mockTokenApi = {
+        createToken: vi.fn().mockResolvedValue({
+          transaction: mockTxBase64,
+          mint: mintKey.toBase58(),
+          pool: poolKey.toBase58(),
+          metadataUri: 'https://arweave.net/abc',
+        }),
+        getTokenStatus: vi.fn(),
+      }
+
+      const client = new VertigoClient(provider, { tokenApi: mockTokenApi })
+      const result = await client.createToken({
+        payer: 'payer',
+        metadata: { name: 'Token', symbol: 'TKN', description: 'desc', image: 'img' },
+        poolConfig: {
+          shift: '1000000',
+          initialTokenBReserves: '1000000000',
+          feeParams: { normalizationPeriod: '600', decay: 0.5, royaltiesBps: 250, reference: '0' },
+        },
+      })
+
+      expect(result.transaction).toBeInstanceOf(VersionedTransaction)
+      expect(result.mint.equals(mintKey)).toBe(true)
+      expect(result.pool.equals(poolKey)).toBe(true)
+      expect(result.metadataUri).toBe('https://arweave.net/abc')
+    })
+
+    it('works with tokenApiKey (default impl)', async () => {
+      const { provider } = makeMockProvider()
+      const mockTx = makeSerializableTx()
+      const mockTxBase64 = Buffer.from(mockTx.serialize()).toString('base64')
+      const mintKey = Keypair.generate().publicKey
+      const poolKey = Keypair.generate().publicKey
+
+      vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce({
+        ok: true,
+        json: vi.fn().mockResolvedValue({
+          transaction: mockTxBase64,
+          mint: mintKey.toBase58(),
+          pool: poolKey.toBase58(),
+        }),
+      } as any)
+
+      const client = new VertigoClient(provider, { tokenApiKey: 'test-key' })
+      const result = await client.createToken({
+        payer: 'payer',
+        metadata: { name: 'T', symbol: 'T', description: '', image: '' },
+        poolConfig: {
+          shift: '0',
+          initialTokenBReserves: '0',
+          feeParams: { normalizationPeriod: '0', decay: 0, royaltiesBps: 0, reference: '0' },
+        },
+      })
+
+      expect(result.transaction).toBeInstanceOf(VersionedTransaction)
+      expect(result.mint.equals(mintKey)).toBe(true)
+
+      vi.restoreAllMocks()
+    })
+  })
+
+  describe('getTokenStatus', () => {
+    it('throws when no tokenApi configured', async () => {
+      const { provider } = makeMockProvider()
+      const client = new VertigoClient(provider)
+
+      await expect(
+        client.getTokenStatus(Keypair.generate().publicKey),
+      ).rejects.toThrow('Token API not configured')
+    })
+
+    it('calls tokenApi with mint as base58', async () => {
+      const { provider } = makeMockProvider()
+      const mint = Keypair.generate().publicKey
+
+      const mockTokenApi = {
+        createToken: vi.fn(),
+        getTokenStatus: vi.fn().mockResolvedValue({
+          status: 'indexed',
+          indexed: true,
+          pool: 'pool-addr',
+        }),
+      }
+
+      const client = new VertigoClient(provider, { tokenApi: mockTokenApi })
+      const result = await client.getTokenStatus(mint)
+
+      expect(result.status).toBe('indexed')
+      expect(result.indexed).toBe(true)
+      expect(mockTokenApi.getTokenStatus).toHaveBeenCalledWith({ mint: mint.toBase58() })
     })
   })
 })
