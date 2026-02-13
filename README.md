@@ -1,371 +1,374 @@
-# Vertigo SDK v2.0
+# Vertigo SDK
 
-<div align="center">
-  <h3>🚀 Official TypeScript SDK for the Vertigo AMM Protocol on Solana</h3>
-  <p>Build powerful DeFi applications with Vertigo's innovative AMM design</p>
+TypeScript SDK for the Vertigo AMM protocol on Solana. Provides pool operations (create, buy, sell, claim, quote) and dFlow-routed swaps through a single `VertigoClient` class.
 
-  [![npm version](https://img.shields.io/npm/v/@vertigo-amm/vertigo-sdk)](https://www.npmjs.com/package/@vertigo-amm/vertigo-sdk)
-  [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](https://opensource.org/licenses/MIT)
-  [![Documentation](https://img.shields.io/badge/docs-vertigo.so-green)](https://docs.vertigo.so)
-</div>
-
-## ✨ Features
-
-- **🎯 Simple & Intuitive API** - Get started in minutes with our high-level client
-- **🔧 Modular Architecture** - Use only what you need with tree-shakeable exports
-- **⚡ High Performance** - Optimized for speed with smart caching and batching
-- **🔐 Type Safety** - Full TypeScript support with comprehensive type definitions
-- **📊 Real-time Data** - Built-in API client for market data and analytics
-- **🛠️ Developer Tools** - Rich utilities for common blockchain operations
-- **📱 Wallet Integration** - Works seamlessly with all major Solana wallets
-- **🔄 Auto-retry Logic** - Robust error handling and automatic retries
-
-## 📦 Installation
+## Installation
 
 ```bash
-yarn add @vertigo-amm/vertigo-sdk
-# or
-npm install @vertigo-amm/vertigo-sdk
-# or
-bun install @vertigo-amm/vertigo-sdk
+pnpm add @vertigo-amm/vertigo-sdk
 ```
 
-## 🚀 Quick Start
+Peer dependencies: `@coral-xyz/anchor`, `@solana/web3.js`, `@solana/spl-token`.
 
-### Basic Usage (Read-Only)
+## Quick Start
 
 ```typescript
-import { Vertigo } from "@vertigo-amm/vertigo-sdk";
-import { Connection } from "@solana/web3.js";
+import { AnchorProvider, Wallet } from '@coral-xyz/anchor'
+import { Connection, Keypair } from '@solana/web3.js'
+import { VertigoClient } from '@vertigo-amm/vertigo-sdk'
 
-// Initialize SDK without wallet (read-only)
-const vertigo = await Vertigo.load({
-  connection: new Connection("https://api.mainnet-beta.solana.com"),
-  network: "mainnet",
-});
+const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed')
+const wallet = new Wallet(Keypair.fromSecretKey(/* ... */))
+const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' })
 
-// Find pools for a token pair
-const pools = await vertigo.pools.findPoolsByMints(SOL_MINT, USDC_MINT);
+const client = new VertigoClient(provider)
+```
 
-// Get swap quote
-const quote = await vertigo.swap.getQuote({
+With dFlow swap routing:
+
+```typescript
+const client = new VertigoClient(provider, {
+  dflowApiKey: process.env.DFLOW_API_KEY,
+})
+```
+
+## dFlow Routed Swaps
+
+The simplest way to swap tokens. Takes an input mint, output mint, and amount, then returns an unsigned `VersionedTransaction` from the dFlow aggregator.
+
+### Get a Swap Transaction
+
+```typescript
+import { PublicKey } from '@solana/web3.js'
+import { BN } from '@coral-xyz/anchor'
+
+const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112')
+const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
+
+const result = await client.swap({
   inputMint: SOL_MINT,
   outputMint: USDC_MINT,
-  amount: 1_000_000_000, // 1 SOL
-  slippageBps: 50,
-});
+  amount: 1_000_000_000,      // 1 SOL in lamports
+  user: wallet.publicKey,
+  slippageBps: 50,             // 0.5% slippage (default)
+})
+
+console.log('Expected output:', result.expectedOutput)
+console.log('Minimum output:', result.minimumOutput)
+console.log('Price impact:', result.priceImpact)
 ```
 
-### With Wallet (Full Features)
+### Sign and Submit
 
 ```typescript
-import { Vertigo } from "@vertigo-amm/vertigo-sdk";
-import { Connection, Keypair } from "@solana/web3.js";
-import * as anchor from "@coral-xyz/anchor";
+// Sign the transaction (user's wallet)
+result.transaction.sign([wallet.payer])
 
-// Initialize with wallet
-const wallet = new anchor.Wallet(keypair);
-const vertigo = await Vertigo.load({
-  connection: new Connection("https://api.mainnet-beta.solana.com"),
-  wallet,
-  network: "mainnet",
-});
+// Submit to the network
+const signature = await client.submitSwap(result.transaction)
+console.log('Swap submitted:', signature)
 
-// Execute a swap
-const result = await vertigo.swap.swap({
-  inputMint: SOL_MINT,
-  outputMint: USDC_MINT,
-  amount: 1_000_000_000,
-  options: {
-    slippageBps: 100,
-    priorityFee: "auto",
-  },
-});
-
-console.log(`Swap successful: ${result.signature}`);
+// Poll for confirmation
+const status = await client.swapStatus(signature)
+console.log('Status:', status.status)   // 'CLOSED' | 'PENDING_CLOSE' | 'OPEN_FAILED' | 'OPEN_EXPIRED'
+console.log('Success:', status.success)  // true | false
 ```
 
-## 📚 Core Modules
-
-### 🏊 Pool Client
-
-Manage liquidity pools and fetch pool data:
+### Full Swap Flow (Frontend Example)
 
 ```typescript
-// Create a new pool
-const { poolAddress } = await vertigo.pools.createPool({
+import { VertigoClient, type SwapArgs } from '@vertigo-amm/vertigo-sdk'
+
+const handleSwap = async (inputMint: PublicKey, outputMint: PublicKey, amount: number) => {
+  // 1. Get the unsigned transaction
+  const { transaction, expectedOutput, minimumOutput } = await client.swap({
+    inputMint,
+    outputMint,
+    amount,
+    user: wallet.publicKey,
+    slippageBps: 100, // 1%
+  })
+
+  // 2. Sign with the user's wallet (works with wallet adapters)
+  const signed = await wallet.signTransaction(transaction)
+
+  // 3. Submit and wait for confirmation
+  const signature = await client.submitSwap(signed)
+
+  // 4. Check status
+  const { success } = await client.swapStatus(signature)
+  if (!success) {
+    throw new Error('Swap failed')
+  }
+
+  return { signature, expectedOutput }
+}
+```
+
+## Pool Operations
+
+### Create a Pool
+
+```typescript
+import { TOKEN_PROGRAM_ID } from '@solana/spl-token'
+import { BN } from '@coral-xyz/anchor'
+
+const signature = await client.create({
+  payer: wallet.publicKey,
+  owner: wallet.publicKey,
+  tokenWalletAuthority: wallet.publicKey,
   mintA: SOL_MINT,
   mintB: TOKEN_MINT,
-  initialMarketCap: 10_000_000_000,
-  royaltiesBps: 250,
-});
-
-// Get pool information
-const pool = await vertigo.pools.getPool(poolAddress);
-
-// Get all pools
-const pools = await vertigo.pools.getPools();
-
-// Find pools by tokens
-const pools = await vertigo.pools.findPoolsByMints(mintA, mintB);
-
-// Get pool statistics
-const stats = await vertigo.pools.getPoolStats(poolAddress);
-```
-
-### 💱 Swap Client
-
-Execute token swaps with advanced features:
-
-```typescript
-// Get swap quote
-const quote = await vertigo.swap.getQuote({
-  inputMint: SOL_MINT,
-  outputMint: USDC_MINT,
-  amount: 1_000_000_000,
-  slippageBps: 50,
-});
-
-// Simulate swap to check for errors
-const simulation = await vertigo.swap.simulateSwap({
-  inputMint: SOL_MINT,
-  outputMint: USDC_MINT,
-  amount: 1_000_000_000,
-});
-
-// Execute swap
-const result = await vertigo.swap.swap({
-  inputMint: SOL_MINT,
-  outputMint: USDC_MINT,
-  amount: 1_000_000_000,
-  options: {
-    slippageBps: 100,
-    wrapSol: true,
-    priorityFee: "auto",
+  tokenWalletB: tokenWalletBAddress,
+  shift: new BN(1_000_000),
+  initialTokenBReserves: new BN(1_000_000_000),
+  feeParams: {
+    normalizationPeriod: new BN(600),
+    decay: 0.5,
+    royaltiesBps: 250,          // 2.5% royalties
+    privilegedSwapper: null,
+    reference: new BN(0),
   },
-});
+  // Optional: auto-derived from PDA seeds if omitted
+  // pool: poolAddress,
+  // vaultA: vaultAAddress,
+  // vaultB: vaultBAddress,
+  // tokenProgramA: TOKEN_PROGRAM_ID,
+  // tokenProgramB: TOKEN_PROGRAM_ID,
+})
+
+console.log('Pool created:', signature)
 ```
 
-### 🏗️ Pool Authority Client
-
-Advanced pool management for authorized users:
+### Buy (SOL -> Token)
 
 ```typescript
-import { PoolAuthority } from "@vertigo-amm/vertigo-sdk";
-
-// Initialize Pool Authority client
-const poolAuth = await PoolAuthority.load({
-  connection,
-  wallet,
-});
-
-// Create pools with authority permissions
-// Note: Token factory features are under development
+const signature = await client.buy({
+  pool: poolAddress,
+  user: wallet.publicKey,
+  owner: poolOwner,
+  mintA: SOL_MINT,
+  mintB: TOKEN_MINT,
+  userTaA: userSolAccount,
+  userTaB: userTokenAccount,
+  amount: new BN(100_000_000),   // 0.1 SOL
+  limit: new BN(0),              // minimum output (0 = no limit)
+})
 ```
 
-### 📊 API Client
-
-Access market data and analytics:
+### Sell (Token -> SOL)
 
 ```typescript
-// Get pool statistics
-const stats = await vertigo.api.getPoolStats(poolAddress);
-
-// Get trending pools
-const trending = await vertigo.api.getTrendingPools("24h", 10);
-
-// Get token information
-const tokenInfo = await vertigo.api.getTokenInfo(mintAddress);
-
-// Subscribe to pool updates
-const unsubscribe = vertigo.api.subscribeToPool(poolAddress, {
-  onUpdate: (data) => console.log("Pool update:", data),
-});
+const signature = await client.sell({
+  pool: poolAddress,
+  user: wallet.publicKey,
+  owner: poolOwner,
+  mintA: SOL_MINT,
+  mintB: TOKEN_MINT,
+  userTaA: userSolAccount,
+  userTaB: userTokenAccount,
+  amount: new BN(1_000_000),     // tokens to sell
+  limit: new BN(0),
+})
 ```
 
-## 🛠️ Utility Functions
-
-The SDK includes rich utilities for common operations:
+### Claim Royalties
 
 ```typescript
-import {
-  formatTokenAmount,
-  parseTokenAmount,
-  getOrCreateATA,
-  estimatePriorityFee,
-  retry,
-  getExplorerUrl,
-  createTokenMetadata,
-} from "@vertigo-amm/vertigo-sdk";
-
-// Format token amounts
-const formatted = formatTokenAmount(amount, decimals, 4);
-
-// Parse user input
-const amount = parseTokenAmount("1.5", 9);
-
-// Get or create token accounts
-const { address, instruction } = await getOrCreateATA(connection, mint, owner);
-
-// Estimate network fees
-const fee = await estimatePriorityFee(connection, 75);
-
-// Retry with exponential backoff
-const result = await retry(() => fetchData(), { maxRetries: 3 });
-
-// Get explorer links
-const url = getExplorerUrl(signature, "mainnet", "solscan");
-
-// Create token metadata for token factories
-const metadata = createTokenMetadata(
-  "My Token",
-  "MYTKN",
-  "https://example.com/metadata.json"
-);
+const signature = await client.claim({
+  pool: poolAddress,
+  claimer: wallet.publicKey,
+  mintA: SOL_MINT,
+  receiverTaA: receiverTokenAccount,
+})
 ```
 
-### 🪙 Token Metadata Helper
+## Quotes
 
-When creating tokens with the factory programs, use the `createTokenMetadata` helper for validation:
+Get swap quotes without executing a transaction. Uses the on-chain `view()` method for accurate results.
 
 ```typescript
-import { createTokenMetadata } from "@vertigo-amm/vertigo-sdk";
+const buyQuote = await client.quoteBuy({
+  pool: poolAddress,
+  owner: poolOwner,
+  user: wallet.publicKey,
+  mintA: SOL_MINT,
+  mintB: TOKEN_MINT,
+  amount: new BN(100_000_000),   // 0.1 SOL
+  limit: new BN(0),
+})
 
-// Create and validate token metadata
-const metadata = createTokenMetadata(
-  "My Amazing Token", // name (max 32 characters)
-  "MAT",              // symbol (max 10 characters, auto-uppercased)
-  "https://example.com/token-metadata.json" // URI to off-chain metadata
-);
-
-// Use with token factory launch params
-const launchParams = {
-  token_config: metadata,
-  reference: new anchor.BN(Date.now() / 1000),
-  nonce: 0,
-};
+console.log('Tokens out:', buyQuote.amountB.toString())
+console.log('Fee:', buyQuote.feeA.toString())
 ```
-
-The helper automatically:
-- ✅ Validates name length (1-32 characters)
-- ✅ Validates symbol length (1-10 characters)
-- ✅ Trims whitespace from all fields
-- ✅ Uppercases the symbol
-- ✅ Ensures URI is provided
-
-## ⚙️ Advanced Configuration
 
 ```typescript
-const vertigo = await Vertigo.load({
-  connection,
-  wallet,
-  network: "mainnet",
+const sellQuote = await client.quoteSell({
+  pool: poolAddress,
+  owner: poolOwner,
+  user: wallet.publicKey,
+  mintA: SOL_MINT,
+  mintB: TOKEN_MINT,
+  amount: new BN(1_000_000),
+  limit: new BN(0),
+})
 
-  // Custom program addresses
-  programs: {
-    amm: customAmmAddress,
-    factory: customFactoryAddress,
-  },
-
-  // API configuration
-  apiUrl: "https://api.vertigo.so",
-
-  // Caching settings
-  cache: {
-    enabled: true,
-    ttl: 60000, // 1 minute
-  },
-
-  // Transaction settings
-  priority: {
-    autoFee: true,
-    baseFee: 1000,
-    maxFee: 1000000,
-  },
-});
+console.log('SOL out:', sellQuote.amountA.toString())
+console.log('Fee:', sellQuote.feeA.toString())
 ```
 
-## 🎯 Examples
+## Pool Queries
 
-Check out our test files for usage examples:
+### Fetch Pool Data
 
-- [Integration Tests](./tests/integration/)
-- [Unit Tests](./tests/unit/)
-- [Full Integration Test](./tests/integration/full-integration.test.ts)
+```typescript
+const pool = await client.getPool(poolAddress)
 
-## 🧪 Running Tests
+console.log('Owner:', pool.owner.toBase58())
+console.log('Mint A:', pool.mintA.toBase58())
+console.log('Mint B:', pool.mintB.toBase58())
+console.log('Reserve A:', pool.tokenAReserves.toString())
+console.log('Reserve B:', pool.tokenBReserves.toString())
+console.log('Shift:', pool.shift.toString())
+console.log('Enabled:', pool.enabled)
+console.log('Royalties collected:', pool.royalties.toString())
+console.log('Vertigo fees:', pool.vertigoFees.toString())
+console.log('Fee decay:', pool.feeParams.decay)
+console.log('Royalties BPS:', pool.feeParams.royaltiesBps)
+```
+
+## PDA Helpers
+
+Derive program addresses without RPC calls.
+
+```typescript
+// Pool PDA: seeds = ["pool", owner, mintA, mintB]
+const poolAddress = client.poolPda(ownerPubkey, SOL_MINT, TOKEN_MINT)
+
+// Vault PDA: seeds = [pool, mint]
+const vaultA = client.vaultPda(poolAddress, SOL_MINT)
+const vaultB = client.vaultPda(poolAddress, TOKEN_MINT)
+```
+
+### Find a Pool Address Before It Exists
+
+```typescript
+// Useful for checking if a pool already exists or pre-computing addresses
+const poolAddress = client.poolPda(owner, mintA, mintB)
+const accountInfo = await provider.connection.getAccountInfo(poolAddress)
+
+if (accountInfo) {
+  console.log('Pool already exists at', poolAddress.toBase58())
+} else {
+  console.log('Pool does not exist yet, safe to create')
+}
+```
+
+## Building Instructions
+
+When you need the raw `TransactionInstruction` instead of sending a full transaction (e.g., for composing with other instructions or using a custom signing flow):
+
+```typescript
+import { Transaction } from '@solana/web3.js'
+
+// Build individual instructions
+const buyIx = await client.buildBuyIx({ /* BuyArgs */ })
+const sellIx = await client.buildSellIx({ /* SellArgs */ })
+const createIx = await client.buildCreateIx({ /* CreateArgs */ })
+const claimIx = await client.buildClaimIx({ /* ClaimArgs */ })
+
+// Compose multiple instructions in a single transaction
+const tx = new Transaction()
+  .add(buyIx)
+  .add(claimIx)
+
+const signature = await provider.sendAndConfirm(tx, [])
+```
+
+### Example: Buy With Custom Priority Fee
+
+```typescript
+import { Transaction, ComputeBudgetProgram } from '@solana/web3.js'
+
+const buyIx = await client.buildBuyIx({
+  pool: poolAddress,
+  user: wallet.publicKey,
+  owner: poolOwner,
+  mintA: SOL_MINT,
+  mintB: TOKEN_MINT,
+  userTaA: userSolAccount,
+  userTaB: userTokenAccount,
+  amount: new BN(100_000_000),
+  limit: new BN(0),
+})
+
+const tx = new Transaction()
+  .add(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 50_000 }))
+  .add(ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }))
+  .add(buyIx)
+
+const signature = await provider.sendAndConfirm(tx, [])
+```
+
+## Configuration
+
+```typescript
+import { PublicKey } from '@solana/web3.js'
+
+const client = new VertigoClient(provider, {
+  // Custom Vertigo program ID (default: vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ)
+  programId: new PublicKey('YOUR_PROGRAM_ID'),
+
+  // dFlow aggregator API key (enables production routing)
+  dflowApiKey: 'your-api-key',
+
+  // Custom dFlow API URL (overrides default prod/dev selection)
+  dflowApiUrl: 'https://custom-dflow-endpoint.com',
+})
+```
+
+Without a `dflowApiKey`, the SDK uses the dFlow dev endpoint. With a key, it uses the production endpoint.
+
+## API Reference
+
+### VertigoClient
+
+| Method | Description | Returns |
+|--------|-------------|---------|
+| `swap(args)` | Get unsigned swap tx from dFlow | `SwapResult` |
+| `submitSwap(signedTx)` | Submit a signed swap transaction | `string` (signature) |
+| `swapStatus(signature)` | Check swap confirmation status | `SwapStatusResult` |
+| `buy(args)` | Execute a buy (build + send + confirm) | `string` (signature) |
+| `sell(args)` | Execute a sell (build + send + confirm) | `string` (signature) |
+| `create(args)` | Create a pool (build + send + confirm) | `string` (signature) |
+| `claim(args)` | Claim royalties (build + send + confirm) | `string` (signature) |
+| `quoteBuy(args)` | Get buy quote (read-only) | `QuoteResult` |
+| `quoteSell(args)` | Get sell quote (read-only) | `QuoteResult` |
+| `buildBuyIx(args)` | Build buy instruction | `TransactionInstruction` |
+| `buildSellIx(args)` | Build sell instruction | `TransactionInstruction` |
+| `buildCreateIx(args)` | Build create instruction | `TransactionInstruction` |
+| `buildClaimIx(args)` | Build claim instruction | `TransactionInstruction` |
+| `getPool(pool)` | Fetch and decode pool account | `PoolData` |
+| `poolPda(owner, mintA, mintB)` | Derive pool PDA | `PublicKey` |
+| `vaultPda(pool, mint)` | Derive vault PDA | `PublicKey` |
+
+### Properties
+
+| Property | Type | Description |
+|----------|------|-------------|
+| `provider` | `AnchorProvider` | The Anchor provider |
+| `program` | `Program` | The Anchor program instance |
+| `programId` | `PublicKey` | The Vertigo program ID |
+
+## Testing
 
 ```bash
-# Run all tests
-npm test
-
-# Run tests in watch mode
-npm run test:watch
-
-# Run integration tests
-npm run test:integration
-
-# Run full devnet integration test
-npm run test:full
-
-# Run devnet tests with various options
-npm run test:devnet
-npm run test:devnet:verbose
+pnpm test          # Run all tests
+pnpm test:watch    # Watch mode
+pnpm typecheck     # Type check
+pnpm build         # Build
 ```
 
-## 🔄 Migration from v1
+## License
 
-If you're upgrading from SDK v1:
-
-```typescript
-// Old (v1)
-import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
-const sdk = new VertigoSDK(provider);
-
-// New (v2)
-import { Vertigo } from "@vertigo-amm/vertigo-sdk";
-const vertigo = await Vertigo.load({ connection, wallet });
-
-// The old SDK is still available for backwards compatibility
-import { VertigoSDK } from "@vertigo-amm/vertigo-sdk";
-```
-
-## 🔗 Network Support
-
-| Network  | Status       | RPC Endpoint                        |
-| -------- | ------------ | ----------------------------------- |
-| Mainnet  | ✅ Supported | https://api.mainnet-beta.solana.com |
-| Devnet   | ✅ Supported | https://api.devnet.solana.com       |
-| Testnet  | ✅ Supported | https://api.testnet.solana.com      |
-| Localnet | ✅ Supported | http://localhost:8899               |
-
-## 📖 Documentation
-
-- [Full Documentation](https://docs.vertigo.so)
-- [API Reference](https://api.vertigo.so/docs)
-- [Integration Guide](https://docs.vertigo.so/integration)
-- [GitHub Repository](https://github.com/vertigo-protocol/vertigo-sdk)
-
-## 🤝 Contributing
-
-We welcome contributions! Please see our [Contributing Guide](CONTRIBUTING.md) for details.
-
-## 🐛 Support
-
-- **Discord**: [Join our community](https://discord.gg/vertigo)
-- **GitHub Issues**: [Report bugs](https://github.com/vertigo-protocol/vertigo-sdk/issues)
-
-## 📄 License
-
-MIT License - see [LICENSE](LICENSE) for details.
-
----
-
-<div align="center">
-  <p>Built with ❤️ by the Vertigo Protocol team</p>
-  <p>
-    <a href="https://vertigo.so">Website</a> •
-    <a href="https://twitter.com/vertigoprotocol">Twitter</a> •
-    <a href="https://discord.gg/vertigo">Discord</a>
-  </p>
-</div>
+MIT
