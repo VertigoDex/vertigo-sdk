@@ -2,6 +2,7 @@ node_modules/
 package-lock.json
 yarn.lock
 dist/
+coverage/
 target/**/*.d.ts
 target/**/*.js
 users/**
