@@ -21,6 +21,16 @@ Full reference for every method, type, and adapter in the SDK.
   - [createDFlowSwapApi](#createdflowswapapi)
   - [createDefaultTokenApi](#createdefaulttokenapi)
 - [Backend Endpoint Specs](#backend-endpoint-specs)
+- [Examples](#examples)
+  - [End-to-End Swap Flow](#1-end-to-end-swap-flow)
+  - [Token Launch Flow](#2-token-launch-flow)
+  - [Pool Lifecycle](#3-pool-lifecycle)
+  - [Quote-First Trading](#4-quote-first-trading)
+  - [Custom Transaction Composition](#5-custom-transaction-composition)
+  - [Custom Swap Adapter (Jupiter)](#6-custom-swap-adapter-jupiter)
+  - [Custom Token Backend Adapter](#7-custom-token-backend-adapter)
+  - [Pool Monitoring](#8-pool-monitoring)
+  - [Error Handling Patterns](#9-error-handling-patterns)
 - [Types](#types)
 
 ---
@@ -800,6 +810,613 @@ These are the HTTP endpoints that the default adapters call. If you're building 
   "outAmount": "500000",
   "otherAmountThreshold": "475000",
   "priceImpactPct": "0.5"
+}
+```
+
+---
+
+## Examples
+
+End-to-end examples showing real-world usage patterns.
+
+### Shared Setup
+
+All examples below assume this setup:
+
+```ts
+import { AnchorProvider, BN, Wallet } from '@coral-xyz/anchor'
+import { Connection, Keypair, PublicKey } from '@solana/web3.js'
+import { TOKEN_PROGRAM_ID, getAssociatedTokenAddressSync } from '@solana/spl-token'
+import { VertigoClient } from '@vertigo-amm/vertigo-sdk'
+
+const connection = new Connection('https://api.mainnet-beta.solana.com', 'confirmed')
+const wallet = new Wallet(Keypair.fromSecretKey(/* your key */))
+const provider = new AnchorProvider(connection, wallet, { commitment: 'confirmed' })
+```
+
+---
+
+### 1. End-to-End Swap Flow
+
+Get a swap transaction, sign it, submit it, and poll until confirmed.
+
+```ts
+const client = new VertigoClient(provider, { swapApiKey: 'YOUR_DFLOW_KEY' })
+
+const SOL_MINT = new PublicKey('So11111111111111111111111111111111111111112')
+const USDC_MINT = new PublicKey('EPjFWdd5AufqSSqeM2qN1xzybapC8G4wEGGkZwyTDt1v')
+
+// 1. Get unsigned swap transaction (1 SOL → USDC, 0.5% slippage)
+const { transaction, expectedOutput, priceImpact } = await client.swap({
+  inputMint: SOL_MINT,
+  outputMint: USDC_MINT,
+  amount: 1_000_000_000,
+  user: wallet.publicKey,
+  slippageBps: 50,
+})
+
+console.log(`Expected output: ${expectedOutput} USDC`)
+console.log(`Price impact: ${priceImpact}%`)
+
+// 2. Sign and submit
+transaction.sign([wallet.payer])
+const signature = await client.submitSwap(transaction)
+console.log(`Submitted: ${signature}`)
+
+// 3. Poll status until confirmed
+const poll = async (): Promise<void> => {
+  const { status, success } = await client.swapStatus(signature)
+
+  if (status === 'CLOSED') {
+    console.log('Swap confirmed!')
+    return
+  }
+
+  if (status === 'OPEN_FAILED') {
+    throw new Error('Swap failed on-chain')
+  }
+
+  // Still pending — wait and retry
+  await new Promise((resolve) => setTimeout(resolve, 2_000))
+  return poll()
+}
+
+await poll()
+```
+
+---
+
+### 2. Token Launch Flow
+
+Create a token via the backend, sign the transaction, and poll until indexed.
+
+```ts
+const client = new VertigoClient(provider, { tokenApiKey: 'YOUR_VERTIGO_KEY' })
+
+// 1. Create token (backend handles metadata upload + indexing)
+const { transaction, mint, pool, metadataUri } = await client.createToken({
+  payer: wallet.publicKey.toBase58(),
+  metadata: {
+    name: 'Awesome Token',
+    symbol: 'AWE',
+    description: 'The most awesome token on Solana',
+    image: 'data:image/png;base64,iVBORw0KGgo...',
+  },
+  poolConfig: {
+    shift: '1000000',
+    initialTokenBReserves: '1000000000',
+    feeParams: {
+      normalizationPeriod: '600',
+      decay: 0.5,
+      royaltiesBps: 250,
+      privilegedSwapper: null,
+      reference: '0',
+    },
+  },
+})
+
+console.log(`Mint: ${mint.toBase58()}`)
+console.log(`Pool: ${pool.toBase58()}`)
+console.log(`Metadata: ${metadataUri}`)
+
+// 2. Sign and submit
+transaction.sign([wallet.payer])
+const signature = await provider.connection.sendRawTransaction(transaction.serialize())
+console.log(`Submitted: ${signature}`)
+
+// 3. Poll until the token is indexed by the backend
+const waitForIndexing = async (): Promise<void> => {
+  const status = await client.getTokenStatus(mint)
+
+  if (status.indexed) {
+    console.log(`Token indexed! Pool: ${status.pool}`)
+    return
+  }
+
+  if (status.status === 'failed') {
+    throw new Error(`Indexing failed: ${status.error}`)
+  }
+
+  await new Promise((resolve) => setTimeout(resolve, 3_000))
+  return waitForIndexing()
+}
+
+await waitForIndexing()
+```
+
+---
+
+### 3. Pool Lifecycle
+
+Create a pool, trade on it, inspect state, and claim royalties.
+
+```ts
+const client = new VertigoClient(provider)
+
+const MINT_A = new PublicKey('So11111111111111111111111111111111111111112')  // SOL
+const MINT_B = new PublicKey('YOUR_TOKEN_MINT')
+
+const owner = wallet.publicKey
+const poolAddress = client.poolPda(owner, MINT_A, MINT_B)
+
+// ── Step 1: Create pool ─────────────────────────────────
+const tokenWalletB = getAssociatedTokenAddressSync(MINT_B, owner)
+
+const createSig = await client.create({
+  payer: wallet.publicKey,
+  owner,
+  tokenWalletAuthority: owner,
+  mintA: MINT_A,
+  mintB: MINT_B,
+  tokenWalletB,
+  shift: 1_000_000,
+  initialTokenBReserves: 1_000_000_000,
+  feeParams: {
+    normalizationPeriod: 600,
+    decay: 0.5,
+    royaltiesBps: 250,
+    privilegedSwapper: null,
+    reference: 0,
+  },
+})
+
+console.log(`Pool created: ${createSig}`)
+
+// ── Step 2: Buy tokens (SOL → Token) ────────────────────
+const userTaA = getAssociatedTokenAddressSync(MINT_A, wallet.publicKey)
+const userTaB = getAssociatedTokenAddressSync(MINT_B, wallet.publicKey)
+
+const buySig = await client.buy({
+  pool: poolAddress,
+  user: wallet.publicKey,
+  owner,
+  mintA: MINT_A,
+  mintB: MINT_B,
+  userTaA,
+  userTaB,
+  amount: 100_000_000,   // 0.1 SOL
+  limit: 0,              // no minimum output
+})
+
+console.log(`Buy executed: ${buySig}`)
+
+// ── Step 3: Check pool state ─────────────────────────────
+const pool = await client.getPool(poolAddress)
+console.log(`Reserves A: ${pool.tokenAReserves.toString()}`)
+console.log(`Reserves B: ${pool.tokenBReserves.toString()}`)
+console.log(`Royalties accrued: ${pool.royalties.toString()}`)
+console.log(`Pool enabled: ${pool.enabled}`)
+
+// ── Step 4: Sell tokens (Token → SOL) ────────────────────
+const sellSig = await client.sell({
+  pool: poolAddress,
+  user: wallet.publicKey,
+  owner,
+  mintA: MINT_A,
+  mintB: MINT_B,
+  userTaA,
+  userTaB,
+  amount: 50_000_000,
+  limit: 0,
+})
+
+console.log(`Sell executed: ${sellSig}`)
+
+// ── Step 5: Claim royalties ──────────────────────────────
+const receiverTaA = getAssociatedTokenAddressSync(MINT_A, wallet.publicKey)
+
+const claimSig = await client.claim({
+  pool: poolAddress,
+  claimer: wallet.publicKey,
+  mintA: MINT_A,
+  receiverTaA,
+})
+
+console.log(`Royalties claimed: ${claimSig}`)
+```
+
+---
+
+### 4. Quote-First Trading
+
+Get quotes before executing to display expected outcomes to the user.
+
+```ts
+const client = new VertigoClient(provider)
+
+const poolAddress = new PublicKey('POOL_ADDRESS')
+const pool = await client.getPool(poolAddress)
+
+const tradeAmount = new BN(500_000_000)  // 0.5 SOL
+
+// Get buy quote (SOL → Token)
+const buyQuote = await client.quoteBuy({
+  pool: poolAddress,
+  owner: pool.owner,
+  user: wallet.publicKey,
+  mintA: pool.mintA,
+  mintB: pool.mintB,
+  amount: tradeAmount,
+  limit: new BN(0),
+})
+
+console.log(`Buy ${tradeAmount.toString()} of token B:`)
+console.log(`  You receive: ${buyQuote.amountA.toString()} token A`)
+console.log(`  Fee: ${buyQuote.feeA.toString()} token A`)
+
+// Get sell quote for comparison
+const sellQuote = await client.quoteSell({
+  pool: poolAddress,
+  owner: pool.owner,
+  user: wallet.publicKey,
+  mintA: pool.mintA,
+  mintB: pool.mintB,
+  amount: tradeAmount,
+  limit: new BN(0),
+})
+
+console.log(`Sell ${tradeAmount.toString()} of token A:`)
+console.log(`  You receive: ${sellQuote.amountB.toString()} token B`)
+console.log(`  Fee: ${sellQuote.feeA.toString()} token A`)
+
+// Only execute if the quote is acceptable
+const minimumOutput = new BN(400_000_000)
+
+if (buyQuote.amountA.gte(minimumOutput)) {
+  await client.buy({
+    pool: poolAddress,
+    user: wallet.publicKey,
+    owner: pool.owner,
+    mintA: pool.mintA,
+    mintB: pool.mintB,
+    userTaA: getAssociatedTokenAddressSync(pool.mintA, wallet.publicKey),
+    userTaB: getAssociatedTokenAddressSync(pool.mintB, wallet.publicKey),
+    amount: tradeAmount,
+    limit: minimumOutput,  // enforce slippage protection
+  })
+}
+```
+
+---
+
+### 5. Custom Transaction Composition
+
+Build raw instructions and combine them with compute budget, priority fees, or other instructions.
+
+```ts
+import { Transaction, ComputeBudgetProgram } from '@solana/web3.js'
+
+const client = new VertigoClient(provider)
+
+const poolAddress = new PublicKey('POOL_ADDRESS')
+const pool = await client.getPool(poolAddress)
+
+// Build buy instruction (does not send anything)
+const buyIx = await client.buildBuyIx({
+  pool: poolAddress,
+  user: wallet.publicKey,
+  owner: pool.owner,
+  mintA: pool.mintA,
+  mintB: pool.mintB,
+  userTaA: getAssociatedTokenAddressSync(pool.mintA, wallet.publicKey),
+  userTaB: getAssociatedTokenAddressSync(pool.mintB, wallet.publicKey),
+  amount: 100_000_000,
+  limit: 0,
+})
+
+// Compose a transaction with priority fees
+const tx = new Transaction()
+  .add(ComputeBudgetProgram.setComputeUnitLimit({ units: 200_000 }))
+  .add(ComputeBudgetProgram.setComputeUnitPrice({ microLamports: 50_000 }))
+  .add(buyIx)
+
+const signature = await provider.sendAndConfirm(tx, [])
+console.log(`Executed with priority fees: ${signature}`)
+```
+
+**Batch buy + sell in one transaction:**
+
+```ts
+const buyIx = await client.buildBuyIx({
+  pool: poolA,
+  user: wallet.publicKey,
+  owner: ownerA,
+  mintA: mintA1,
+  mintB: mintB1,
+  userTaA: userTaA1,
+  userTaB: userTaB1,
+  amount: 100_000_000,
+  limit: 0,
+})
+
+const sellIx = await client.buildSellIx({
+  pool: poolB,
+  user: wallet.publicKey,
+  owner: ownerB,
+  mintA: mintA2,
+  mintB: mintB2,
+  userTaA: userTaA2,
+  userTaB: userTaB2,
+  amount: 50_000_000,
+  limit: 0,
+})
+
+const tx = new Transaction().add(buyIx).add(sellIx)
+const signature = await provider.sendAndConfirm(tx, [])
+```
+
+---
+
+### 6. Custom Swap Adapter (Jupiter)
+
+Implement a `SwapApi` adapter wrapping Jupiter's API.
+
+```ts
+import type { SwapApi, SwapRouteParams, SwapRouteResult } from '@vertigo-amm/vertigo-sdk'
+
+const createJupiterSwapApi = (): SwapApi => {
+  const getSwapTransaction = async (params: SwapRouteParams): Promise<SwapRouteResult> => {
+    // 1. Get quote
+    const quoteParams = new URLSearchParams({
+      inputMint: params.inputMint,
+      outputMint: params.outputMint,
+      amount: params.amount,
+      slippageBps: params.slippageBps.toString(),
+    })
+
+    const quoteResp = await fetch(
+      `https://quote-api.jup.ag/v6/quote?${quoteParams.toString()}`,
+    )
+    const quote = await quoteResp.json()
+
+    // 2. Get swap transaction
+    const swapResp = await fetch('https://quote-api.jup.ag/v6/swap', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        quoteResponse: quote,
+        userPublicKey: params.userPublicKey,
+        wrapAndUnwrapSol: true,
+      }),
+    })
+    const swap = await swapResp.json()
+
+    return {
+      transaction: swap.swapTransaction,
+      expectedOutput: quote.outAmount,
+      minimumOutput: quote.otherAmountThreshold,
+      priceImpact: quote.priceImpactPct,
+    }
+  }
+
+  return { getSwapTransaction }
+}
+
+// Use it
+const client = new VertigoClient(provider, {
+  swapApi: createJupiterSwapApi(),
+})
+
+const result = await client.swap({
+  inputMint: SOL_MINT,
+  outputMint: USDC_MINT,
+  amount: 1_000_000_000,
+  user: wallet.publicKey,
+})
+```
+
+---
+
+### 7. Custom Token Backend Adapter
+
+Implement a `TokenApi` adapter for your own token creation backend.
+
+```ts
+import type { TokenApi, CreateTokenParams, CreateTokenResult, GetTokenStatusParams, TokenStatus } from '@vertigo-amm/vertigo-sdk'
+
+const createMyTokenApi = (apiUrl: string, apiKey: string): TokenApi => {
+  const headers: HeadersInit = {
+    'Content-Type': 'application/json',
+    'Authorization': `Bearer ${apiKey}`,
+  }
+
+  const createToken = async (params: CreateTokenParams): Promise<CreateTokenResult> => {
+    const response = await fetch(`${apiUrl}/tokens`, {
+      method: 'POST',
+      headers,
+      body: JSON.stringify({
+        payer: params.payer,
+        name: params.metadata.name,
+        symbol: params.metadata.symbol,
+        description: params.metadata.description,
+        imageBase64: params.metadata.image,
+        poolShift: params.poolConfig.shift,
+        poolReserves: params.poolConfig.initialTokenBReserves,
+        feeConfig: params.poolConfig.feeParams,
+      }),
+    })
+
+    if (!response.ok) {
+      throw new Error(`Token creation failed: ${response.status}`)
+    }
+
+    const data = await response.json()
+
+    // Map your backend's response to the SDK's expected format
+    return {
+      transaction: data.unsignedTx,
+      mint: data.mintAddress,
+      pool: data.poolAddress,
+      metadataUri: data.arweaveUri,
+    }
+  }
+
+  const getTokenStatus = async (params: GetTokenStatusParams): Promise<TokenStatus> => {
+    const response = await fetch(`${apiUrl}/tokens/${params.mint}`, { headers })
+    const data = await response.json()
+
+    return {
+      status: data.state,
+      indexed: data.state === 'indexed',
+      pool: data.poolAddress,
+      error: data.errorMessage,
+    }
+  }
+
+  return { createToken, getTokenStatus }
+}
+
+// Use it
+const client = new VertigoClient(provider, {
+  tokenApi: createMyTokenApi('https://api.myapp.com', 'my-key'),
+})
+```
+
+---
+
+### 8. Pool Monitoring
+
+Fetch and display pool data for a dashboard or monitoring tool.
+
+```ts
+const client = new VertigoClient(provider)
+
+const monitorPool = async (poolAddress: PublicKey): Promise<void> => {
+  const pool = await client.getPool(poolAddress)
+
+  console.log('── Pool Info ──────────────────────────')
+  console.log(`Address:      ${pool.address.toBase58()}`)
+  console.log(`Owner:        ${pool.owner.toBase58()}`)
+  console.log(`Mint A:       ${pool.mintA.toBase58()}`)
+  console.log(`Mint B:       ${pool.mintB.toBase58()}`)
+  console.log(`Enabled:      ${pool.enabled}`)
+  console.log('')
+  console.log('── Reserves ───────────────────────────')
+  console.log(`Token A:      ${pool.tokenAReserves.toString()}`)
+  console.log(`Token B:      ${pool.tokenBReserves.toString()}`)
+  console.log(`Shift:        ${pool.shift.toString()}`)
+  console.log('')
+  console.log('── Fees ───────────────────────────────')
+  console.log(`Royalties:    ${pool.royalties.toString()}`)
+  console.log(`Vertigo fees: ${pool.vertigoFees.toString()}`)
+  console.log(`Royalty BPS:  ${pool.feeParams.royaltiesBps}`)
+  console.log(`Decay:        ${pool.feeParams.decay}`)
+  console.log(`Norm period:  ${pool.feeParams.normalizationPeriod.toString()}`)
+}
+
+// Monitor multiple pools
+const pools = [
+  new PublicKey('POOL_1'),
+  new PublicKey('POOL_2'),
+]
+
+const results = await Promise.allSettled(pools.map(monitorPool))
+
+for (const [i, result] of results.entries()) {
+  if (result.status === 'rejected') {
+    console.error(`Pool ${pools[i].toBase58()}: ${result.reason}`)
+  }
+}
+```
+
+---
+
+### 9. Error Handling Patterns
+
+Graceful handling of common error scenarios.
+
+```ts
+const client = new VertigoClient(provider, {
+  swapApiKey: 'YOUR_DFLOW_KEY',
+  tokenApiKey: 'YOUR_VERTIGO_KEY',
+})
+
+// ── Handle pool not found ────────────────────────────────
+const safeGetPool = async (poolAddress: PublicKey): Promise<PoolData | null> => {
+  try {
+    return await client.getPool(poolAddress)
+  } catch (error) {
+    if (error instanceof Error && error.message.includes('Pool not found')) {
+      return null
+    }
+    throw error
+  }
+}
+
+const pool = await safeGetPool(new PublicKey('MAYBE_INVALID'))
+
+if (!pool) {
+  console.log('Pool does not exist')
+}
+
+// ── Handle swap with timeout / failure ───────────────────
+const swapWithRetry = async (
+  maxAttempts: number,
+): Promise<string> => {
+  const { transaction } = await client.swap({
+    inputMint: SOL_MINT,
+    outputMint: TOKEN_MINT,
+    amount: 1_000_000_000,
+    user: wallet.publicKey,
+  })
+
+  transaction.sign([wallet.payer])
+
+  for (let attempt = 1; attempt <= maxAttempts; attempt++) {
+    try {
+      const signature = await client.submitSwap(transaction)
+      const { status } = await client.swapStatus(signature)
+
+      if (status === 'CLOSED') return signature
+      if (status === 'OPEN_FAILED') throw new Error('Swap failed on-chain')
+
+      // PENDING_CLOSE — wait and check again
+      await new Promise((resolve) => setTimeout(resolve, 2_000))
+      const recheck = await client.swapStatus(signature)
+
+      if (recheck.status === 'CLOSED') return signature
+    } catch (error) {
+      if (attempt === maxAttempts) throw error
+      console.log(`Attempt ${attempt} failed, retrying...`)
+    }
+  }
+
+  throw new Error('Swap did not confirm after max attempts')
+}
+
+// ── Handle missing adapter gracefully ────────────────────
+const clientOnChainOnly = new VertigoClient(provider) // no adapters
+
+try {
+  await clientOnChainOnly.swap({
+    inputMint: SOL_MINT,
+    outputMint: TOKEN_MINT,
+    amount: 1_000_000_000,
+    user: wallet.publicKey,
+  })
+} catch (error) {
+  // "Swap API not configured. Provide swapApi or swapApiKey in VertigoConfig."
+  console.log('Expected error:', (error as Error).message)
 }
 ```
 
