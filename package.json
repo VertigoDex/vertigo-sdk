@@ -8,6 +8,7 @@
     "url": "https://github.com/vertigo-protocol/vertigo-sdk"
   },
   "license": "MIT",
+  "packageManager": "pnpm@10.22.0",
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
   "exports": {
