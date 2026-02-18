@@ -33,6 +33,7 @@ const makeMockProvider = () => {
 
   const connection = {
     getAccountInfo: vi.fn(),
+    getProgramAccounts: vi.fn(),
     sendRawTransaction: vi.fn(),
     getSignatureStatuses: vi.fn(),
     getLatestBlockhash: vi.fn().mockResolvedValue({
@@ -247,6 +248,81 @@ describe('VertigoClient', () => {
 
       const pool = await client.getPool(Keypair.generate().publicKey)
       expect(pool.feeParams.privilegedSwapper).toBeNull()
+    })
+  })
+
+  describe('getAllPools', () => {
+    it('returns empty array when no pools exist', async () => {
+      const { provider, connection } = makeMockProvider()
+      connection.getProgramAccounts.mockResolvedValue([])
+      const client = new VertigoClient(provider)
+
+      const pools = await client.getAllPools()
+      expect(pools).toEqual([])
+      expect(connection.getProgramAccounts).toHaveBeenCalledWith(
+        DEFAULT_PROGRAM_ID,
+        expect.objectContaining({ filters: expect.any(Array) }),
+      )
+    })
+
+    it('decodes multiple pool accounts', async () => {
+      const { provider, connection } = makeMockProvider()
+      const client = new VertigoClient(provider)
+
+      const pubkey1 = Keypair.generate().publicKey
+      const pubkey2 = Keypair.generate().publicKey
+      const owner1 = Keypair.generate().publicKey
+      const owner2 = Keypair.generate().publicKey
+
+      const makeMockDecoded = (owner: PublicKey) => ({
+        owner,
+        mintA: Keypair.generate().publicKey,
+        mintB: Keypair.generate().publicKey,
+        tokenAReserves: new BN(1000),
+        tokenBReserves: new BN(2000),
+        shift: new BN(50),
+        royalties: new BN(5),
+        vertigoFees: new BN(2),
+        enabled: true,
+        feeParams: {
+          normalizationPeriod: new BN(300),
+          decay: 0.25,
+          royaltiesBps: 100,
+          privilegedSwapper: null,
+          reference: new BN(0),
+        },
+      })
+
+      connection.getProgramAccounts.mockResolvedValue([
+        { pubkey: pubkey1, account: { data: Buffer.alloc(0) } },
+        { pubkey: pubkey2, account: { data: Buffer.alloc(0) } },
+      ])
+
+      let callCount = 0
+      vi.spyOn(client.program.coder.accounts, 'decode').mockImplementation(() => {
+        callCount++
+        return callCount === 1 ? makeMockDecoded(owner1) : makeMockDecoded(owner2)
+      })
+
+      const pools = await client.getAllPools()
+
+      expect(pools).toHaveLength(2)
+      expect(pools[0].address.equals(pubkey1)).toBe(true)
+      expect(pools[0].owner.equals(owner1)).toBe(true)
+      expect(pools[1].address.equals(pubkey2)).toBe(true)
+      expect(pools[1].owner.equals(owner2)).toBe(true)
+    })
+
+    it('uses discriminator memcmp filter', async () => {
+      const { provider, connection } = makeMockProvider()
+      connection.getProgramAccounts.mockResolvedValue([])
+      const client = new VertigoClient(provider)
+
+      await client.getAllPools()
+
+      const filters = connection.getProgramAccounts.mock.calls[0][1].filters
+      expect(filters).toHaveLength(1)
+      expect(filters[0].memcmp.offset).toBe(0)
     })
   })
 

@@ -493,9 +493,27 @@ console.log('Fee:', quote.feeA.toString())
 
 #### `getPool(pool: PublicKey): Promise<PoolData>`
 
-Fetches and decodes a pool account from the chain.
+Fetches and decodes a single pool account from the chain.
 
 **Throws** if the pool does not exist.
+
+---
+
+#### `getAllPools(): Promise<PoolData[]>`
+
+Fetches and decodes all Vertigo pool accounts on-chain. Uses a discriminator filter to match only pool accounts in a single RPC call.
+
+**Returns:** Array of `PoolData` (empty array if no pools exist).
+
+**Example:**
+
+```ts
+const pools = await client.getAllPools()
+
+for (const pool of pools) {
+  console.log(`${pool.address.toBase58()} — ${pool.enabled ? 'active' : 'disabled'}`)
+}
+```
 
 ```ts
 type PoolData = {

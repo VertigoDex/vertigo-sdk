@@ -148,6 +148,7 @@ Also: `buildSellIx`, `buildCreateIx`, `buildClaimIx`.
 | `quoteBuy(args)` / `quoteSell(args)` | Read-only quotes |
 | `buildBuyIx` / `buildSellIx` / `buildCreateIx` / `buildClaimIx` | Raw instructions |
 | `getPool(pool)` | Fetch pool data |
+| `getAllPools()` | Fetch all pools on-chain |
 | `poolPda(owner, mintA, mintB)` / `vaultPda(pool, mint)` | PDA derivation |
 
 Full type signatures, adapter contracts, and backend endpoint specs in **[DOCS.md](./DOCS.md)**.

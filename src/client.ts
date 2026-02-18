@@ -33,6 +33,7 @@ import type {
 } from './types'
 
 const POOL_SEED = 'pool'
+const POOL_DISCRIMINATOR = Buffer.from([241, 154, 109, 4, 17, 177, 109, 188])
 const DEFAULT_PROGRAM_ID = new PublicKey('vrTGoBuy5rYSxAfV3jaRJWHH6nN9WK4NRExGxsk1bCJ')
 const DEFAULT_SLIPPAGE_BPS = 50
 
@@ -87,16 +88,11 @@ class VertigoClient {
 
   // ── Query ────────────────────────────────────────────────
 
-  async getPool(pool: PublicKey): Promise<PoolData> {
-    const accountInfo = await this.provider.connection.getAccountInfo(pool)
-    if (!accountInfo) {
-      throw new Error(`Pool not found: ${pool.toBase58()}`)
-    }
-
-    const decoded = this.program.coder.accounts.decode('pool', accountInfo.data)
+  private decodePool(address: PublicKey, data: Buffer): PoolData {
+    const decoded = this.program.coder.accounts.decode('pool', data)
 
     return {
-      address: pool,
+      address,
       owner: decoded.owner,
       mintA: decoded.mintA,
       mintB: decoded.mintB,
@@ -114,6 +110,28 @@ class VertigoClient {
         reference: new BN(decoded.feeParams.reference.toString()),
       },
     }
+  }
+
+  async getPool(pool: PublicKey): Promise<PoolData> {
+    const accountInfo = await this.provider.connection.getAccountInfo(pool)
+    if (!accountInfo) {
+      throw new Error(`Pool not found: ${pool.toBase58()}`)
+    }
+
+    return this.decodePool(pool, accountInfo.data)
+  }
+
+  async getAllPools(): Promise<PoolData[]> {
+    const accounts = await this.provider.connection.getProgramAccounts(
+      this.programId,
+      {
+        filters: [
+          { memcmp: { offset: 0, bytes: POOL_DISCRIMINATOR.toString('base64'), encoding: 'base64' } },
+        ],
+      },
+    )
+
+    return accounts.map(({ pubkey, account }) => this.decodePool(pubkey, account.data))
   }
 
   // ── Swap (via SwapApi adapter) ─────────────────────────────
