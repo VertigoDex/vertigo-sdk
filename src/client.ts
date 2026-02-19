@@ -89,7 +89,7 @@ class VertigoClient {
   // ── Query ────────────────────────────────────────────────
 
   private decodePool(address: PublicKey, data: Buffer): PoolData {
-    const decoded = this.program.coder.accounts.decode('pool', data)
+    const decoded = this.program.coder.accounts.decode('Pool', data)
 
     return {
       address,

@@ -9,6 +9,21 @@ import type {
 const DEFAULT_API_URL = 'https://api.vertigo.so'
 const DEFAULT_TIMEOUT_MS = 30_000
 
+const isCreateTokenResult = (data: unknown): data is CreateTokenResult =>
+  typeof data === 'object'
+  && data !== null
+  && typeof (data as Record<string, unknown>).transaction === 'string'
+  && typeof (data as Record<string, unknown>).mint === 'string'
+  && typeof (data as Record<string, unknown>).pool === 'string'
+
+const VALID_TOKEN_STATUSES = new Set(['pending', 'indexed', 'failed'])
+
+const isTokenStatus = (data: unknown): data is TokenStatus =>
+  typeof data === 'object'
+  && data !== null
+  && VALID_TOKEN_STATUSES.has((data as Record<string, unknown>).status as string)
+  && typeof (data as Record<string, unknown>).indexed === 'boolean'
+
 type TokenApiConfig = {
   apiKey: string
   apiUrl?: string
@@ -34,12 +49,18 @@ const createDefaultTokenApi = (config: TokenApiConfig): TokenApi => {
       throw new Error(`Token API POST /v1/tokens returned ${response.status}: ${body}`)
     }
 
-    return (await response.json()) as CreateTokenResult
+    const data: unknown = await response.json()
+
+    if (!isCreateTokenResult(data)) {
+      throw new Error('Token API POST /v1/tokens returned an unexpected response shape')
+    }
+
+    return data
   }
 
   const getTokenStatus = async (params: GetTokenStatusParams): Promise<TokenStatus> => {
     const response = await fetch(`${apiUrl}/v1/tokens/${params.mint}/status`, {
-      headers,
+      headers: { 'x-api-key': config.apiKey },
       signal: AbortSignal.timeout(DEFAULT_TIMEOUT_MS),
     })
 
@@ -48,7 +69,13 @@ const createDefaultTokenApi = (config: TokenApiConfig): TokenApi => {
       throw new Error(`Token API GET /v1/tokens/${params.mint}/status returned ${response.status}: ${body}`)
     }
 
-    return (await response.json()) as TokenStatus
+    const data: unknown = await response.json()
+
+    if (!isTokenStatus(data)) {
+      throw new Error(`Token API GET /v1/tokens/${params.mint}/status returned an unexpected response shape`)
+    }
+
+    return data
   }
 
   return { createToken, getTokenStatus }
